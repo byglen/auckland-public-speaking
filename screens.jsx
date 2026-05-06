@@ -426,18 +426,36 @@ function DrawingScreen({ participants, onComplete, onAddLate, onRemoveParticipan
   const [spinFocusKey, setSpinFocusKey] = useState(0);
   const spinPointerLastRef = useRef(null);
 
+  /** True once user has released Space after a boost — gates name readout vs hold hint */
+  const [spinPastBoost, setSpinPastBoost] = useState(false);
+  const spinWasBoostingRef = useRef(false);
+
   const [spinSpaceHeld, setSpinSpaceHeld] = useState(false);
+  const spinSpaceHeldRef = useRef(false);
 
   useEffect(() => {
     if (phase !== 'spinning') setSpinSpaceHeld(false);
+    if (phase !== 'spinning') {
+      setSpinPastBoost(false);
+      spinWasBoostingRef.current = false;
+    }
   }, [phase]);
 
+  useEffect(() => {
+    spinSpaceHeldRef.current = spinSpaceHeld;
+  }, [spinSpaceHeld]);
+
   const onSpinBoostChange = useCallback((held) => {
-    setSpinSpaceHeld(!!held);
+    const h = !!held;
+    spinSpaceHeldRef.current = h;
+    if (spinWasBoostingRef.current && !h) setSpinPastBoost(true);
+    spinWasBoostingRef.current = h;
+    setSpinSpaceHeld(h);
   }, []);
 
   const onWheelPointerName = useCallback((name) => {
     if (name == null || name === '') return;
+    if (spinSpaceHeldRef.current) return;
     if (spinPointerLastRef.current === name) return;
     spinPointerLastRef.current = name;
     setSpinFocusName(name);
@@ -455,6 +473,8 @@ function DrawingScreen({ participants, onComplete, onAddLate, onRemoveParticipan
     setWinner(w);
     setPhase('spinning');
     setSpinFocusName('');
+    setSpinPastBoost(false);
+    spinWasBoostingRef.current = false;
     spinPointerLastRef.current = null;
   }, []);
 
@@ -613,18 +633,37 @@ function DrawingScreen({ participants, onComplete, onAddLate, onRemoveParticipan
         </div>
       }
 
-      {phase === 'spinning' && spinFocusName &&
+      {phase === 'spinning' &&
       <div
-        aria-hidden
         style={{
           position: 'fixed',
           top: 'clamp(1rem, 3vh, 2.5rem)',
           right: 'clamp(1rem, 3vw, 2.75rem)',
-          maxWidth: 'min(58vw, 720px)',
+          maxWidth: 'min(62vw, 800px)',
           zIndex: 50,
           pointerEvents: 'none',
-          textAlign: 'right'
+          textAlign: 'right',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'flex-end',
+          gap: '0.35rem'
         }}>
+        {spinSpaceHeld ?
+        <div
+          style={{
+            fontFamily: 'Outfit',
+            fontSize: 'clamp(1.28rem, 2.7vw, 1.95rem)',
+            fontWeight: 800,
+            color: C.pulseRedSoft,
+            letterSpacing: '0.12em',
+            textTransform: 'uppercase',
+            lineHeight: 1.35,
+            textShadow: `0 0 24px rgba(255,64,64,0.35)`,
+            animation: 'pulseBig 1.65s ease-in-out infinite'
+          }}>
+          Release <span style={{ color: C.text }}>Space</span> to stop
+        </div>
+        : spinPastBoost && spinFocusName ?
         <div
           key={spinFocusKey}
           style={{
@@ -642,6 +681,32 @@ function DrawingScreen({ participants, onComplete, onAddLate, onRemoveParticipan
           }}>
           {spinFocusName}
         </div>
+        : spinPastBoost ?
+        <div
+          aria-hidden
+          style={{
+            minHeight: 'clamp(3rem, 6.2vw, 7rem)',
+            width: 1,
+            opacity: 0,
+            visibility: 'hidden'
+          }}
+        />
+        :
+        <div
+          style={{
+            fontFamily: 'Outfit',
+            fontSize: 'clamp(1.28rem, 2.7vw, 1.95rem)',
+            fontWeight: 700,
+            color: `${C.dim}f0`,
+            letterSpacing: '0.1em',
+            textTransform: 'uppercase',
+            lineHeight: 1.4,
+            animation: 'pulseBig 2.6s ease-in-out infinite',
+            opacity: 0.95
+          }}>
+          Hold <span style={{ color: C.text }}>Space</span> to spin
+        </div>
+        }
       </div>
       }
 
@@ -659,34 +724,9 @@ function DrawingScreen({ participants, onComplete, onAddLate, onRemoveParticipan
         padding: 'clamp(0.35rem, 1.5vh, 1rem)',
         gap: 'clamp(0.55rem, 1.8vh, 1.35rem)'
       }}>
-        {spinSpaceHeld &&
-        <div
-          style={{
-            letterSpacing: '0.24em',
-            textTransform: 'uppercase',
-            fontSize: '0.72rem',
-            fontWeight: 800,
-            color: C.pulseRedSoft,
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.55rem',
-            animation: 'pulseBig 1.8s ease-in-out infinite'
-          }}>
-          <span
-            style={{
-              width: 9,
-              height: 9,
-              borderRadius: '50%',
-              background: C.pulseRed,
-              boxShadow: `0 0 14px ${C.pulseRed}, 0 0 28px rgba(255,64,64,0.45)`
-            }}
-          />
-          Full speed — release Space to land
-        </div>
-        }
         <div style={{
           flexShrink: 0,
-          width: 'min(88vw, min(76vh, 920px))',
+          width: 'min(94vw, min(84vh, 1020px))',
           transition:
             'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), filter 0.38s cubic-bezier(0.25, 0.46, 0.45, 1)',
           transform: spinSpaceHeld ? 'scale(1.035)' : 'scale(1)',
@@ -702,26 +742,6 @@ function DrawingScreen({ participants, onComplete, onAddLate, onRemoveParticipan
             onPointerNameChange: onWheelPointerName,
             onSpaceBoostChange: onSpinBoostChange
           })}
-        </div>
-        <div style={{
-          color: spinSpaceHeld ? `${C.pulseRedSoft}e6` : `${C.dim}cc`,
-          fontSize: '1.05rem',
-          marginTop: '0.25rem',
-          letterSpacing: '0.06em',
-          textAlign: 'center',
-          maxWidth: 560,
-          lineHeight: 1.45,
-          transition: 'color 0.3s ease'
-        }}>
-          {spinSpaceHeld ?
-          <>
-              Release <span style={{ color: C.text, fontWeight: 700 }}>Space</span> to stop
-            </> :
-
-          <>
-              Hold <span style={{ color: C.text, fontWeight: 700 }}>Space</span> to spin
-            </>
-          }
         </div>
       </div>
       }
