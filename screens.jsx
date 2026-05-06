@@ -248,17 +248,32 @@ function HomeScreen({ questionOfNight, participants, onRegister, onDraw, onEditQ
         </div>
       </div>
 
-      {/* Centre */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '2rem 7rem', textAlign: 'center' }}>
+      {/* Centre — wider gutters + scaled type so long questions wrap comfortably */}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '2rem clamp(1rem, 3.25vw, 2rem)',
+        textAlign: 'center',
+        minHeight: 0
+      }}>
         <div style={{ color: C.accent, fontSize: '1.15rem', letterSpacing: '0.35em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '2rem' }}>
           Question of the Night
         </div>
         <h1 style={{
-          color: C.text, fontWeight: 900,
-
-          lineHeight: 1.18, maxWidth: 1200,
+          color: C.text,
+          fontWeight: 900,
+          lineHeight: 1.16,
+          maxWidth: 'min(1100px, 100%)',
+          width: '100%',
+          margin: '0 auto 4rem',
+          fontFamily: 'Outfit',
+          letterSpacing: '0.06px',
           textWrap: 'pretty',
-          marginBottom: '4rem', fontFamily: "Outfit", letterSpacing: "0.1px", fontSize: "120px"
+          fontSize: 'clamp(2.25rem, 4.25vw + 2.75vmin, 5.75rem)',
+          overflowWrap: 'break-word'
         }}>
           {questionOfNight}
         </h1>
@@ -1066,14 +1081,22 @@ function SpeechScreen({ speakerName, question, onComplete }) {
           display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start',
           borderBottom: `1px solid ${phase === 'feedback' ? '#1a2a4a' : C.border}`
         }}>
-            <div style={{ maxWidth: '68%' }}>
+            <div style={{ maxWidth: 'min(920px, 72%)', minWidth: 0 }}>
               <div style={{
               color: phase === 'feedback' ? '#5080d0' : C.accent,
               fontSize: '0.95rem', letterSpacing: '0.3em', textTransform: 'uppercase', fontWeight: 700
             }}>
                 {phase === 'speech' ? `${speakerName} — Speaking` : `${speakerName} — Feedback`}
               </div>
-              <div style={{ color: C.muted, fontSize: '1.85rem', marginTop: '0.5rem', lineHeight: 1.35, fontWeight: 600 }}>
+              <div style={{
+              color: C.text,
+              fontSize: 'clamp(1.95rem, 3.4vw + 0.85rem, 3.15rem)',
+              marginTop: '0.65rem',
+              lineHeight: 1.38,
+              fontWeight: 600,
+              opacity: 0.95,
+              overflowWrap: 'break-word'
+            }}>
                 {question}
               </div>
             </div>
