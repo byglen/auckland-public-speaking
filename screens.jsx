@@ -495,6 +495,14 @@ function DrawingScreen({ participants, onComplete, onAddLate, onRemoveParticipan
 
   const startDraw = useCallback(() => {
     if (phase !== 'ready' || remaining.length === 0) return;
+    // One person left — no wheel; same "Next Speaker" reveal as after a spin
+    if (remaining.length === 1) {
+      setShowAdd(false);
+      setWinner(remaining[0]);
+      setNameKey((k) => k + 1);
+      setPhase('reveal');
+      return;
+    }
     launchSpinFromPool([...remaining]);
   }, [phase, remaining, launchSpinFromPool]);
 
