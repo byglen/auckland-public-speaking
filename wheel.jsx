@@ -90,6 +90,72 @@ function drawCircularLabelText(ctx, str, cx, cy, radius, centerAngleRad, fontSpe
   ctx.restore();
 }
 
+const WEDGE_LIT_HUES = [218, 275, 198, 300, 30, 168];
+
+function wedgeLabelStyle(i, N) {
+  const goldenCap = i === N - 1 && N % 2 === 1;
+  const zebraDark = (i % 2 === 0) && !goldenCap;
+  if (goldenCap) return { type: 'gold' };
+  if (zebraDark) return { type: 'dark', cool: ((i >>> 1) % 2) === 0 };
+  return { type: 'lit', hue: WEDGE_LIT_HUES[Math.floor(i / 2) % WEDGE_LIT_HUES.length] };
+}
+
+/** Slice-aware wedge labels — tinted fill, soft emboss, tracked lettering. */
+function drawWedgeLabel(ctx, text, anchorX, textAlign, fontPx, style, boosting) {
+  if (!text) return;
+  const spacing = fontPx * 0.075;
+  ctx.font = `700 ${fontPx}px Outfit, system-ui, sans-serif`;
+  ctx.textBaseline = 'middle';
+
+  const chars = [...text];
+  let totalW = 0;
+  for (let c = 0; c < chars.length; c++) {
+    totalW += ctx.measureText(chars[c]).width;
+    if (c < chars.length - 1) totalW += spacing;
+  }
+
+  const cursor = textAlign === 'right' ? anchorX - totalW : anchorX;
+  const x0 = cursor;
+  const x1 = cursor + totalW;
+  const grad = ctx.createLinearGradient(x0, -fontPx * 0.15, x1, fontPx * 0.15);
+
+  let shadowColor;
+  if (style.type === 'dark') {
+    const cool = style.cool;
+    grad.addColorStop(0, cool ? 'rgba(148,162,192,0.38)' : 'rgba(175,162,188,0.36)');
+    grad.addColorStop(0.45, cool ? 'rgba(205,214,232,0.66)' : 'rgba(222,212,228,0.62)');
+    grad.addColorStop(1, cool ? 'rgba(138,152,182,0.34)' : 'rgba(165,155,180,0.32)');
+    shadowColor = 'rgba(0,0,0,0.55)';
+  } else if (style.type === 'gold') {
+    grad.addColorStop(0, 'rgba(195,158,88,0.52)');
+    grad.addColorStop(0.5, 'rgba(252,228,168,0.78)');
+    grad.addColorStop(1, 'rgba(175,140,78,0.48)');
+    shadowColor = 'rgba(0,0,0,0.38)';
+  } else {
+    const h = style.hue;
+    grad.addColorStop(0, `hsla(${h}, 44%, 58%, 0.52)`);
+    grad.addColorStop(0.38, `hsla(${(h + 14) % 360}, 52%, 80%, 0.78)`);
+    grad.addColorStop(0.72, `hsla(${(h + 28) % 360}, 48%, 68%, 0.62)`);
+    grad.addColorStop(1, `hsla(${h}, 40%, 54%, 0.48)`);
+    shadowColor = `hsla(${h}, 28%, 6%, 0.42)`;
+  }
+
+  ctx.save();
+  ctx.textAlign = 'left';
+  ctx.shadowColor = shadowColor;
+  ctx.shadowBlur = boosting ? 7 : 4.5;
+  ctx.shadowOffsetX = 0.65;
+  ctx.shadowOffsetY = 1.1;
+  ctx.fillStyle = grad;
+
+  let cx = cursor;
+  for (let ci = 0; ci < chars.length; ci++) {
+    ctx.fillText(chars[ci], cx, 0);
+    cx += ctx.measureText(chars[ci]).width + spacing;
+  }
+  ctx.restore();
+}
+
 /** Retro backlit LED counter — sits on turntable plinth corner */
 function RetroLedDisplay({ count }) {
   const n = Math.max(0, count ?? 0);
@@ -236,7 +302,7 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
     const wedgeToneInnerR = labelPaperR * 0.35;
 
     /** Theme — rim hues muted for hybrid black-vinyl zebra */
-    const LIT_HUES = [218, 275, 198, 300, 30, 168];
+    const LIT_HUES = WEDGE_LIT_HUES;
 
     // Soft vignette beyond disc (vinyl platter in space — no gold roulette halo)
     const glow = ctx.createRadialGradient(cx, cy, outerR * 0.68, cx, cy, rimR + 22);
@@ -443,26 +509,19 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
       const radialBand = outerR - grooveInnerR - 26;
       const maxByN =
         N <= 5 ? 46 : N <= 10 ? 40 : N <= 15 ? 32 : N <= 22 ? 25 : N <= 30 ? 20 : 17;
-      const minPx = N >= 26 ? 11 : 12;
-      const fontPx = Math.max(minPx, Math.min(maxByN, arcLen / 3.3, radialBand / 4.5));
-      ctx.font = `800 ${fontPx}px Outfit, system-ui, sans-serif`;
-      ctx.fillStyle = '#fff';
-      ctx.shadowColor = 'rgba(0,0,0,0.55)';
-      ctx.shadowBlur = 6;
+      const minPx = N >= 26 ? 12 : 13;
+      const fontPx = Math.max(minPx, Math.min(maxByN + 2, arcLen / 3.05, radialBand / 4.1));
       let label = names[i];
-      const maxChars = Math.max(6, Math.floor((outerR - grooveInnerR - 28) / (fontPx * 0.55)));
+      const maxChars = Math.max(6, Math.floor((outerR - grooveInnerR - 28) / (fontPx * 0.52)));
       if (label.length > maxChars) label = label.slice(0, maxChars - 1) + '…';
       const absoluteMid = ((midAng + rotation) % (Math.PI * 2) + Math.PI * 2) % (Math.PI * 2);
       const upsideDown = absoluteMid > Math.PI / 2 && absoluteMid < (3 * Math.PI) / 2;
+      const labelStyle = wedgeLabelStyle(i, N);
       if (upsideDown) {
         ctx.rotate(Math.PI);
-        ctx.textAlign = 'left';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(label, -outerR + 18, 0);
+        drawWedgeLabel(ctx, label, -outerR + 18, 'left', fontPx, labelStyle, boosting);
       } else {
-        ctx.textAlign = 'right';
-        ctx.textBaseline = 'middle';
-        ctx.fillText(label, outerR - 18, 0);
+        drawWedgeLabel(ctx, label, outerR - 18, 'right', fontPx, labelStyle, boosting);
       }
       ctx.restore();
     }

@@ -259,6 +259,7 @@ function App() {
           onBackHome={() => setScreen(SCREEN.HOME)}
           pickRevealQuoteForSession={pickRevealQuoteForSession}
           demoMode={demoMode}
+          onToggleDemo={handleToggleDemo}
         />
       )}
       {screen === SCREEN.QSELECT && (

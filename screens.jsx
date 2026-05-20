@@ -1194,7 +1194,7 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, onDone }) {
 }
 
 // ─── DRAWING SCREEN ───────────────────────────────────────────────────────────
-function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteForSession, demoMode = false }) {
+function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteForSession, demoMode = false, onToggleDemo }) {
   const [phase, setPhase] = useState('ready');
   const [winner, setWinner] = useState(null);
   const [nameKey, setNameKey] = useState(0);
@@ -1285,6 +1285,35 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     launchSpinFromPool([...remaining], spokenCount);
   }, [phase, remaining, participants, launchSpinFromPool]);
 
+  const prevDemoModeRef = useRef(demoMode);
+
+  // ⌘D swaps speaker roster — refresh locked spin pool + wheel slices to match
+  useEffect(() => {
+    if (prevDemoModeRef.current === demoMode) return;
+    prevDemoModeRef.current = demoMode;
+
+    const spokenCount = participants.filter((p) => p.done).length;
+    if (remaining.length === 0) return;
+
+    if (remaining.length === 1) {
+      const { winner: w } = pickDrawWinner(remaining, spokenCount);
+      if (!w) return;
+      setSpinPool([...remaining]);
+      setSpinWinnerIdx(0);
+      setWinner(w);
+      setRevealQuote(pickRevealQuoteForSession());
+      setNameKey((k) => k + 1);
+      setPhase('reveal');
+      setSpinFocusName('');
+      setSpinPastBoost(false);
+      spinWasBoostingRef.current = false;
+      spinPointerLastRef.current = null;
+      return;
+    }
+
+    launchSpinFromPool([...remaining], spokenCount);
+  }, [demoMode, remaining, participants, launchSpinFromPool, pickRevealQuoteForSession]);
+
   const onSpinComplete = useCallback(() => {
     setRevealQuote(pickRevealQuoteForSession());
     setNameKey((k) => k + 1);
@@ -1335,6 +1364,20 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [demoMode, phase, skipSpinToReveal]);
+
+  // ⌘D — toggle demo mode (same as home screen)
+  useEffect(() => {
+    if (!onToggleDemo) return;
+    const h = (e) => {
+      if (!e.metaKey || e.code !== 'KeyD') return;
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      e.preventDefault();
+      onToggleDemo();
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onToggleDemo]);
 
   const adminMenu = (
     <DrawingAdminMenu
@@ -1392,99 +1435,96 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       {/* ── SPINNING ── */}
       {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 &&
       <div style={{
+        position: 'relative',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         width: '100%',
         flex: 1,
         minHeight: 0,
-        padding: 'clamp(0.35rem, 1.5vh, 1rem)'
+        padding: 'clamp(0.35rem, 1.5vh, 1rem)',
+        overflow: 'visible'
       }}>
         <div style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr auto 1fr',
-          alignItems: 'start',
-          width: '100%',
-          overflow: 'visible'
+          flexShrink: 0,
+          width: 'min(94vw, min(84vh, 1020px))',
+          position: 'relative',
+          zIndex: 1,
+          transition:
+            'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), filter 0.38s cubic-bezier(0.25, 0.46, 0.45, 1)',
+          transform: spinSpaceHeld ? 'scale(1.035)' : 'scale(1)',
+          filter: spinSpaceHeld
+            ? 'saturate(1.1) brightness(1.04) drop-shadow(0 0 28px rgba(255,180,115,0.38)) drop-shadow(0 0 64px rgba(70,155,255,0.4)) drop-shadow(0 0 20px rgba(255,64,64,0.2))'
+            : 'none'
         }}>
-          <div aria-hidden />
-          <div style={{
-            flexShrink: 0,
-            width: 'min(94vw, min(84vh, 1020px))',
-            transition:
-              'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), filter 0.38s cubic-bezier(0.25, 0.46, 0.45, 1)',
-            transform: spinSpaceHeld ? 'scale(1.035)' : 'scale(1)',
-            filter: spinSpaceHeld
-              ? 'saturate(1.1) brightness(1.04) drop-shadow(0 0 28px rgba(255,180,115,0.38)) drop-shadow(0 0 64px rgba(70,155,255,0.4)) drop-shadow(0 0 20px rgba(255,64,64,0.2))'
-              : 'none'
-          }}>
-            {window.SpinWheel && React.createElement(window.SpinWheel, {
-              names: spinPool.map((p) => p.name),
-              winnerIdx: spinWinnerIdx,
-              spinKey: spinKey,
-              remainingCount: remaining.length,
-              onComplete: onSpinComplete,
-              onPointerNameChange: onWheelPointerName,
-              onSpaceBoostChange: onSpinBoostChange
-            })}
-          </div>
+          {window.SpinWheel && React.createElement(window.SpinWheel, {
+            names: spinPool.map((p) => p.name),
+            winnerIdx: spinWinnerIdx,
+            spinKey: spinKey,
+            remainingCount: remaining.length,
+            onComplete: onSpinComplete,
+            onPointerNameChange: onWheelPointerName,
+            onSpaceBoostChange: onSpinBoostChange
+          })}
+        </div>
 
-          <div style={{
-            position: 'relative',
-            display: 'flex',
-            justifyContent: 'flex-start',
-            paddingLeft: 'clamp(1rem, 2.5vw, 2.75rem)',
-            width: 'clamp(200px, 22vw, 320px)',
-            minHeight: spinPastBoost ? 'clamp(3rem, 6.2vw, 7rem)' : undefined,
-            pointerEvents: 'none',
-            zIndex: 50,
-            overflow: 'visible'
-          }}>
-            {spinSpaceHeld ?
-            <KeyboardHint
-              ariaLabel="Release space to stop"
-              caption="release to stop"
-              align="center"
-              urgent
-            >
-              <RetroSpaceKey active />
-            </KeyboardHint>
-            : spinPastBoost && spinFocusName ?
-            <div
-              key={spinFocusKey}
-              style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                transform: 'translateX(-100%)',
-                paddingRight: 'clamp(1rem, 2.5vw, 2.75rem)',
-                fontFamily: 'Outfit',
-                fontSize: 'clamp(2.25rem, 4.5vw, 5rem)',
-                fontWeight: 700,
-                color: C.gold,
-                lineHeight: 1.1,
-                letterSpacing: '-0.1px',
-                textAlign: 'right',
-                whiteSpace: 'nowrap',
-                textShadow: '0 4px 32px rgba(0,0,0,0.55), 0 0 56px rgba(212,168,75,0.22)',
-                animation: 'spinNameSwap 0.1s cubic-bezier(0.22, 1, 0.36, 1) both',
-                willChange: 'transform, opacity'
-              }}>
-              {spinFocusName}
-            </div>
-            : spinPastBoost ?
-            null
-            :
-            <KeyboardHint
-              ariaLabel="Press and hold space to spin"
-              caption="Press and hold"
-              align="center"
-            >
-              <RetroSpaceKey />
-            </KeyboardHint>
-            }
+        <div style={{
+          position: 'absolute',
+          top: 'calc(50% - min(47vw, min(42vh, 510px)))',
+          left: 'calc(50% + min(47vw, min(42vh, 510px)) + clamp(1.25rem, 3vw, 3rem))',
+          right: 'clamp(1rem, 2vw, 2rem)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'flex-start',
+          minHeight: spinPastBoost ? 'clamp(3rem, 6.2vw, 7rem)' : undefined,
+          minWidth: 0,
+          pointerEvents: 'none',
+          zIndex: 50,
+          overflow: 'hidden'
+        }}>
+          {spinSpaceHeld ?
+          <KeyboardHint
+            ariaLabel="Release space to stop"
+            caption="release to stop"
+            align="center"
+            urgent
+          >
+            <RetroSpaceKey active />
+          </KeyboardHint>
+          : spinPastBoost && spinFocusName ?
+          <div
+            key={spinFocusKey}
+            title={spinFocusName}
+            style={{
+              width: '100%',
+              minWidth: 0,
+              fontFamily: 'Outfit',
+              fontSize: 'clamp(2.25rem, 4.5vw, 5rem)',
+              fontWeight: 700,
+              color: C.gold,
+              lineHeight: 1.1,
+              letterSpacing: '-0.1px',
+              textAlign: 'center',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              textShadow: '0 4px 32px rgba(0,0,0,0.55), 0 0 56px rgba(212,168,75,0.22)',
+              animation: 'spinNameSwap 0.1s cubic-bezier(0.22, 1, 0.36, 1) both',
+              willChange: 'transform, opacity'
+            }}>
+            {spinFocusName}
           </div>
+          : spinPastBoost ?
+          null
+          :
+          <KeyboardHint
+            ariaLabel="Press and hold space to spin"
+            caption="Press and hold"
+            align="center"
+          >
+            <RetroSpaceKey />
+          </KeyboardHint>
+          }
         </div>
       </div>
       }
