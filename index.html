@@ -43,6 +43,19 @@
       50%       { opacity: 0.7; transform: scale(0.97); }
     }
 
+    @keyframes firstTimerChipPulse {
+      0%   { box-shadow: 0 0 0 0 rgba(212,168,75,0); transform: scale(1); }
+      40%  { box-shadow: 0 0 22px rgba(212,168,75,0.55); transform: scale(1.06); }
+      100% { box-shadow: 0 0 0 0 rgba(212,168,75,0); transform: scale(1); }
+    }
+
+    @keyframes ledDigitPulse {
+      0%, 100% { opacity: 1; filter: brightness(1); }
+      48%      { opacity: 0.92; filter: brightness(0.94); }
+      50%      { opacity: 0.88; filter: brightness(0.88); }
+      52%      { opacity: 0.94; filter: brightness(0.96); }
+    }
+
     /* Wheel “currently under pointer” readout — short crossfade each slice change */
     @keyframes spinNameSwap {
       0% {
@@ -61,6 +74,45 @@
       50%       { opacity: 1;   transform: scale(1.02); }
     }
 
+    /* Next Speaker reveal — warm glow + floating applause */
+    @keyframes revealGlowPulse {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50%       { opacity: 1;   transform: scale(1.05); }
+    }
+
+    @keyframes revealRingPulse {
+      0%, 100% { opacity: 0.35; transform: scale(1); }
+      50%       { opacity: 0.75; transform: scale(1.04); }
+    }
+
+    @keyframes applauseDrift0 {
+      0%   { transform: translate(0, 48px) rotate(-10deg) scale(0.45); opacity: 0; }
+      14%  { opacity: 0.95; }
+      100% { transform: translate(-42px, -240px) rotate(16deg) scale(1.05); opacity: 0; }
+    }
+
+    @keyframes applauseDrift1 {
+      0%   { transform: translate(0, 36px) rotate(8deg) scale(0.5); opacity: 0; }
+      14%  { opacity: 0.9; }
+      100% { transform: translate(52px, -280px) rotate(-22deg) scale(0.95); opacity: 0; }
+    }
+
+    @keyframes applauseDrift2 {
+      0%   { transform: translate(0, 56px) rotate(0deg) scale(0.4); opacity: 0; }
+      16%  { opacity: 0.88; }
+      100% { transform: translate(-18px, -210px) rotate(28deg) scale(1.12); opacity: 0; }
+    }
+
+    @keyframes revealShimmer {
+      0%   { background-position: 200% center; }
+      100% { background-position: -200% center; }
+    }
+
+    @keyframes revealQuoteIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
@@ -72,6 +124,8 @@
 
   <!-- Data must load before components -->
   <script src="data.js"></script>
+  <script src="reveal-quotes.js"></script>
+  <script src="jazz-loop.js"></script>
   <script type="text/babel" src="wheel.jsx"></script>
   <script type="text/babel" src="screens.jsx"></script>
   <script type="text/babel" src="app.jsx"></script>

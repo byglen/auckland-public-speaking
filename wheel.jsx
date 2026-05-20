@@ -90,7 +90,95 @@ function drawCircularLabelText(ctx, str, cx, cy, radius, centerAngleRad, fontSpe
   ctx.restore();
 }
 
-const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange, onSpaceBoostChange }) => {
+/** Retro backlit LED counter — sits on turntable plinth corner */
+function RetroLedDisplay({ count }) {
+  const n = Math.max(0, count ?? 0);
+  const digits = (n > 99 ? '99' : String(n).padStart(2, '0')).split('');
+
+  const digitStyle = {
+    width: 'clamp(18px, 3.2vw, 26px)',
+    height: 'clamp(28px, 4.8vw, 38px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    background: 'linear-gradient(180deg, #060508 0%, #0c0a0e 45%, #040406 100%)',
+    borderRadius: 3,
+    boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.95), inset 0 -1px 0 rgba(60,120,255,0.08)',
+    border: '1px solid rgba(0,0,0,0.65)',
+    fontFamily: "'Courier New', Courier, monospace",
+    fontSize: 'clamp(1.15rem, 2.6vw, 1.65rem)',
+    fontWeight: 700,
+    fontVariantNumeric: 'tabular-nums',
+    color: '#5a9cff',
+    textShadow: `
+      0 0 2px #6aabff,
+      0 0 8px rgba(74, 140, 255, 0.85),
+      0 0 18px rgba(58, 118, 255, 0.55),
+      0 0 32px rgba(40, 100, 255, 0.28)
+    `,
+    lineHeight: 1,
+    animation: 'ledDigitPulse 3.2s ease-in-out infinite'
+  };
+
+  return (
+    <div
+      aria-label={`${n} speakers left in draw`}
+      style={{
+        position: 'absolute',
+        right: 'clamp(10px, 2.2vw, 20px)',
+        bottom: 'clamp(10px, 2vh, 18px)',
+        zIndex: 4,
+        pointerEvents: 'none'
+      }}>
+      <div style={{
+        background: 'linear-gradient(165deg, #22252f 0%, #12141c 55%, #0a0b10 100%)',
+        border: '1px solid rgba(255,255,255,0.09)',
+        borderRadius: 7,
+        padding: 'clamp(5px, 1vw, 7px) clamp(7px, 1.4vw, 10px) clamp(6px, 1.1vw, 8px)',
+        boxShadow: `
+          inset 0 1px 0 rgba(255,255,255,0.06),
+          inset 0 -2px 4px rgba(0,0,0,0.5),
+          0 3px 10px rgba(0,0,0,0.45)
+        `
+      }}>
+        <div style={{
+          fontSize: 'clamp(0.42rem, 0.95vw, 0.55rem)',
+          fontWeight: 800,
+          letterSpacing: '0.22em',
+          textTransform: 'uppercase',
+          color: 'rgba(100, 165, 255, 0.78)',
+          textAlign: 'center',
+          marginBottom: 'clamp(3px, 0.6vw, 5px)',
+          textShadow: '0 0 6px rgba(74,140,255,0.4)'
+        }}>
+          Left
+        </div>
+        <div style={{
+          display: 'flex',
+          gap: 'clamp(3px, 0.55vw, 5px)',
+          padding: 'clamp(3px, 0.6vw, 5px)',
+          background: '#030304',
+          borderRadius: 4,
+          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.9)',
+          border: '1px solid rgba(0,0,0,0.55)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Scanline mesh */}
+          <div aria-hidden style={{
+            position: 'absolute', inset: 0, opacity: 0.12, pointerEvents: 'none',
+            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 3px)'
+          }} />
+          {digits.map((d, i) =>
+          <div key={i} style={{ ...digitStyle, animationDelay: `${i * 0.15}s` }}>{d}</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange, onSpaceBoostChange, remainingCount }) => {
   const { useRef, useEffect, useLayoutEffect } = React;
   const canvasRef = useRef(null);
   const liveRotRef = useRef(0);
@@ -810,124 +898,237 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
   }, []);
 
   return (
-    <div style={{
+    <div
+      style={{
       position: 'relative',
       boxSizing: 'border-box',
       width: 'min(94vw, min(84vh, 1020px))',
-      minWidth: 'min(300px, 94vw)',
-      minHeight: 'min(300px, 84vh)',
-      aspectRatio: '1 / 1',
-      filter: 'drop-shadow(0 30px 60px rgba(0,0,0,0.55))'
+      minWidth: 'min(280px, 94vw)',
+      maxWidth: '100%',
+      /* Bird's-eye turntable plinth — deck around the platter */
+      padding:
+        'clamp(22px, 4vh, 44px) clamp(11px, 1.85vw, 22px) clamp(32px, 4.5vh, 48px)',
+      borderRadius: 'clamp(14px, 2.6vw, 30px)',
+      background: `linear-gradient(
+        168deg,
+        rgba(38, 42, 56, 0.98) 0%,
+        rgba(20, 23, 32, 1) 38%,
+        rgba(14, 16, 24, 1) 72%,
+        rgba(10, 11, 17, 1) 100%
+      )`,
+      boxShadow: `
+        inset 0 1px 0 rgba(255, 255, 255, 0.075),
+        inset 0 -2px 6px rgba(0, 0, 0, 0.42),
+        0 32px 64px rgba(0, 0, 0, 0.58),
+        0 12px 28px rgba(0, 0, 0, 0.38)
+      `,
+      border: '1px solid rgba(255, 255, 255, 0.055)',
+      overflow: 'visible',
+      filter: 'drop-shadow(0 26px 50px rgba(0, 0, 0, 0.52))'
     }}>
-      <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block' }} />
-      {/* Stylus tip on vertical centre (−π/2). Pivot drawn high so base reads above the platter, not on the groove */}
+      {/* Decorative deck hardware — bottom-left knob + centre fader */}
       <div
+        aria-hidden="true"
         style={{
           pointerEvents: 'none',
           position: 'absolute',
-          left: '50%',
-          top: '-8px',
-          transform: 'translateX(-50%)',
-          width: 'clamp(120px, 32%, 250px)',
-          height: 'clamp(142px, 30vh, 252px)',
-          zIndex: 5,
+          left: 'clamp(8px, 1.8vw, 18px)',
+          right: 'clamp(88px, 16vw, 120px)',
+          bottom: 'clamp(6px, 1.2vh, 12px)',
           display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-end',
-          filter:
-            'drop-shadow(0 12px 12px rgba(0,0,0,0.58)) drop-shadow(0 -1px 0 rgba(238,243,252,0.1))'
+          alignItems: 'center',
+          gap: 'clamp(6px, 1.5vw, 14px)',
+          zIndex: 2,
+          opacity: 0.88
         }}>
-        <svg
-          aria-hidden="true"
-          viewBox="-5 -8 212 268"
-          preserveAspectRatio="xMidYMax meet"
-          style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }}>
-          <defs>
-            <linearGradient id="apsTonearmTube" x1="10%" y1="0%" x2="92%" y2="100%">
-              <stop offset="0%" stopColor="#ebedf6" />
-              <stop offset="38%" stopColor="#9aaecc" />
-              <stop offset="100%" stopColor="#39465e" />
-            </linearGradient>
-            <linearGradient id="apsHeadshellDark" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#44556e" />
-              <stop offset="100%" stopColor="#171d2a" />
-            </linearGradient>
-          </defs>
-          {/* x=154 is stylus column; −53 aligns tip to platter centre (−π/2) */}
-          <g transform="translate(-53 0)">
-            {/* Plinth cue — reads as deck above the record, not on the vinyl */}
-            <rect
-              x="148"
-              y="-4"
-              width="44"
-              height="11"
-              rx="3"
-              fill="#2a3140"
-              stroke="#151a24"
-              strokeWidth="1"
-            />
-            <ellipse
-              cx="176"
-              cy="21"
-              rx="10"
-              ry="16"
-              transform="rotate(18 176 21)"
-              fill="#2e3648"
-              stroke="#1a2230"
-              strokeWidth="2"
-            />
-            <circle cx="172" cy="14" r="2" fill="rgba(235,239,246,0.45)" />
-            {/* Neck — runs into ellipse bottom + under chrome so no seams */}
-            <path
-              d="M 168 36 C 170 43 173 53 173 62 L174 68 L173 71 L169 71 L166 62 C 165 54 164 46 164 39 Z"
-              fill="#39465c"
-              stroke="#273141"
-              strokeWidth="1"
-              strokeLinejoin="round"
-            />
-            <path
-              d="M 174 67 C 168 146 159 206 152 226"
-              fill="none"
-              stroke="url(#apsTonearmTube)"
-              strokeWidth="9"
-              strokeLinecap="butt"
-            />
-            <path
-              d="M 176 66 C 170 146 161 206 152 226"
-              fill="none"
-              stroke="rgba(255,255,255,0.36)"
-              strokeWidth="2.8"
-              strokeLinecap="butt"
-            />
-            {/* Compact headshell */}
-            <path
-              d="M 146 217 L154 224 L159 229 L154 231 L146 224 Z"
-              fill="url(#apsHeadshellDark)"
-              stroke="#5b6f8e"
-              strokeWidth="1"
-              strokeLinejoin="round"
-            />
-            {/* Cantilever + single contact */}
-            <line
-              x1="154"
-              y1="230"
-              x2="154"
-              y2="252"
-              stroke="#aebfe0"
-              strokeWidth="2.4"
-              strokeLinecap="round"
-            />
-            <polygon points="154,248 157,255 151,255" fill="#dce6fa" stroke="#8a9ab8" strokeWidth="0.9" />
-            <circle
-              cx="154"
-              cy="252"
-              r="3.4"
-              fill="#f4f8ff"
-              stroke="#7d8ca8"
-              strokeWidth="1.15"
-            />
-          </g>
+        <svg width="34" height="34" viewBox="0 0 36 36" style={{ flexShrink: 0 }}>
+          <circle cx="18" cy="18" r="15.5" fill="#12151e" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+          <circle cx="18" cy="18" r="11.5" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="0.85" />
+          <circle cx="18" cy="18" r="3" fill="#252a38" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
+          <line x1="18" y1="18" x2="18" y2="7.5" stroke="rgba(195,206,228,0.42)" strokeWidth="1.6" strokeLinecap="round" transform="rotate(48 18 18)" />
         </svg>
+
+        <div
+          style={{
+            flex: '1 1 auto',
+            display: 'flex',
+            justifyContent: 'center',
+            minWidth: 0,
+            maxWidth: 'min(148px, 28vw)'
+          }}>
+          <div
+            style={{
+              width: '100%',
+              height: 7,
+              borderRadius: 4,
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(32,36,48,0.9) 40%, rgba(18,21,30,1) 100%)',
+              boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.65), inset 0 -1px 0 rgba(255,255,255,0.04)',
+              border: '1px solid rgba(0,0,0,0.35)',
+              position: 'relative'
+            }}>
+            <div
+              style={{
+                position: 'absolute',
+                left: '62%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                width: 13,
+                height: 17,
+                borderRadius: 3,
+                background: 'linear-gradient(165deg, #454e64 0%, #242a38 55%, #141820 100%)',
+                boxShadow:
+                  '0 1px 2px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
+                border: '1px solid rgba(0,0,0,0.35)'
+              }}
+            />
+          </div>
+        </div>
+      </div>
+
+      {typeof remainingCount === 'number' &&
+      <RetroLedDisplay count={remainingCount} />
+      }
+
+      {/* Felt-style mat ring + platter well (still top-down, minimal) */}
+      <div
+        style={{
+          position: 'relative',
+          boxSizing: 'border-box',
+          width: '100%',
+          aspectRatio: '1 / 1',
+          borderRadius: '50%',
+          padding: 'clamp(5px, 0.95vw, 10px)',
+          background: `radial-gradient(
+            circle at 50% 46%,
+            rgba(54, 58, 74, 0.35) 0%,
+            rgba(26, 28, 38, 0.92) 52%,
+            rgba(13, 14, 22, 1) 100%
+          )`,
+          boxShadow: `
+            inset 0 0 0 1px rgba(0, 0, 0, 0.45),
+            inset 0 3px 16px rgba(0, 0, 0, 0.5),
+            inset 0 -1px 0 rgba(255, 255, 255, 0.035)
+          `
+        }}>
+        <div
+          style={{
+            position: 'relative',
+            width: '100%',
+            height: '100%',
+            borderRadius: '50%',
+            overflow: 'visible'
+          }}>
+          <canvas ref={canvasRef} style={{ width: '100%', height: '100%', display: 'block', borderRadius: '50%' }} />
+          {/* Stylus tip on vertical centre (−π/2). Pivot drawn high so base reads above the platter, not on the groove */}
+          <div
+            style={{
+              pointerEvents: 'none',
+              position: 'absolute',
+              left: '50%',
+              top: '-8px',
+              transform: 'translateX(-50%)',
+              width: 'clamp(120px, 32%, 250px)',
+              height: 'clamp(142px, 30vh, 252px)',
+              zIndex: 5,
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'flex-end',
+              filter:
+                'drop-shadow(0 12px 12px rgba(0,0,0,0.58)) drop-shadow(0 -1px 0 rgba(238,243,252,0.1))'
+            }}>
+            <svg
+              aria-hidden="true"
+              viewBox="-5 -8 212 268"
+              preserveAspectRatio="xMidYMax meet"
+              style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }}>
+              <defs>
+                <linearGradient id="apsTonearmTube" x1="10%" y1="0%" x2="92%" y2="100%">
+                  <stop offset="0%" stopColor="#ebedf6" />
+                  <stop offset="38%" stopColor="#9aaecc" />
+                  <stop offset="100%" stopColor="#39465e" />
+                </linearGradient>
+                <linearGradient id="apsHeadshellDark" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#44556e" />
+                  <stop offset="100%" stopColor="#171d2a" />
+                </linearGradient>
+              </defs>
+              {/* x=154 is stylus column; −53 aligns tip to platter centre (−π/2) */}
+              <g transform="translate(-53 0)">
+                {/* Plinth cue — reads as deck above the record, not on the vinyl */}
+                <rect
+                  x="148"
+                  y="-4"
+                  width="44"
+                  height="11"
+                  rx="3"
+                  fill="#2a3140"
+                  stroke="#151a24"
+                  strokeWidth="1"
+                />
+                <ellipse
+                  cx="176"
+                  cy="21"
+                  rx="10"
+                  ry="16"
+                  transform="rotate(18 176 21)"
+                  fill="#2e3648"
+                  stroke="#1a2230"
+                  strokeWidth="2"
+                />
+                <circle cx="172" cy="14" r="2" fill="rgba(235,239,246,0.45)" />
+                {/* Neck — runs into ellipse bottom + under chrome so no seams */}
+                <path
+                  d="M 168 36 C 170 43 173 53 173 62 L174 68 L173 71 L169 71 L166 62 C 165 54 164 46 164 39 Z"
+                  fill="#39465c"
+                  stroke="#273141"
+                  strokeWidth="1"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M 174 67 C 168 146 159 206 152 226"
+                  fill="none"
+                  stroke="url(#apsTonearmTube)"
+                  strokeWidth="9"
+                  strokeLinecap="butt"
+                />
+                <path
+                  d="M 176 66 C 170 146 161 206 152 226"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.36)"
+                  strokeWidth="2.8"
+                  strokeLinecap="butt"
+                />
+                {/* Compact headshell */}
+                <path
+                  d="M 146 217 L154 224 L159 229 L154 231 L146 224 Z"
+                  fill="url(#apsHeadshellDark)"
+                  stroke="#5b6f8e"
+                  strokeWidth="1"
+                  strokeLinejoin="round"
+                />
+                {/* Cantilever + single contact */}
+                <line
+                  x1="154"
+                  y1="230"
+                  x2="154"
+                  y2="252"
+                  stroke="#aebfe0"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                />
+                <polygon points="154,248 157,255 151,255" fill="#dce6fa" stroke="#8a9ab8" strokeWidth="0.9" />
+                <circle
+                  cx="154"
+                  cy="252"
+                  r="3.4"
+                  fill="#f4f8ff"
+                  stroke="#7d8ca8"
+                  strokeWidth="1.15"
+                />
+              </g>
+            </svg>
+          </div>
+        </div>
       </div>
     </div>
   );
