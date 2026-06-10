@@ -14,9 +14,22 @@ const SCREEN = {
   REGISTER: 'register',
   DRAWING:  'drawing',
   QSELECT:  'qselect',
+  YOLO_PREP:'yolo_prep',
   SPEECH:   'speech',
   QR:       'qr',
 };
+
+function pickYoloQuestion(questionOfNight, usedQuestions, carouselOptions) {
+  const YOLO_SLOT = window.YOLO_SLOT;
+  const carouselRandoms = carouselOptions.filter(
+    (o) => o !== YOLO_SLOT && o !== questionOfNight
+  );
+  const exclude = new Set([questionOfNight, ...carouselRandoms, ...usedQuestions]);
+  let pool = QUESTIONS.filter((q) => !exclude.has(q));
+  if (!pool.length) pool = QUESTIONS.filter((q) => !usedQuestions.has(q));
+  if (!pool.length) pool = [...QUESTIONS];
+  return pool[Math.floor(Math.random() * pool.length)];
+}
 
 function App() {
   const [screen,          setScreen]          = useState(SCREEN.SETUP);
@@ -30,6 +43,7 @@ function App() {
   const [addedFlash,      setAddedFlash]      = useState(null);
   const [reopenManage,    setReopenManage]    = useState(false);
   const [questionSelectState, setQuestionSelectState] = useState(null);
+  const [yoloPrepQuestion, setYoloPrepQuestion] = useState(null);
   const [usedRevealQuotes, setUsedRevealQuotes] = useState(new Set());
   const usedRevealQuotesRef = useRef(usedRevealQuotes);
   usedRevealQuotesRef.current = usedRevealQuotes;
@@ -144,9 +158,10 @@ function App() {
     });
   }, [triggerFirstTimerPulse]);
 
-  // ⌘F — mark last added speaker as first timer (home + registration)
+  // ⌘F — mark last added speaker as first timer (home, registration, or added confirmation)
   useEffect(() => {
-    if (screen !== SCREEN.HOME && screen !== SCREEN.REGISTER) return;
+    const active = screen === SCREEN.HOME || screen === SCREEN.REGISTER || addedFlash;
+    if (!active) return;
     const h = (e) => {
       if (!e.metaKey || e.code !== 'KeyF') return;
       e.preventDefault();
@@ -154,7 +169,7 @@ function App() {
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [screen, handleMarkLastAddedFirstTimer]);
+  }, [screen, addedFlash, handleMarkLastAddedFirstTimer]);
 
   const handleResetSpeakers = useCallback(() => {
     setParticipants(prev => prev.map(p => ({ ...p, done: false, firstTimer: false })));
@@ -177,6 +192,7 @@ function App() {
   const handleDrawComplete = useCallback(({ name }) => {
     setCurrentSpeaker(name);
     setQuestionSelectState(null);
+    setYoloPrepQuestion(null);
     setScreen(SCREEN.QSELECT);
   }, []);
 
@@ -184,7 +200,27 @@ function App() {
     setQuestionSelectState(selectSnapshot);
     setSelectedQ(question);
     setUsedQuestions((prev) => new Set([...prev, question]));
+    setYoloPrepQuestion(null);
     setScreen(SCREEN.SPEECH);
+  }, []);
+
+  const handleYoloStart = useCallback((selectSnapshot) => {
+    const question = pickYoloQuestion(questionOfNight, usedQuestions, selectSnapshot.options);
+    setQuestionSelectState(selectSnapshot);
+    setUsedQuestions((prev) => new Set([...prev, question]));
+    setYoloPrepQuestion(question);
+    setScreen(SCREEN.YOLO_PREP);
+  }, [questionOfNight, usedQuestions]);
+
+  const handleYoloPrepComplete = useCallback(() => {
+    setSelectedQ(yoloPrepQuestion);
+    setYoloPrepQuestion(null);
+    setScreen(SCREEN.SPEECH);
+  }, [yoloPrepQuestion]);
+
+  const handleYoloPrepCancel = useCallback(() => {
+    setYoloPrepQuestion(null);
+    setScreen(SCREEN.QSELECT);
   }, []);
 
   const handleSpeechBack = useCallback(() => {
@@ -268,8 +304,17 @@ function App() {
           questionOfNight={questionOfNight}
           usedQuestions={usedQuestions}
           onStart={handleSpeechStart}
+          onStartYolo={handleYoloStart}
           selectRestore={questionSelectState}
           onSelectRestoreConsumed={handleSelectRestoreConsumed}
+        />
+      )}
+      {screen === SCREEN.YOLO_PREP && yoloPrepQuestion && (
+        <YoloPrepScreen
+          question={yoloPrepQuestion}
+          demoMode={demoMode}
+          onComplete={handleYoloPrepComplete}
+          onCancel={handleYoloPrepCancel}
         />
       )}
       {screen === SCREEN.SPEECH && (
@@ -287,6 +332,7 @@ function App() {
           name: addedFlash.name,
           added: addedFlash.added,
           continueAdding: !!addedFlash.returnTo,
+          isFirstTimer: !!participants.find((p) => p.name === addedFlash.name)?.firstTimer,
           onDone: dismissAddedFlash
         })}
       </div>

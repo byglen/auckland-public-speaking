@@ -13,8 +13,12 @@ const C = {
   text: '#f0f0f8',
   muted: '#9090c0',
   pulseRed: '#ff4040',
-  pulseRedSoft: '#ff7878'
+  pulseRedSoft: '#ff7878',
+  yolo: '#ff5070'
 };
+
+/** Sentinel for the Yolo carousel slot (not a real question string). */
+const YOLO_SLOT = '__YOLO_SLOT__';
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function fmt(secs) {
@@ -137,6 +141,31 @@ function QuestionOfNightBadge({ large = false }) {
     }}>
       <span style={{ fontSize: `${1.05 * s}rem`, lineHeight: 1 }} aria-hidden>★</span>
       Question of the Night
+    </span>
+  );
+}
+
+function YoloModeBadge({ large = false }) {
+  const s = large ? 2 : 1;
+
+  return (
+    <span style={{
+      background: `${C.yolo}22`,
+      border: `${1.5 * s}px solid ${C.yolo}66`,
+      color: C.yolo,
+      borderRadius: 100,
+      padding: `${0.4 * s}rem ${1.25 * s}rem`,
+      fontSize: `${1 * s}rem`,
+      fontWeight: 700,
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      display: 'inline-flex',
+      alignItems: 'center',
+      gap: `${0.45 * s}rem`,
+      boxShadow: `0 0 28px ${C.yolo}22`
+    }}>
+      <span style={{ fontSize: `${1.15 * s}rem`, lineHeight: 1, fontWeight: 900 }} aria-hidden>?</span>
+      Yolo mode
     </span>
   );
 }
@@ -1097,7 +1126,7 @@ function SpeakerRevealCelebration({ seed = 0 }) {
 // ─── SPEAKER ADDED CONFIRMATION ───────────────────────────────────────────────
 const SPEAKER_ADDED_HOLD_MS = 2800;
 
-function SpeakerAddedBeat({ name, added, continueAdding = false, onDone }) {
+function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = false, onDone }) {
   useEffect(() => {
     const t = setTimeout(() => onDone({ continueAdding: false }), SPEAKER_ADDED_HOLD_MS);
     return () => clearTimeout(t);
@@ -1118,6 +1147,8 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, onDone }) {
       window.removeEventListener('keydown', h);
     };
   }, [onDone]);
+
+  const showFt = isFirstTimer && added;
 
   return (
     <div style={{
@@ -1156,6 +1187,26 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, onDone }) {
         }}>
           {name}
         </div>
+        {showFt &&
+        <div style={{
+          marginTop: 'clamp(1rem, 2.5vh, 1.5rem)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.45rem',
+          padding: '0.4rem 1.1rem',
+          borderRadius: 100,
+          background: `${C.gold}22`,
+          border: `1px solid ${C.gold}55`,
+          color: C.gold,
+          fontSize: '0.95rem',
+          fontWeight: 700,
+          letterSpacing: '0.12em',
+          textTransform: 'uppercase',
+          animation: 'firstTimerChipPulse 1s ease-out'
+        }}>
+          First timer
+        </div>
+        }
         <div style={{
           marginTop: 'clamp(1.25rem, 3vh, 2rem)',
           fontSize: 'clamp(1.5rem, 2.8vw + 0.5rem, 2.25rem)',
@@ -1185,7 +1236,7 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, onDone }) {
           animation: 'fadeSlide 0.55s ease 0.85s both',
           opacity: 0.85
         }}>
-          Enter — add another
+          Enter — add another{added ? ' · ⌘F — first timer' : ''}
         </p>
         }
       </div>
@@ -1217,6 +1268,11 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
 
   const [spinSpaceHeld, setSpinSpaceHeld] = useState(false);
   const spinSpaceHeldRef = useRef(false);
+  const lastRevealAdvanceRef = useRef(0);
+
+  useEffect(() => {
+    if (phase === 'reveal') lastRevealAdvanceRef.current = 0;
+  }, [phase, winner?.name]);
 
   useEffect(() => {
     if (phase !== 'spinning') setSpinSpaceHeld(false);
@@ -1342,12 +1398,16 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Space on reveal → question picker
+  // Space on reveal → question picker (ignore repeat presses within 2s)
   useEffect(() => {
     const h = (e) => {
       if (e.code !== 'Space' && e.code !== 'Enter') return;
+      if (phase !== 'reveal' || !winner) return;
       e.preventDefault();
-      if (phase === 'reveal' && winner) onComplete({ name: winner.name });
+      const now = Date.now();
+      if (lastRevealAdvanceRef.current && now - lastRevealAdvanceRef.current < 2000) return;
+      lastRevealAdvanceRef.current = now;
+      onComplete({ name: winner.name });
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
@@ -1603,19 +1663,26 @@ function QuestionSelectScreen({
   questionOfNight,
   usedQuestions,
   onStart,
+  onStartYolo,
   selectRestore = null,
   onSelectRestoreConsumed
 }) {
-  const [idx, setIdx] = useState(0);
+  const [idx, setIdx] = useState(1);
   const [options, setOptions] = useState([]);
   const [qKey, setQKey] = useState(0);
   const didRestoreRef = useRef(false);
+  const spaceGraceUntilRef = useRef(0);
 
   useBlockPointerInput(true);
 
   useEffect(() => {
     didRestoreRef.current = false;
   }, [speakerName]);
+
+  useEffect(() => {
+    if (selectRestore?.options?.length) return;
+    spaceGraceUntilRef.current = Date.now() + 2000;
+  }, [speakerName, selectRestore]);
 
   useEffect(() => {
     if (selectRestore?.options?.length && !didRestoreRef.current) {
@@ -1629,33 +1696,54 @@ function QuestionSelectScreen({
     if (didRestoreRef.current) return;
     const available = QUESTIONS.filter((q) => !usedQuestions.has(q) && q !== questionOfNight);
     const shuffled = [...available].sort(() => Math.random() - 0.5).slice(0, 3);
-    setOptions([questionOfNight, ...shuffled]);
-    setIdx(0);
+    setOptions([YOLO_SLOT, questionOfNight, ...shuffled]);
+    setIdx(1);
     setQKey((k) => k + 1);
   }, [speakerName, questionOfNight, usedQuestions, selectRestore, onSelectRestoreConsumed]);
 
-  const isQotN = idx === 0;
-  const current = options[idx] || '';
-  const qotNUsed = usedQuestions.has(questionOfNight);
+  const isYolo = options[idx] === YOLO_SLOT;
+  const isQotN = options[idx] === questionOfNight;
+  const current = isYolo ? '' : (options[idx] || '');
 
-  const goLeft = useCallback(() => {setIdx((i) => Math.max(0, i - 1));setQKey((k) => k + 1);}, []);
-  const goRight = useCallback(() => {setIdx((i) => Math.min(options.length - 1, i + 1));setQKey((k) => k + 1);}, [options.length]);
+  const goLeft = useCallback(() => {
+    setIdx((i) => (i - 1 + options.length) % options.length);
+    setQKey((k) => k + 1);
+  }, [options.length]);
+  const goRight = useCallback(() => {
+    setIdx((i) => (i + 1) % options.length);
+    setQKey((k) => k + 1);
+  }, [options.length]);
 
   useEffect(() => {
     const h = (e) => {
-      if (e.code === 'ArrowLeft') {e.preventDefault();goLeft();}
-      if (e.code === 'ArrowRight') {e.preventDefault();goRight();}
-      if (e.code === 'Space') {e.preventDefault();if (current) onStart(current, { options, idx });}
+      if (e.code === 'ArrowLeft') { e.preventDefault(); goLeft(); }
+      if (e.code === 'ArrowRight') { e.preventDefault(); goRight(); }
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (Date.now() < spaceGraceUntilRef.current) return;
+        const snapshot = { options, idx };
+        if (isYolo) onStartYolo(snapshot);
+        else if (current) onStart(current, snapshot);
+      }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [goLeft, goRight, current, onStart, options, idx]);
+  }, [goLeft, goRight, current, isYolo, onStart, onStartYolo, options, idx]);
 
   if (!options.length) return null;
 
-  const questionSelectBackdrop = isQotN
+  const questionSelectBackdrop = isYolo
+    ? `radial-gradient(ellipse 125% 95% at 50% 28%, rgba(255,80,120,0.22) 0%, rgba(255,60,100,0.08) 42%, ${C.bg} 78%)`
+    : isQotN
     ? `radial-gradient(ellipse 125% 95% at 50% 28%, rgba(212,168,75,0.16) 0%, rgba(212,168,75,0.06) 42%, ${C.bg} 78%)`
     : `radial-gradient(ellipse 125% 95% at 50% 28%, rgba(47,114,248,0.14) 0%, rgba(47,114,248,0.05) 42%, ${C.bg} 78%)`;
+
+  const dotColor = (i) => {
+    if (i !== idx) return `${C.dim}50`;
+    if (options[i] === YOLO_SLOT) return C.yolo;
+    if (options[i] === questionOfNight) return C.gold;
+    return C.accent;
+  };
 
   return (
     <div style={{
@@ -1684,6 +1772,8 @@ function QuestionSelectScreen({
       }}>
         {isQotN ?
         <QuestionOfNightBadge />
+        : isYolo ?
+        <YoloModeBadge />
         : current ?
         <span style={{
           background: `${C.accent}1a`, border: `1.5px solid ${C.accent}70`,
@@ -1693,7 +1783,7 @@ function QuestionSelectScreen({
           boxShadow: `0 0 28px ${C.accent}18`
         }}>
           <span style={{ fontSize: '1.1rem', lineHeight: 1 }} aria-hidden>🎲</span>
-          Random question {idx}
+          Random question {idx - 1}
         </span>
         : null
         }
@@ -1702,14 +1792,60 @@ function QuestionSelectScreen({
           {options.map((_, i) =>
           <div key={i} aria-hidden style={{
             width: i === idx ? 32 : 10, height: 10, borderRadius: 100,
-            background: i === idx ? i === 0 ? C.gold : C.accent : `${C.dim}50`,
+            background: dotColor(i),
             transition: 'all 0.25s'
           }} />
           )}
         </div>
       </div>
 
-      {/* Question text */}
+      {/* Question text or Yolo graphic */}
+      {isYolo ?
+      <div
+        key={qKey}
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 'clamp(12rem, 18vh, 15rem)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 'clamp(7.5rem, 12vh, 9.5rem) 3rem 0',
+          animation: 'fadeSlide 0.22s ease-out'
+        }}>
+        <div style={{
+          position: 'relative',
+          width: 'clamp(9rem, 22vw, 16rem)',
+          height: 'clamp(9rem, 22vw, 16rem)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            borderRadius: '50%',
+            border: `3px solid ${C.yolo}55`,
+            boxShadow: `0 0 60px ${C.yolo}33, inset 0 0 40px ${C.yolo}18`,
+            animation: 'yoloPulse 2.4s ease-in-out infinite'
+          }} />
+          <div style={{
+            fontFamily: 'Outfit',
+            fontSize: 'clamp(6rem, 14vw, 10rem)',
+            fontWeight: 900,
+            color: C.yolo,
+            lineHeight: 1,
+            textShadow: `0 0 48px ${C.yolo}66`,
+            animation: 'yoloPulse 2.4s ease-in-out infinite',
+            userSelect: 'none'
+          }} aria-hidden>
+            ?
+          </div>
+        </div>
+      </div>
+      :
       <QuestionDisplayText
         key={qKey}
         style={{
@@ -1724,6 +1860,7 @@ function QuestionSelectScreen({
         }}>
         {current}
       </QuestionDisplayText>
+      }
 
       {/* Keyboard hints */}
       <div style={{
@@ -1741,12 +1878,135 @@ function QuestionSelectScreen({
         <KeyboardHint ariaLabel="Arrow keys to browse questions" caption="to browse questions">
           <RetroArrowKeys />
         </KeyboardHint>
-        <KeyboardHint ariaLabel="Press space to start speech" caption="to start speech">
+        <KeyboardHint
+          ariaLabel={isYolo ? 'Press space to accept the challenge' : 'Press space to start speech'}
+          caption={isYolo ? 'to accept the challenge' : 'to start speech'}
+        >
           <RetroSpaceKey />
         </KeyboardHint>
       </div>
     </div>);
 
+}
+
+// ─── YOLO PREP SCREEN ─────────────────────────────────────────────────────────
+function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
+  const [phase, setPhase] = useState('tease');
+  const [countdown, setCountdown] = useState(null);
+
+  const suspenseMs = demoMode ? 1400 : 2600;
+  const revealAnimMs = demoMode ? 900 : 1500;
+  const prepCount = 5;
+
+  useBlockPointerInput(true);
+
+  // Tease → reveal (question begins fading in)
+  useEffect(() => {
+    if (phase !== 'tease') return;
+    const t = setTimeout(() => setPhase('reveal'), suspenseMs);
+    return () => clearTimeout(t);
+  }, [phase, suspenseMs]);
+
+  // Reveal animation completes → start countdown
+  useEffect(() => {
+    if (phase !== 'reveal') return;
+    const t = setTimeout(() => {
+      setPhase('countdown');
+      setCountdown(prepCount);
+    }, revealAnimMs);
+    return () => clearTimeout(t);
+  }, [phase, revealAnimMs, prepCount]);
+
+  // Countdown ticks; at zero → speech timer
+  useEffect(() => {
+    if (phase !== 'countdown' || countdown === null) return;
+    if (countdown <= 0) {
+      onComplete();
+      return;
+    }
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [phase, countdown, onComplete]);
+
+  useEffect(() => {
+    const h = (e) => {
+      if (e.code !== 'Escape') return;
+      e.preventDefault();
+      onCancel();
+    };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onCancel]);
+
+  const showTease = phase === 'tease';
+  const showQuestion = phase === 'reveal' || phase === 'countdown';
+  const showCountdown = phase === 'countdown';
+
+  return (
+    <div style={{
+      background: `radial-gradient(ellipse 120% 90% at 50% 22%, rgba(255,80,120,0.18) 0%, rgba(255,50,90,0.06) 45%, ${C.bg} 80%)`,
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '2rem 4rem',
+      position: 'relative',
+      transition: 'background 0.6s ease'
+    }}>
+      <div style={{ position: 'absolute', top: '2.5rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 2 }}>
+        <YoloModeBadge />
+      </div>
+
+      {showTease &&
+      <div style={{
+        color: C.muted,
+        fontSize: 'clamp(1.4rem, 2.8vw, 2rem)',
+        fontWeight: 600,
+        letterSpacing: '0.14em',
+        textTransform: 'uppercase',
+        animation: 'yoloTeasePulse 1.8s ease-in-out infinite',
+        userSelect: 'none'
+      }}>
+        Your question…
+      </div>
+      }
+
+      {showQuestion &&
+      <QuestionDisplayText
+        style={{
+          maxWidth: 1500,
+          padding: '0 2rem',
+          marginBottom: showCountdown ? 'clamp(2rem, 5vh, 3.5rem)' : 0,
+          animation: phase === 'reveal'
+            ? `yoloQuestionReveal ${revealAnimMs}ms cubic-bezier(0.22, 1, 0.36, 1) both`
+            : undefined,
+          opacity: phase === 'countdown' ? 1 : undefined
+        }}>
+        {question}
+      </QuestionDisplayText>
+      }
+
+      {showCountdown && countdown !== null && countdown > 0 &&
+      <div
+        key={countdown}
+        style={{
+          fontSize: 'clamp(8rem, 22vw, 16rem)',
+          fontWeight: 900,
+          color: C.text,
+          letterSpacing: '-0.04em',
+          lineHeight: 1,
+          fontVariantNumeric: 'tabular-nums',
+          animation: 'yoloCountPop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both',
+          textShadow: '0 4px 32px rgba(0,0,0,0.45)',
+          userSelect: 'none'
+        }}>
+        {countdown}
+      </div>
+      }
+
+    </div>
+  );
 }
 
 // ─── SPEECH SCREEN ────────────────────────────────────────────────────────────
@@ -2093,7 +2353,9 @@ Object.assign(window, {
   RegistrationScreen,
   DrawingScreen,
   QuestionSelectScreen,
+  YoloPrepScreen,
   SpeechScreen,
   QRScreen,
-  SpeakerAddedBeat
+  SpeakerAddedBeat,
+  YOLO_SLOT
 });
