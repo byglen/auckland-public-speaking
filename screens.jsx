@@ -1,6 +1,16 @@
 // screens.jsx — all screen components for Auckland Public Speaking app
 const { useState, useEffect, useRef, useCallback } = React;
 
+// ─── OS-AGNOSTIC SHORTCUTS ────────────────────────────────────────────────────
+// Mac uses ⌘; Windows/Linux use Ctrl. Detect once and expose helpers globally so
+// both screens.jsx and app.jsx can describe + handle shortcuts correctly.
+const IS_MAC = /Mac|iPhone|iPad|iPod/.test(navigator.platform || navigator.userAgent || '');
+const cmdPressed = (e) => (IS_MAC ? e.metaKey : e.ctrlKey);
+const kbd = (letter) => (IS_MAC ? `\u2318${letter}` : `Ctrl+${letter}`);
+window.IS_MAC = IS_MAC;
+window.cmdPressed = cmdPressed;
+window.kbd = kbd;
+
 // ─── COLOUR TOKENS ────────────────────────────────────────────────────────────
 const C = {
   bg: '#0b0b14',
@@ -19,6 +29,21 @@ const C = {
 
 /** Sentinel for the Yolo carousel slot (not a real question string). */
 const YOLO_SLOT = '__YOLO_SLOT__';
+
+/** Bank transfer details shown at the end of the night — edit these to go live. */
+const BANK_DETAILS = {
+  accountName: 'Glen Oakes',
+  accountNumber: '12-3140-0328925-00',
+  reference: 'APS'
+};
+
+/** Format an account number for display. Pre-formatted numbers (with separators)
+ *  are shown as-is; a bare digit string is grouped into blocks for legibility. */
+function groupDigits(num, size = 4) {
+  const raw = String(num).trim();
+  if (/[^0-9]/.test(raw)) return raw;
+  return raw.replace(new RegExp(`(.{${size}})`, 'g'), '$1 ').trim();
+}
 
 // ─── HELPERS ──────────────────────────────────────────────────────────────────
 function fmt(secs) {
@@ -72,6 +97,7 @@ function useBlockPointerInput(active) {
   useEffect(() => {
     if (!active) return undefined;
     const block = (e) => {
+      if (e.target?.closest?.('[data-walkthrough-ui]')) return;
       e.preventDefault();
       e.stopPropagation();
     };
@@ -215,48 +241,50 @@ function QuestionDisplayText({ children, style = {} }) {
   );
 }
 
-function HomeSubduedButton({ children, onClick, ariaLabel }) {
+function HomeSubduedButton({ children, onClick, ariaLabel, disabled = false }) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
+      disabled={disabled}
       style={{
         background: `${C.surface}cc`,
         border: `1px solid ${C.border}`,
         color: C.muted,
         padding: '0.5rem 0.95rem',
         borderRadius: 9,
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         fontSize: '0.98rem',
         fontWeight: 600,
         fontFamily: 'inherit',
         letterSpacing: '0.01em',
-        opacity: 0.88
+        opacity: disabled ? 0.32 : 0.88
       }}>
       {children}
     </button>
   );
 }
 
-function HomeIconButton({ ariaLabel, onClick, children }) {
+function HomeIconButton({ ariaLabel, onClick, children, disabled = false }) {
   return (
     <button
       type="button"
       aria-label={ariaLabel}
       onClick={onClick}
+      disabled={disabled}
       style={{
         background: `${C.surface}cc`,
         border: `1px solid ${C.border}`,
         color: C.muted,
         padding: '0.48rem 0.58rem',
         borderRadius: 9,
-        cursor: 'pointer',
+        cursor: disabled ? 'not-allowed' : 'pointer',
         fontFamily: 'inherit',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        opacity: 0.88,
+        opacity: disabled ? 0.32 : 0.88,
         lineHeight: 0
       }}>
       {children}
@@ -268,6 +296,14 @@ function QrCodeIcon() {
   return (
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
       <path fill="currentColor" d="M3 3h8v8H3V3zm2 2v4h4V5H5zm8-2h8v8h-8V3zm2 2v4h4V5h-4zM3 13h8v8H3v-8zm2 2v4h4v-4H5zm11 0h2v2h-2v-2zm4 0h2v2h-2v-2zm-4 4h2v2h-2v-2zm4 0h2v4h-2v-4zm-4 4h2v2h2v-2h-2z" />
+    </svg>
+  );
+}
+
+function BackIcon() {
+  return (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden>
+      <path d="M15 5l-7 7 7 7" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -618,11 +654,23 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
 }
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
-function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed }) {
+function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, highlightSpeakers = false }) {
   const [showManage, setShowManage] = useState(false);
   const remaining = participants.filter((p) => !p.done);
   const total = participants.length;
   const done = participants.filter((p) => p.done).length;
+
+  // Walk-through lock: only the action named by the active step is available.
+  const walkActive = !!walkAllow;
+  const canAddSpeaker = !walkActive || walkAllow === 'addSpeaker' || walkAllow === 'addMore';
+  const canManage = !walkActive || walkAllow === 'manage';
+  const canUseQR = !walkActive; // QR launcher is locked during the walk-through
+
+  // "Manage your speakers" step advances once the host performs any management action,
+  // or simply opens the panel and closes it again.
+  const advanceManageStep = useCallback(() => {
+    if (walkAllow === 'manage' && onWalkAdvance) onWalkAdvance('manage');
+  }, [walkAllow, onWalkAdvance]);
 
   useEffect(() => {
     if (!reopenManage) return;
@@ -630,11 +678,12 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     onReopenManageConsumed && onReopenManageConsumed();
   }, [reopenManage, onReopenManageConsumed]);
 
-  // ⌘D — toggle demo mode (sample speakers + accelerated speech timers)
+  // ⌘D / Ctrl+D — toggle demo mode (sample speakers + accelerated speech timers)
   useEffect(() => {
     if (!onToggleDemo || showManage) return;
+    if (walkAllow && walkAllow !== 'demo' && walkAllow !== 'draw') return;
     const h = (e) => {
-      if (!e.metaKey || e.code !== 'KeyD') return;
+      if (!cmdPressed(e) || e.code !== 'KeyD') return;
       const tag = (e.target && e.target.tagName) || '';
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       e.preventDefault();
@@ -642,7 +691,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onToggleDemo, showManage]);
+  }, [onToggleDemo, showManage, walkAllow]);
 
   // Block Space → draw while manage modal is open
   useEffect(() => {
@@ -659,7 +708,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
 
   // Listen for any letter key press → launch register screen with that char
   useEffect(() => {
-    if (showManage) return;
+    if (showManage || !canAddSpeaker) return;
     const h = (e) => {
       // Skip if modifier keys held, or if user is typing in an input already
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -674,7 +723,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onRegister, showManage]);
+  }, [onRegister, showManage, canAddSpeaker]);
 
   return (
     <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
@@ -682,7 +731,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
       {showManage &&
       <ManageSpeakersModal
         participants={participants}
-        onClose={() => setShowManage(false)}
+        onClose={() => { setShowManage(false); advanceManageStep(); }}
         onAdd={(name) => onAddParticipant(name, 'manage')}
         onRemove={onRemoveParticipant}
         onSetDone={onSetParticipantDone}
@@ -707,13 +756,30 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
             border: `1px solid ${C.gold}55`,
             background: `${C.gold}12`
           }}>
-            Demo · ⌘D to exit
+            Demo · {kbd('D')} to exit
           </span>
           }
-          <HomeSubduedButton ariaLabel="Manage speakers" onClick={() => setShowManage(true)}>
-            Speakers
-          </HomeSubduedButton>
-          <HomeIconButton ariaLabel="WhatsApp QR code" onClick={onShowQR}>
+          <div style={{ position: 'relative', display: 'inline-flex' }}>
+            {highlightSpeakers &&
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                inset: '-7px',
+                borderRadius: 14,
+                border: `2px solid ${C.gold}`,
+                boxShadow: `0 0 0 4px ${C.gold}28, 0 0 28px ${C.gold}44`,
+                animation: 'walkthroughHighlightPulse 2.2s ease-in-out infinite',
+                pointerEvents: 'none',
+                zIndex: 1
+              }}
+            />
+            }
+            <HomeSubduedButton ariaLabel="Manage speakers" onClick={() => setShowManage(true)} disabled={!canManage}>
+              Speakers
+            </HomeSubduedButton>
+          </div>
+          <HomeIconButton ariaLabel="WhatsApp QR code" onClick={onShowQR} disabled={!canUseQR}>
             <QrCodeIcon />
           </HomeIconButton>
 
@@ -873,27 +939,265 @@ function QRScreen({ onBack }) {
   }, [onBack]);
 
   return (
-    <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '3rem', position: 'relative' }}>
-      <div style={{ color: '#25D366', fontSize: '1.4rem', letterSpacing: '0.3em', textTransform: 'uppercase', fontWeight: 700, marginBottom: '1.5rem' }}>
-        Join our WhatsApp
+    <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column' }}>
+
+      {/* Top bar — consistent with home */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 3rem', borderBottom: `1px solid ${C.border}` }}>
+        <HomeBrandMark />
+        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+          <HomeIconButton ariaLabel="Close — back to home" onClick={onBack}>
+            <BackIcon />
+          </HomeIconButton>
+        </div>
       </div>
-      <h1 style={{ color: C.text, fontSize: '4rem', fontWeight: 900, margin: 0, marginBottom: '3rem', letterSpacing: '-0.02em', textAlign: 'center' }}>
-        Scan to join the group
-      </h1>
 
-      <div style={{ background: '#fff', padding: '2.5rem', borderRadius: 28, boxShadow: '0 30px 80px rgba(0,0,0,0.4)' }}>
-        <img src="whatsapp-qr.png" alt="WhatsApp group QR code" style={{ display: 'block', width: 520, height: 520, imageRendering: 'pixelated' }} />
-      </div>
+      {/* Centre — two panels: WhatsApp join (left) + bank details (right) */}
+      <div style={{
+        flex: 1,
+        minHeight: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 'clamp(1.5rem, 3vh, 2.5rem) clamp(1.5rem, 4vw, 3rem)'
+      }}>
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          alignItems: 'stretch',
+          justifyContent: 'center',
+          gap: 'clamp(1.5rem, 3.5vw, 3rem)',
+          width: '100%',
+          maxWidth: 1180
+        }}>
 
-      <p style={{ color: C.muted, fontSize: '1.5rem', marginTop: '2.5rem', marginBottom: '2rem' }}>
-        Open your camera and point it at the code
-      </p>
+          {/* ── WhatsApp join ── */}
+          <div style={QR_PANEL_STYLE}>
+            <div style={QR_EYEBROW_STYLE}>Join our WhatsApp</div>
+            <div style={{ background: '#fff', padding: 'clamp(1rem, 1.6vw, 1.5rem)', borderRadius: 16 }}>
+              <img
+                src="whatsapp-qr.png"
+                alt="WhatsApp group QR code"
+                style={{ display: 'block', width: 'min(34vh, 320px)', height: 'min(34vh, 320px)', imageRendering: 'pixelated' }}
+              />
+            </div>
+            <p style={{ color: C.muted, fontSize: '1.05rem', fontWeight: 400, margin: '1.25rem 0 0', lineHeight: 1.5 }}>
+              Point your camera at the code
+            </p>
+          </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.6rem' }}>
-        <Btn variant="surface" size="md" onClick={onBack}>← Back to Home</Btn>
-        <span style={{ color: C.dim, fontSize: '0.95rem' }}>Esc / Space / Enter to return</span>
+          {/* ── Bank details ── */}
+          <BankDetailsCard />
+
+        </div>
       </div>
     </div>);
+}
+
+// ─── BANK DETAILS CARD (shown on the QR / end-of-night screen) ─────────────────
+const QR_PANEL_STYLE = {
+  flex: '1 1 340px',
+  maxWidth: 480,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  textAlign: 'center',
+  background: C.surface,
+  border: `1px solid ${C.border}`,
+  borderRadius: 20,
+  padding: 'clamp(1.5rem, 2.5vw, 2.25rem)'
+};
+
+const QR_EYEBROW_STYLE = {
+  color: C.muted,
+  fontSize: '0.9rem',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  fontWeight: 600,
+  marginBottom: '1.25rem'
+};
+
+function BankDetailRow({ label, value, mono = false, last = false }) {
+  return (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '0.3rem',
+      padding: '0.95rem 0',
+      borderBottom: last ? 'none' : `1px solid ${C.border}`
+    }}>
+      <span style={{
+        color: C.muted,
+        fontSize: '0.8rem',
+        fontWeight: 600,
+        letterSpacing: '0.16em',
+        textTransform: 'uppercase'
+      }}>
+        {label}
+      </span>
+      <span style={{
+        color: C.text,
+        fontSize: mono ? 'clamp(1.6rem, 2.4vw, 2.2rem)' : 'clamp(1.45rem, 2vw, 1.9rem)',
+        fontWeight: 700,
+        letterSpacing: mono ? '0.04em' : '-0.01em',
+        fontVariantNumeric: mono ? 'tabular-nums' : 'normal',
+        lineHeight: 1.1
+      }}>
+        {value}
+      </span>
+    </div>
+  );
+}
+
+function BankDetailsCard() {
+  return (
+    <div style={{
+      ...QR_PANEL_STYLE,
+      alignItems: 'stretch',
+      textAlign: 'left'
+    }}>
+      <div style={QR_EYEBROW_STYLE}>Support the night</div>
+      <p style={{ color: C.muted, fontSize: '1.05rem', fontWeight: 400, margin: '-0.5rem 0 0.5rem', lineHeight: 1.55 }}>
+        We have a koha for meetup fees to keep the group running. Anything is appreciated — around $2–$5 is recommended.
+      </p>
+
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <BankDetailRow label="Account name" value={BANK_DETAILS.accountName} />
+        <BankDetailRow label="Account number" value={groupDigits(BANK_DETAILS.accountNumber)} mono />
+        <BankDetailRow label="Reference" value={BANK_DETAILS.reference} mono last />
+      </div>
+    </div>
+  );
+}
+
+// ─── HOST WALK-THROUGH COACH ──────────────────────────────────────────────────
+function WalkthroughCoach({ title, body, stepNumber, totalSteps, isLast, onExit, onSkip, showSkip = false, progress = null }) {
+  const lines = Array.isArray(body) ? body : [body];
+  const showProgress = progress && Number.isFinite(progress.target);
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 400, pointerEvents: 'none' }}>
+      <div style={{
+        position: 'absolute',
+        right: 'clamp(1rem, 2.5vw, 2rem)',
+        bottom: 'clamp(1rem, 3vh, 2rem)',
+        width: 'min(380px, calc(100vw - 2rem))',
+        background: C.surface,
+        border: `1px solid ${C.gold}66`,
+        borderRadius: 16,
+        boxShadow: '0 24px 70px rgba(0,0,0,0.55)',
+        padding: '1.15rem 1.25rem',
+        pointerEvents: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '0.7rem'
+      }} data-walkthrough-ui>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <span style={{ color: C.gold, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+            Host walk-through
+          </span>
+          <span style={{ color: C.dim, fontSize: '0.8rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+            {stepNumber} / {totalSteps}
+          </span>
+        </div>
+
+        <div style={{ color: C.text, fontSize: '1.12rem', fontWeight: 800, letterSpacing: '-0.01em' }}>
+          {title}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+          {lines.map((l, i) =>
+          <p key={i} style={{ margin: 0, color: C.muted, fontSize: '0.98rem', lineHeight: 1.5 }}>{l}</p>
+          )}
+        </div>
+
+        {showProgress &&
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '0.6rem',
+          padding: '0.55rem 0.75rem',
+          background: `${C.gold}12`,
+          border: `1px solid ${C.gold}33`,
+          borderRadius: 10
+        }}>
+          <span style={{ color: C.gold, fontSize: '0.95rem', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+            Added {Math.min(progress.current, progress.target)} of {progress.target}
+          </span>
+          <div style={{ flex: 1, height: 6, borderRadius: 999, background: `${C.gold}22`, overflow: 'hidden' }}>
+            <div style={{
+              height: '100%',
+              width: `${Math.min(100, (progress.current / progress.target) * 100)}%`,
+              background: C.gold,
+              borderRadius: 999,
+              transition: 'width 0.3s ease'
+            }} />
+          </div>
+        </div>
+        }
+
+        {(showSkip || isLast) &&
+        <div style={{
+          display: 'flex',
+          justifyContent: showSkip && !isLast ? 'space-between' : 'flex-end',
+          alignItems: 'center',
+          marginTop: '0.15rem'
+        }}>
+          {showSkip && !isLast &&
+          <button
+            type="button"
+            onClick={onSkip}
+            style={{
+              background: 'none', border: 'none', color: C.dim,
+              fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600,
+              cursor: 'pointer', padding: 0, textDecoration: 'underline', opacity: 0.85
+            }}>
+            Skip walk-through
+          </button>
+          }
+          {isLast &&
+          <button
+            type="button"
+            onClick={onExit}
+            style={{
+              background: C.gold, color: '#0b0b14', border: 'none', borderRadius: 10,
+              padding: '0.5rem 1.15rem', fontFamily: 'inherit', fontWeight: 800,
+              fontSize: '0.95rem', cursor: 'pointer'
+            }}>
+            Finish
+          </button>
+          }
+        </div>
+        }
+      </div>
+    </div>
+  );
+}
+
+function WalkthroughRestartButton({ onRestart }) {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 400, pointerEvents: 'none' }}>
+      <button
+        type="button"
+        data-walkthrough-ui
+        onClick={onRestart}
+        style={{
+          position: 'absolute',
+          right: 'clamp(1rem, 2.5vw, 2rem)',
+          bottom: 'clamp(1rem, 3vh, 2rem)',
+          pointerEvents: 'auto',
+          background: C.gold,
+          color: '#0b0b14',
+          border: 'none',
+          borderRadius: 12,
+          padding: '0.65rem 1.25rem',
+          fontFamily: 'inherit',
+          fontWeight: 800,
+          fontSize: '0.95rem',
+          cursor: 'pointer',
+          boxShadow: '0 12px 40px rgba(0,0,0,0.45), 0 0 24px rgba(212,168,75,0.25)',
+          letterSpacing: '0.01em'
+        }}>
+        Restart walk-through
+      </button>
+    </div>
+  );
 }
 
 // ─── RETRO KEY HINTS (shared skeuomorphic keyboard UI) ───────────────────────
@@ -986,7 +1290,7 @@ function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, u
 }
 
 // ─── DRAW ADMIN MENU (top-left) ───────────────────────────────────────────────
-function DrawingAdminMenu({ onBackHome, showRespin, onRespin }) {
+function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = false, disableMenu = false }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -1013,19 +1317,20 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin }) {
           type="button"
           aria-label="Menu"
           aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
+          disabled={disableMenu}
+          onClick={() => { if (disableMenu) return; setOpen((o) => !o); }}
           style={{
             background: `${C.surface}cc`,
             border: `1px solid ${C.border}`,
             color: C.muted,
             padding: '0.35rem 0.65rem',
             borderRadius: 8,
-            cursor: 'pointer',
+            cursor: disableMenu ? 'not-allowed' : 'pointer',
             fontSize: '0.88rem',
             fontWeight: 600,
             fontFamily: 'inherit',
             letterSpacing: '0.04em',
-            opacity: 0.82
+            opacity: disableMenu ? 0.32 : 0.82
           }}>
           ☰ Menu
         </button>
@@ -1058,12 +1363,15 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin }) {
           }
           <button
             type="button"
-            onClick={() => { setOpen(false); onBackHome(); }}
+            disabled={disableBackHome}
+            onClick={() => { if (disableBackHome) return; setOpen(false); onBackHome(); }}
             style={{
               display: 'block', width: '100%', textAlign: 'left',
-              background: 'none', border: 'none', cursor: 'pointer',
-              color: C.text, fontFamily: 'inherit', fontSize: '0.95rem',
-              fontWeight: 600, padding: '0.6rem 1rem'
+              background: 'none', border: 'none',
+              cursor: disableBackHome ? 'not-allowed' : 'pointer',
+              color: disableBackHome ? C.dim : C.text, fontFamily: 'inherit', fontSize: '0.95rem',
+              fontWeight: 600, padding: '0.6rem 1rem',
+              opacity: disableBackHome ? 0.5 : 1
             }}>
             ← Back to home
           </button>
@@ -1126,14 +1434,15 @@ function SpeakerRevealCelebration({ seed = 0 }) {
 // ─── SPEAKER ADDED CONFIRMATION ───────────────────────────────────────────────
 const SPEAKER_ADDED_HOLD_MS = 2800;
 
-function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = false, onDone }) {
+function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = false, onDone, suppressAddHints = false }) {
   useEffect(() => {
     const t = setTimeout(() => onDone({ continueAdding: false }), SPEAKER_ADDED_HOLD_MS);
     return () => clearTimeout(t);
   }, [name, onDone]);
 
-  // Enter — skip confirmation and return to add next name
+  // Enter — skip confirmation and return to add next name (disabled during walk-through first add)
   useEffect(() => {
+    if (suppressAddHints) return;
     let armed = false;
     const arm = setTimeout(() => { armed = true; }, 300);
     const h = (e) => {
@@ -1146,7 +1455,7 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
       clearTimeout(arm);
       window.removeEventListener('keydown', h);
     };
-  }, [onDone]);
+  }, [onDone, suppressAddHints]);
 
   const showFt = isFirstTimer && added;
 
@@ -1225,7 +1534,7 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
         }}>
           {added ? 'added.' : 'welcome back.'}
         </div>
-        {continueAdding &&
+        {continueAdding && !suppressAddHints &&
         <p style={{
           marginTop: 'clamp(2rem, 4vh, 2.75rem)',
           color: C.dim,
@@ -1245,11 +1554,15 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
 }
 
 // ─── DRAWING SCREEN ───────────────────────────────────────────────────────────
-function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteForSession, demoMode = false, onToggleDemo }) {
+function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteForSession, demoMode = false, onToggleDemo, onPhaseChange, walkAllow = null }) {
   const [phase, setPhase] = useState('ready');
   const [winner, setWinner] = useState(null);
   const [nameKey, setNameKey] = useState(0);
   const [revealQuote, setRevealQuote] = useState(REVEAL_QUOTES[0]);
+
+  useEffect(() => {
+    onPhaseChange && onPhaseChange(phase);
+  }, [phase, onPhaseChange]);
 
   const remaining = participants.filter((p) => !p.done);
 
@@ -1425,11 +1738,11 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     return () => window.removeEventListener('keydown', h);
   }, [demoMode, phase, skipSpinToReveal]);
 
-  // ⌘D — toggle demo mode (same as home screen)
+  // ⌘D / Ctrl+D — toggle demo mode (same as home screen)
   useEffect(() => {
     if (!onToggleDemo) return;
     const h = (e) => {
-      if (!e.metaKey || e.code !== 'KeyD') return;
+      if (!cmdPressed(e) || e.code !== 'KeyD') return;
       const tag = (e.target && e.target.tagName) || '';
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
       e.preventDefault();
@@ -1444,6 +1757,8 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       onBackHome={onBackHome}
       showRespin={phase === 'reveal' && remaining.length > 1}
       onRespin={respinFromReveal}
+      disableBackHome={!!walkAllow}
+      disableMenu={walkAllow === 'revealAdvance'}
     />
   );
 
@@ -2010,13 +2325,17 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
 }
 
 // ─── SPEECH SCREEN ────────────────────────────────────────────────────────────
-function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, demoMode = false }) {
+function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, demoMode = false, onPhaseChange }) {
   const [phase, setPhase] = useState('speech');
   const [speechSecs, setSpeechSecs] = useState(0);
   const [feedSecs, setFeedSecs] = useState(0);
   const [flashOn, setFlashOn] = useState(false);
   const [timerFastForward, setTimerFastForward] = useState(false);
   const phaseRef = useRef('speech');
+
+  useEffect(() => {
+    onPhaseChange && onPhaseChange(phase);
+  }, [phase, onPhaseChange]);
   phaseRef.current = phase;
 
   // Speech timer — normal mode
@@ -2247,8 +2566,8 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
             }}>
               <div style={{
               color: C.text,
-              fontSize: 'clamp(1.95rem, 3.4vw + 0.85rem, 3.15rem)',
-              lineHeight: 1.38,
+              fontSize: 'clamp(3.06rem, 5.28vw + 1.32rem, 4.92rem)',
+              lineHeight: 1.1,
               fontWeight: 600,
               opacity: 0.95,
               overflowWrap: 'break-word'
@@ -2279,7 +2598,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
               {phase === 'feedback' && <FeedbackBadge large />}
 
               <div style={{
-                fontSize: 'clamp(10rem, 24vw, 26rem)',
+                fontSize: 'clamp(8.5rem, 20vw, 22rem)',
                 fontWeight: 900,
                 color: phase === 'feedback'
                   ? (feedLeft < 30 ? '#ff8060' : '#4a78d8')
@@ -2356,6 +2675,8 @@ Object.assign(window, {
   YoloPrepScreen,
   SpeechScreen,
   QRScreen,
+  WalkthroughCoach,
+  WalkthroughRestartButton,
   SpeakerAddedBeat,
   YOLO_SLOT
 });
