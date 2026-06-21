@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>APS Programme</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #1a1a22;
+      --muted: #6b6b78;
+      --line: #e6e6ec;
+      --gold: #c08a1e;
+      --gold-soft: #f6edd8;
+      --banner: #eef4ee;
+      --banner-ink: #2f4a32;
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      background: #f4f4f6;
+      font-family: 'Outfit', sans-serif;
+      color: var(--ink);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 820px;
+      margin: 32px auto;
+      background: #fff;
+      padding: 56px 64px 64px;
+      border-radius: 14px;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.08);
+    }
+
+    /* ---- Header ---- */
+    header { margin-bottom: 38px; }
+
+    .emoji { font-size: 46px; line-height: 1; display: block; margin-bottom: 16px; }
+
+    h1 {
+      font-size: 46px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.05;
+    }
+
+    .byline {
+      margin-top: 12px;
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 16px;
+    }
+
+    /* ---- Sections ---- */
+    .section { margin-top: 30px; break-inside: avoid; }
+
+    .section h2 {
+      font-size: 21px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      padding-bottom: 9px;
+      border-bottom: 2px solid var(--line);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: baseline;
+      gap: 8px;
+    }
+
+    .section h2 .time {
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .section h2 .note {
+      color: var(--muted);
+      font-weight: 500;
+      font-size: 15px;
+    }
+
+    /* ---- Checklist items ---- */
+    ul.checklist { list-style: none; margin-top: 14px; }
+
+    ul.checklist li {
+      position: relative;
+      padding: 5px 0 5px 30px;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    ul.checklist li::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 7px;
+      width: 16px;
+      height: 16px;
+      border: 1.6px solid #bcbcc8;
+      border-radius: 4px;
+    }
+
+    ul.checklist li strong { font-weight: 700; }
+
+    /* ---- App overview (replacement) ---- */
+    .overview {
+      margin-top: 14px;
+      padding: 18px 22px;
+      background: var(--gold-soft);
+      border-radius: 10px;
+      border-left: 4px solid var(--gold);
+    }
+
+    .overview p { font-size: 16px; line-height: 1.55; }
+    .overview p + p { margin-top: 8px; }
+    .overview .lead { font-weight: 700; }
+
+    /* ---- Transition banners ---- */
+    .banner {
+      margin-top: 30px;
+      padding: 13px 20px;
+      background: var(--banner);
+      color: var(--banner-ink);
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 18px;
+      break-inside: avoid;
+    }
+
+    .footnote {
+      margin-top: 44px;
+      padding-top: 16px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    /* ---- Print ---- */
+    @media print {
+      @page { size: A4; margin: 14mm; }
+      html, body { background: #fff; }
+      .page {
+        max-width: none;
+        margin: 0;
+        padding: 0;
+        border-radius: 0;
+        box-shadow: none;
+      }
+      .footnote { display: none; }
+      .section, .banner, .overview { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <span class="emoji">&#128250;</span>
+      <h1>APS Programme</h1>
+    </header>
+
+    <section class="section">
+      <h2>Before start <span class="time">(6:00&ndash;6:30pm)</span></h2>
+      <ul class="checklist">
+        <li>Welcome people as they arrive</li>
+        <li>Ask if they&rsquo;d like to do a talk &rarr; add their name to the app</li>
+        <li>Count names in the app &rarr; decide if a break is needed</li>
+        <li>5mins before start &rarr; Remind to grab a drink if they like</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Opening: App overview <span class="time">(6:30pm)</span></h2>
+      <div class="overview">
+        <p class="lead">Explain how the event will run with the app.</p>
+        <p>Run through the app&rsquo;s demo mode so people see the topics, timer and controls in action.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Opening: Reminders <span class="time">(6:40pm)</span></h2>
+      <ul class="checklist">
+        <li>Everyone is welcome to <strong>provide feedback</strong></li>
+        <li>This is a <strong>safe and supportive environment</strong></li>
+        <li>Speaking is optional</li>
+        <li>If you&rsquo;re not ready to speak, feel free to just enjoy the vibe of the group.</li>
+      </ul>
+    </section>
+
+    <section class="section">
+      <h2>Group Introductions <span class="time">(6:45)</span> <span class="note">~ keep short &amp; sweet</span></h2>
+      <ul class="checklist">
+        <li>Name</li>
+        <li>Start with an easy warm-up question (make your own or check with Bat/Glen)</li>
+      </ul>
+    </section>
+
+    <div class="banner">&rarr; Impromptu Talks Begin (6:45&ndash;7ish)</div>
+
+    <section class="section">
+      <h2>Half-way Break <span class="note">(if needed, around ~7:30)</span></h2>
+      <ul class="checklist">
+        <li>Give people a chance to order a drink / toilet break</li>
+        <li>For late-comers &rarr; Now is a good time to add name to the app</li>
+      </ul>
+    </section>
+
+    <div class="banner">&rarr; 2nd Half Impromptu Talks (7:45ish)</div>
+
+    <section class="section">
+      <h2>Wrap up <span class="note">(roughly 8:30pm)</span></h2>
+      <ul class="checklist">
+        <li>(If there is time) Open the floor for any reflections/lessons learned</li>
+        <li>(If host would like) Everyone is welcome to give feedback for the host</li>
+        <li>Congratulate everyone for showing up &#128588;</li>
+        <li>Whatsapp QR codes available to scan on the table</li>
+        <li>Interested in hosting? &rarr; chat with Bat/Glen</li>
+        <li>Final Announcements from Bat/Glen, if any</li>
+      </ul>
+    </section>
+
+    <div class="footnote">To export: open this page in a browser, press Cmd/Ctrl+P, then choose &ldquo;Save as PDF&rdquo;.</div>
+  </div>
+</body>
+</html>

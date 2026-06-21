@@ -351,6 +351,7 @@ function HomeBrandMark() {
 // ─── SETUP SCREEN ─────────────────────────────────────────────────────────────
 function SetupScreen({ onComplete, hideBrand = false }) {
   const [q, setQ] = useState('');
+  const [usedRandom, setUsedRandom] = useState(false);
   const taRef = useRef(null);
   const canSubmit = !!q.trim();
 
@@ -369,6 +370,7 @@ function SetupScreen({ onComplete, hideBrand = false }) {
   const pickRandom = () => {
     const pool = QUESTIONS.filter((x) => x !== q);
     setQ(pool[Math.floor(Math.random() * pool.length)]);
+    setUsedRandom(true);
     taRef.current?.focus();
   };
 
@@ -468,7 +470,7 @@ function SetupScreen({ onComplete, hideBrand = false }) {
             paddingTop: '0.25rem'
           }}>
             <Btn variant="surface" size="md" onClick={pickRandom}>
-              Pick random
+              {usedRandom ? 'Load another question' : 'Load random question'}
             </Btn>
             <Btn
               variant="gold"
@@ -650,7 +652,7 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
             }}>
             Mark all as not done
           </Btn>
-          <Btn variant="ghost" size="sm" onClick={onClose}>Done</Btn>
+          <Btn variant="gold" size="sm" onClick={onClose}>Done</Btn>
         </div>
       </div>
     </div>
@@ -1185,7 +1187,7 @@ function WalkKeyChip({ children }) {
   );
 }
 
-function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isLast, onExit, onSkip, showSkip = false, progress = null, nudgeKey = 0 }) {
+function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isLast, onExit, onSkip, showSkip = false, progress = null, nudgeKey = 0, canFinish = true, placement = 'top-left' }) {
   const lines = body ? (Array.isArray(body) ? body : [body]) : [];
   const showProgress = progress && Number.isFinite(progress.target);
   const cueKeys = cue && Array.isArray(cue.keys) ? cue.keys : [];
@@ -1213,12 +1215,17 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
       ? `walkthroughCoachPop 0.42s ease-out, ${glow}`
       : glow;
 
+  const atBottom = placement === 'bottom-left';
+  const edge = atBottom
+    ? { bottom: 'clamp(1rem, 3vh, 2rem)' }
+    : { top: 'clamp(1rem, 3vh, 2rem)' };
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, pointerEvents: 'none' }}>
       <div style={{
         position: 'absolute',
         left: 'clamp(1rem, 2.5vw, 2rem)',
-        top: 'clamp(1rem, 3vh, 2rem)',
+        ...edge,
         width: 'min(380px, calc(100vw - 2rem))',
         background: `linear-gradient(158deg, #23233f 0%, ${C.surface} 58%)`,
         border: `2px solid ${C.gold}`,
@@ -1230,7 +1237,7 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
         display: 'flex',
         flexDirection: 'column',
         gap: '0.7rem',
-        transformOrigin: 'top left',
+        transformOrigin: atBottom ? 'bottom left' : 'top left',
         animation
       }} data-walkthrough-ui>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
@@ -1308,7 +1315,7 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
         </div>
         }
 
-        {(showSkip || isLast) &&
+        {(showSkip || (isLast && canFinish)) &&
         <div style={{
           display: 'flex',
           justifyContent: showSkip && !isLast ? 'space-between' : 'flex-end',
@@ -1327,7 +1334,7 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
             Skip walk-through
           </button>
           }
-          {isLast &&
+          {isLast && canFinish &&
           <button
             type="button"
             onClick={onExit}
@@ -1341,6 +1348,109 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
           }
         </div>
         }
+      </div>
+    </div>
+  );
+}
+
+function WalkthroughIntroModal({ onStart, programmeHref = 'programme.html' }) {
+  return (
+    <div style={{
+      position: 'fixed', inset: 0, zIndex: 600,
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: 'clamp(1rem, 4vw, 2.5rem)',
+      background: 'rgba(7,7,16,0.78)',
+      backdropFilter: 'blur(4px)',
+      WebkitBackdropFilter: 'blur(4px)'
+    }} data-walkthrough-ui>
+      <div style={{
+        width: 'min(560px, 100%)',
+        maxHeight: 'calc(100vh - 2rem)',
+        overflowY: 'auto',
+        background: `linear-gradient(158deg, #23233f 0%, ${C.surface} 60%)`,
+        border: `2px solid ${C.gold}`,
+        borderRadius: 18,
+        padding: 'clamp(1.5rem, 4vw, 2.25rem)',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '1rem',
+        boxShadow: '0 24px 70px rgba(0,0,0,0.55), 0 0 32px rgba(212,168,75,0.22)',
+        animation: 'walkthroughCoachPop 0.42s ease-out'
+      }}>
+        <span style={{
+          alignSelf: 'flex-start',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '0.4rem',
+          color: C.muted,
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          letterSpacing: '0.16em',
+          textTransform: 'uppercase'
+        }}>
+          <span aria-hidden style={{ fontSize: '0.8rem', lineHeight: 1, opacity: 0.7 }}>{'\u2728'}</span>
+          Host walk-through
+        </span>
+
+        <div style={{ color: C.text, fontSize: 'clamp(1.5rem, 4vw, 1.9rem)', fontWeight: 800, letterSpacing: '-0.015em', lineHeight: 1.15 }}>
+          Thanks for hosting Auckland Public Speaking {'\uD83D\uDC4F'}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
+          <p style={{ margin: 0, color: C.muted, fontSize: '18px', lineHeight: 1.5 }}>
+            Grab the programme so you{'\u2019'}ve got the runsheet handy:
+          </p>
+          <a
+            href={programmeHref}
+            target="_blank"
+            rel="noopener"
+            style={{
+              alignSelf: 'flex-start',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              background: 'transparent',
+              color: C.gold,
+              textDecoration: 'none',
+              border: `1.5px solid ${C.gold}66`,
+              borderRadius: 10,
+              padding: '0.5rem 1rem',
+              fontWeight: 700,
+              fontSize: '0.92rem'
+            }}>
+            <span aria-hidden style={{ fontSize: '1rem', lineHeight: 1 }}>{'\uD83D\uDCC4'}</span>
+            Download the programme
+          </a>
+        </div>
+
+        <p style={{ margin: 0, color: C.muted, fontSize: '18px', lineHeight: 1.5 }}>
+          It{'\u2019'}s just a rough guide. You{'\u2019'}re completely free to add your own spin and run the night however feels right to you.
+        </p>
+
+        <p style={{ margin: 0, color: C.muted, fontSize: '18px', lineHeight: 1.5 }}>
+          When you{'\u2019'}re ready, we{'\u2019'}ll walk you through how the app works so you can confidently explain it to the room and facilitate the evening. It takes about 5 minutes.
+        </p>
+
+        <button
+          type="button"
+          onClick={onStart}
+          style={{
+            marginTop: '0.5rem',
+            alignSelf: 'stretch',
+            background: C.gold,
+            color: '#0b0b14',
+            border: 'none',
+            borderRadius: 14,
+            padding: '0.95rem 1.5rem',
+            fontFamily: 'inherit',
+            fontWeight: 800,
+            fontSize: '1.12rem',
+            letterSpacing: '0.01em',
+            cursor: 'pointer',
+            boxShadow: '0 10px 30px rgba(212,168,75,0.32)'
+          }}>
+          Start the walk-through
+        </button>
       </div>
     </div>
   );
@@ -2501,18 +2611,20 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
 }
 
 // ─── SPEECH SCREEN ────────────────────────────────────────────────────────────
-function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, demoMode = false, onPhaseChange }) {
+function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, demoMode = false, onPhaseChange, requireFullSpeech = false, onFullTimeReached }) {
   const [phase, setPhase] = useState('speech');
   const [speechSecs, setSpeechSecs] = useState(0);
   const [feedSecs, setFeedSecs] = useState(0);
   const [flashOn, setFlashOn] = useState(false);
   const [timerFastForward, setTimerFastForward] = useState(false);
   const phaseRef = useRef('speech');
+  const speechSecsRef = useRef(0);
 
   useEffect(() => {
     onPhaseChange && onPhaseChange(phase);
   }, [phase, onPhaseChange]);
   phaseRef.current = phase;
+  speechSecsRef.current = speechSecs;
 
   // Speech timer — normal mode
   useEffect(() => {
@@ -2648,6 +2760,11 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
     return () => clearInterval(id);
   }, [phase, speechSecs >= 120]);
 
+  // Notify once the speech timer reaches the 2:00 mark (used by the walk-through).
+  useEffect(() => {
+    if (phase === 'speech' && speechSecs >= 120) onFullTimeReached && onFullTimeReached();
+  }, [phase, speechSecs >= 120]);
+
   // Key handler — Space advances state machine; Escape returns to question browse (speech or feedback)
   useEffect(() => {
     const h = (e) => {
@@ -2660,13 +2777,18 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
       if (e.code !== 'Space') return;
       e.preventDefault();
       const p = phaseRef.current;
-      if (p === 'speech') {setPhase('feedback');setFeedSecs(0);} else
+      if (p === 'speech') {
+        // During the walk-through, hold the speaker on the timer until it reaches the 2:00
+        // mark so the host sees every colour state before Space ends the speech.
+        if (requireFullSpeech && speechSecsRef.current < 120) return;
+        setPhase('feedback');setFeedSecs(0);
+      } else
       if (p === 'feedback') {onComplete();} // manual skip → straight to draw
       else if (p === 'alarm') {onComplete();} // timeout alarm → draw
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onComplete, onBackToQuestions]);
+  }, [onComplete, onBackToQuestions, requireFullSpeech]);
 
   // ── derive visuals ──
   let bgColor = C.bg;
@@ -2735,7 +2857,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
           borderBottom: `1px solid ${phase === 'feedback' ? '#1a2a4a' : C.border}`
         }}>
             <div style={{
-              maxWidth: 'min(920px, 88%)',
+              maxWidth: 'min(1280px, 94%)',
               width: '100%',
               minWidth: 0,
               textAlign: 'center'
@@ -2852,6 +2974,7 @@ Object.assign(window, {
   SpeechScreen,
   QRScreen,
   WalkthroughCoach,
+  WalkthroughIntroModal,
   WalkthroughRestartButton,
   SpeakerAddedBeat,
   YOLO_SLOT

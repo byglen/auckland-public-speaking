@@ -46,8 +46,8 @@ const WALK_STEP_LANDING_DELAY_MS = 700;
 
 const WALK_STEPS = [
   {
-    title: "Pick tonight's question",
-    body: ['Hit "Pick random" or type your own — keep it easy for first-timers.'],
+    title: 'Pick a question',
+    body: ['No need to decide now. Use anything just for this walk-through.', 'If you\u2019d like to choose a question for the event, tell Glen or Bat and we\u2019ll have it ready on the night.'],
     auto: (c) => c.screen === SCREEN.HOME,
   },
   {
@@ -124,12 +124,16 @@ const WALK_STEPS = [
     title: 'Pick a question',
     body: ['Question of the night, three randoms, or Yolo mode.'],
     cue: { keys: ['\u2190', '\u2192'], text: 'browse · Space to pick' },
-    auto: (c) => c.screen === SCREEN.SPEECH || c.screen === SCREEN.YOLO_PREP,
+    // Advance only once the speech timer screen actually starts. For Yolo this means we wait
+    // through the question reveal / countdown (coach hidden) instead of advancing on YOLO_PREP.
+    auto: (c) => c.screen === SCREEN.SPEECH,
   },
   {
     title: 'Explain the timer',
     body: ['Demo fast-forwards the speech so you can explain timing.'],
     cue: { keys: ['Space'], text: 'to end it' },
+    // Only surface the "Space to end it" cue once the timer has reached the 2:00 mark.
+    cueWhen: (c) => c.speechFullTime,
     auto: (c) => c.speechPhase === 'feedback',
   },
   {
@@ -159,6 +163,7 @@ function App() {
     catch (e) { return false; }
   });
   const [walkStep,        setWalkStep]        = useState(0);
+  const [walkIntroSeen,   setWalkIntroSeen]   = useState(false);
   const [walkCoachDismissed, setWalkCoachDismissed] = useState(false);
   const [walkCompletedOnce, setWalkCompletedOnce]   = useState(false);
   const [walkNudge,       setWalkNudge]       = useState(0);
@@ -166,6 +171,8 @@ function App() {
   const addMoreBaselineStepRef = useRef(-1);
   const [drawPhase,       setDrawPhase]       = useState(null);
   const [speechPhase,     setSpeechPhase]     = useState(null);
+  const [speechFullTime,  setSpeechFullTime]  = useState(false);
+  const [walkFinishReady, setWalkFinishReady] = useState(false);
   const [addedFlash,      setAddedFlash]      = useState(null);
   const [reopenManage,    setReopenManage]    = useState(false);
   const [questionSelectState, setQuestionSelectState] = useState(null);
@@ -338,8 +345,20 @@ function App() {
     demoMode,
     drawPhase,
     speechPhase,
+    speechFullTime,
     addMoreBaseline: addMoreBaselineRef.current
   };
+
+  // Clear the "speech reached 2:00" flag whenever we leave the speech screen.
+  useEffect(() => {
+    if (screen !== SCREEN.SPEECH) setSpeechFullTime(false);
+  }, [screen]);
+
+  // On the final step, reveal Finish once the host has pressed Cmd+D (demo off) at least
+  // once. It stays visible afterwards even if they toggle demo speakers back on.
+  useEffect(() => {
+    if (walkthrough && WALK_STEPS[walkStep]?.last && !demoMode) setWalkFinishReady(true);
+  }, [walkthrough, walkStep, demoMode]);
 
   const activeWalkStep = walkthrough ? WALK_STEPS[walkStep] : null;
   const walkTitle = activeWalkStep
@@ -408,6 +427,7 @@ function App() {
     setFirstTimerPulseName(null);
     setWalkCoachDismissed(false);
     setWalkStep(0);
+    setWalkFinishReady(false);
     setDrawPhase(null);
     setSpeechPhase(null);
     setScreen(SCREEN.SETUP);
@@ -556,6 +576,8 @@ function App() {
           onComplete={handleSpeechComplete}
           onBackToQuestions={handleSpeechBack}
           onPhaseChange={walkthrough ? setSpeechPhase : undefined}
+          requireFullSpeech={walkthrough && !walkCoachDismissed}
+          onFullTimeReached={walkthrough ? () => setSpeechFullTime(true) : undefined}
         />
       )}
       {addedFlash && window.SpeakerAddedBeat &&
@@ -570,7 +592,12 @@ function App() {
         })}
       </div>
       }
-      {walkthrough && !walkCoachDismissed && WALK_STEPS[walkStep] && window.WalkthroughCoach &&
+      {walkthrough && !walkIntroSeen && !walkCoachDismissed && window.WalkthroughIntroModal &&
+        React.createElement(window.WalkthroughIntroModal, {
+          onStart: () => setWalkIntroSeen(true)
+        })
+      }
+      {walkthrough && walkIntroSeen && !walkCoachDismissed && screen !== SCREEN.YOLO_PREP && WALK_STEPS[walkStep] && window.WalkthroughCoach &&
         React.createElement(window.WalkthroughCoach, {
           title: walkTitle,
           body: WALK_STEPS[walkStep].body,
@@ -582,7 +609,9 @@ function App() {
           showSkip: walkCompletedOnce && !WALK_STEPS[walkStep].last,
           onSkip: handleWalkFinish,
           progress: walkProgress,
-          nudgeKey: walkNudge
+          nudgeKey: walkNudge,
+          canFinish: walkFinishReady,
+          placement: screen === SCREEN.SPEECH ? 'bottom-left' : 'top-left'
         })
       }
       {walkthrough && walkCoachDismissed && window.WalkthroughRestartButton &&
