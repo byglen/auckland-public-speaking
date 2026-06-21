@@ -32,100 +32,115 @@ function pickYoloQuestion(questionOfNight, usedQuestions, carouselOptions) {
 }
 
 // Host walk-through — contextual coach steps that advance as the host performs each real action.
-// `auto(ctx)` advances automatically when the host completes the step's action. Steps without
-// `auto` (e.g. "Manage your speakers") advance via an explicit onWalkAdvance callback.
-// `allow` names the single action the host may take while the step is active — everything else
-// in the UI is locked so the walk-through stays focused on one thing at a time.
+// Each card is punchy: a short `title` plus an optional `cue` ({ keys, text }) that emphasises the
+// single key press / action that matters. `auto(ctx)` advances automatically when the host completes
+// the step's action; steps without `auto` (e.g. open/close Manage Speakers) advance via the explicit
+// onWalkAdvance callback. `allow` names the single action the host may take while the step is active —
+// everything else in the UI is locked (and shakes the card) so the walk-through stays focused.
+const CMD = window.IS_MAC ? '\u2318' : 'Ctrl';
+
+// After a speaker is added the host sits on the full-screen "added" celebration, which
+// covers the coach. We hold the walk-through step advance until they're back on home and
+// wait this long before flipping the step — so the coach's step-change pop is actually seen.
+const WALK_STEP_LANDING_DELAY_MS = 700;
+
 const WALK_STEPS = [
   {
-    title: "Set tonight's question",
-    body: [
-      'Use "Pick random" or type your own. Keep it interesting and easy for first-timers to answer.',
-      'Tip: press "Pick random" as many times as you like to cycle through fresh suggestions.'
-    ],
+    title: "Pick tonight's question",
+    body: ['Hit "Pick random" or type your own — keep it easy for first-timers.'],
     auto: (c) => c.screen === SCREEN.HOME,
   },
   {
-    title: 'Add your speakers',
-    body: [
-      'Start typing a name — or ask the guest to type their own — then press Enter.',
-      'Always ask people first, especially first-timers.'
-    ],
+    title: 'Add your first speaker',
+    body: ['Type a name, or let the guest type their own.'],
+    cue: { keys: ['Enter'], text: 'to add them' },
+    cueWhen: (c) => c.screen === SCREEN.REGISTER,
     allow: 'addSpeaker',
     auto: (c) => c.count >= 1,
   },
   {
-    title: 'Mark a first-timer',
-    body: [`Press ${window.kbd('F')} to flag the last speaker you added so they are not picked in the first two draws. They get a gold "FT" badge.`],
+    title: 'Mark them a first-timer',
+    body: ['Keeps them out of the first two draws and adds a gold FT badge.'],
+    cue: { keys: [CMD, 'F'], text: 'flags the last speaker added' },
     allow: 'markFT',
     auto: (c) => c.hasFT,
   },
   {
-    title: 'Add a few more',
-    body: ['Add three more names so the wheel has plenty of options.'],
+    title: 'Add two more',
+    titleFor: (c) => (c.count - c.addMoreBaseline >= 1 ? 'Add one more' : 'Add two more'),
+    body: ['Give the wheel a few options to spin.'],
     allow: 'addMore',
-    progress: (c) => ({ current: Math.max(0, c.count - c.addMoreBaseline), target: 3 }),
-    auto: (c) => c.count - c.addMoreBaseline >= 3,
+    progress: (c) => ({ current: Math.max(0, c.count - c.addMoreBaseline), target: 2 }),
+    auto: (c) => c.count - c.addMoreBaseline >= 2,
   },
   {
-    title: 'Manage your speakers',
-    body: [
-      'Open Speakers with the Speakers button in the top right.',
-      'Try it: unmark a first-timer, mark someone as done, remove a name, or add a new one.'
-    ],
+    title: 'Open your speaker list',
+    body: ['Tap the Speakers button, highlighted in the top right of this screen, to mark people done, remove them, or add more.'],
     allow: 'manage',
     highlightSpeakers: true,
   },
   {
-    title: 'Show everyone how it works',
-    body: [`Press ${window.kbd('D')} to switch into demo mode. It loads sample speakers so you can demonstrate the app without using real names.`],
+    title: 'Close it to continue',
+    body: ['Every change saves automatically.'],
+    cue: { keys: ['Esc'], text: 'or tap Done' },
+    allow: 'closeManage',
+  },
+  {
+    title: 'Try demo mode',
+    body: ['Demonstrate the app without using real names.'],
+    cue: { keys: [CMD, 'D'], text: 'loads sample speakers' },
     allow: 'demo',
     auto: (c) => c.demoMode,
   },
   {
     title: 'Your real list is safe',
-    body: [`Press ${window.kbd('D')} again and your real speakers come straight back — nothing is lost.`],
+    body: ['Toggle demo off and your real speakers come straight back.'],
+    cue: { keys: [CMD, 'D'], text: 'brings everyone back' },
     allow: 'demo',
     auto: (c) => !c.demoMode,
   },
   {
     title: 'Run a draw',
-    body: [`Switch back to demo mode (${window.kbd('D')}), then press Space to start spinning the wheel.`],
+    body: ['Turn demo back on, then spin the wheel.'],
+    cue: { keys: ['Space'], text: 'to start spinning' },
+    cueWhen: (c) => c.demoMode,
     allow: 'draw',
     auto: (c) => c.screen === SCREEN.DRAWING,
   },
   {
-    title: 'Spin the wheel',
-    body: ['Hold Space to spin at full speed, then release to let it land on a speaker.'],
+    title: 'Spin it',
+    body: ['Let it slow down and land on a speaker.', 'In demo mode, press Enter to end the spin instantly.'],
+    cue: { keys: ['Space'], text: 'hold, then release' },
     auto: (c) => c.drawPhase === 'reveal',
   },
   {
     title: 'Give it up!',
-    body: ['Press Space to move on to choosing a question.'],
+    body: ['Time to choose their question.'],
+    cue: { keys: ['Space'], text: 'to continue' },
     allow: 'revealAdvance',
     auto: (c) => c.screen === SCREEN.QSELECT,
   },
   {
     title: 'Pick a question',
-    body: ['Use the arrow keys to browse: the Question of the Night, three random questions, and "Yolo mode" — a surprise mystery question. Press Space to choose.'],
+    body: ['Question of the night, three randoms, or Yolo mode.'],
+    cue: { keys: ['\u2190', '\u2192'], text: 'browse · Space to pick' },
     auto: (c) => c.screen === SCREEN.SPEECH || c.screen === SCREEN.YOLO_PREP,
   },
   {
-    title: 'Explaining the timer',
-    body: [
-      'In demo mode the timer jumps ahead to simulate a full speech. Use this moment to explain how timing works for speakers.',
-      'Press Space to end the speech.'
-    ],
+    title: 'Explain the timer',
+    body: ['Demo fast-forwards the speech so you can explain timing.'],
+    cue: { keys: ['Space'], text: 'to end it' },
     auto: (c) => c.speechPhase === 'feedback',
   },
   {
     title: 'Feedback time',
-    body: ['In demo mode the feedback timer runs in real time. Use it to explain what good, constructive feedback sounds like.'],
+    body: ['Demo runs feedback in real time — show what good feedback sounds like.'],
     auto: (c) => c.screen === SCREEN.DRAWING || c.screen === SCREEN.HOME,
   },
   {
-    title: "You're ready to go",
-    body: [`Press ${window.kbd('D')} to switch back to your real speakers — and the night begins.`],
+    title: "You're all set",
+    body: ['Switch back to your real speakers and start the night.'],
+    cue: { keys: [CMD, 'D'], text: 'back to real speakers' },
     last: true,
   },
 ];
@@ -146,6 +161,7 @@ function App() {
   const [walkStep,        setWalkStep]        = useState(0);
   const [walkCoachDismissed, setWalkCoachDismissed] = useState(false);
   const [walkCompletedOnce, setWalkCompletedOnce]   = useState(false);
+  const [walkNudge,       setWalkNudge]       = useState(0);
   const addMoreBaselineRef     = useRef(0);
   const addMoreBaselineStepRef = useRef(-1);
   const [drawPhase,       setDrawPhase]       = useState(null);
@@ -326,17 +342,32 @@ function App() {
   };
 
   const activeWalkStep = walkthrough ? WALK_STEPS[walkStep] : null;
+  const walkTitle = activeWalkStep
+    ? (activeWalkStep.titleFor ? activeWalkStep.titleFor(walkCtx) : activeWalkStep.title)
+    : '';
   const walkProgress = activeWalkStep?.progress ? activeWalkStep.progress(walkCtx) : null;
+  const walkCue = activeWalkStep?.cue && (!activeWalkStep.cueWhen || activeWalkStep.cueWhen(walkCtx))
+    ? activeWalkStep.cue
+    : null;
 
-  // Host walk-through — advance the current step once its action is complete
+  // Host walk-through — advance the current step once its action is complete.
+  // For the "add speaker" steps the host is briefly on the celebratory "added" beat
+  // (which covers the coach), so we hold the advance until the beat clears and they're
+  // back on home, then wait a small beat — that way the coach's step-change pop is seen.
   useEffect(() => {
     if (!walkthrough || walkCoachDismissed) return;
     const step = WALK_STEPS[walkStep];
     if (!step || !step.auto) return;
-    if (step.auto(walkCtx)) {
-      setWalkStep((s) => Math.min(WALK_STEPS.length - 1, s + 1));
+    if (!step.auto(walkCtx)) return;
+    if (addedFlash) return; // wait for the "speaker added" beat to clear first
+    const advance = () => setWalkStep((s) => Math.min(WALK_STEPS.length - 1, s + 1));
+    const isAddStep = step.allow === 'addSpeaker' || step.allow === 'addMore';
+    if (isAddStep && screen === SCREEN.HOME) {
+      const t = setTimeout(advance, WALK_STEP_LANDING_DELAY_MS);
+      return () => clearTimeout(t);
     }
-  }, [walkthrough, walkCoachDismissed, walkStep, screen, participants, demoMode, drawPhase, speechPhase]);
+    advance();
+  }, [walkthrough, walkCoachDismissed, walkStep, screen, participants, demoMode, drawPhase, speechPhase, addedFlash]);
 
   // Explicit advance for steps with no automatic trigger (e.g. "Manage your speakers").
   const handleWalkAdvance = useCallback((forAllow) => {
@@ -344,6 +375,11 @@ function App() {
       if (forAllow && WALK_STEPS[s]?.allow !== forAllow) return s;
       return Math.min(WALK_STEPS.length - 1, s + 1);
     });
+  }, []);
+
+  // Off-path — the host tried an action the active step doesn't ask for; shake the coach to refocus.
+  const triggerWalkNudge = useCallback(() => {
+    setWalkNudge((n) => n + 1);
   }, []);
 
   // Finish — dismiss the coach panel but stay in walk-through mode so the host can keep using the app.
@@ -444,7 +480,7 @@ function App() {
   return (
     <div style={{ fontFamily: "'Outfit', sans-serif" }}>
       {screen === SCREEN.SETUP && (
-        <SetupScreen onComplete={handleSetupDone} />
+        <SetupScreen onComplete={handleSetupDone} hideBrand={walkthrough && !walkCoachDismissed} />
       )}
       {screen === SCREEN.HOME && (
         <HomeScreen
@@ -466,7 +502,9 @@ function App() {
           onReopenManageConsumed={() => setReopenManage(false)}
           walkAllow={walkAllow}
           onWalkAdvance={handleWalkAdvance}
+          onWalkNudge={triggerWalkNudge}
           highlightSpeakers={highlightSpeakers}
+          hideBrand={walkthrough && !walkCoachDismissed}
         />
       )}
       {screen === SCREEN.REGISTER && (
@@ -534,15 +572,17 @@ function App() {
       }
       {walkthrough && !walkCoachDismissed && WALK_STEPS[walkStep] && window.WalkthroughCoach &&
         React.createElement(window.WalkthroughCoach, {
-          title: WALK_STEPS[walkStep].title,
+          title: walkTitle,
           body: WALK_STEPS[walkStep].body,
+          cue: walkCue,
           stepNumber: walkStep + 1,
           totalSteps: WALK_STEPS.length,
           isLast: !!WALK_STEPS[walkStep].last,
           onExit: handleWalkFinish,
           showSkip: walkCompletedOnce && !WALK_STEPS[walkStep].last,
           onSkip: handleWalkFinish,
-          progress: walkProgress
+          progress: walkProgress,
+          nudgeKey: walkNudge
         })
       }
       {walkthrough && walkCoachDismissed && window.WalkthroughRestartButton &&

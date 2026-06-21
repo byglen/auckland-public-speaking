@@ -145,6 +145,29 @@
       50%       { opacity: 0.88; box-shadow: 0 0 0 8px rgba(212,168,75,0.1), 0 0 36px rgba(212,168,75,0.52); }
     }
 
+    @keyframes walkthroughShake {
+      10%, 90% { transform: translateX(-2px); }
+      20%, 80% { transform: translateX(4px); }
+      30%, 50%, 70% { transform: translateX(-8px); }
+      40%, 60% { transform: translateX(8px); }
+    }
+
+    @keyframes walkthroughArrowNudge {
+      0%, 100% { transform: translateX(0); }
+      50%      { transform: translateX(7px); }
+    }
+
+    @keyframes walkthroughCoachGlow {
+      0%, 100% { box-shadow: 0 24px 70px rgba(0,0,0,0.55), 0 0 0 1px rgba(212,168,75,0.45), 0 0 26px rgba(212,168,75,0.30); }
+      50%      { box-shadow: 0 24px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,75,0.8), 0 0 46px rgba(212,168,75,0.58); }
+    }
+
+    @keyframes walkthroughCoachPop {
+      0%   { transform: scale(0.94); }
+      55%  { transform: scale(1.03); }
+      100% { transform: scale(1); }
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }

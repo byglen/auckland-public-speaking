@@ -241,7 +241,10 @@ function QuestionDisplayText({ children, style = {} }) {
   );
 }
 
-function HomeSubduedButton({ children, onClick, ariaLabel, disabled = false }) {
+// `locked` keeps the disabled look but leaves the button clickable so the walk-through
+// can intercept the press and shake the coach card instead of silently doing nothing.
+function HomeSubduedButton({ children, onClick, ariaLabel, disabled = false, locked = false }) {
+  const muted = disabled || locked;
   return (
     <button
       type="button"
@@ -254,19 +257,20 @@ function HomeSubduedButton({ children, onClick, ariaLabel, disabled = false }) {
         color: C.muted,
         padding: '0.5rem 0.95rem',
         borderRadius: 9,
-        cursor: disabled ? 'not-allowed' : 'pointer',
+        cursor: muted ? 'not-allowed' : 'pointer',
         fontSize: '0.98rem',
         fontWeight: 600,
         fontFamily: 'inherit',
         letterSpacing: '0.01em',
-        opacity: disabled ? 0.32 : 0.88
+        opacity: muted ? 0.32 : 0.88
       }}>
       {children}
     </button>
   );
 }
 
-function HomeIconButton({ ariaLabel, onClick, children, disabled = false }) {
+function HomeIconButton({ ariaLabel, onClick, children, disabled = false, locked = false }) {
+  const muted = disabled || locked;
   return (
     <button
       type="button"
@@ -279,12 +283,12 @@ function HomeIconButton({ ariaLabel, onClick, children, disabled = false }) {
         color: C.muted,
         padding: '0.48rem 0.58rem',
         borderRadius: 9,
-        cursor: disabled ? 'not-allowed' : 'pointer',
+        cursor: muted ? 'not-allowed' : 'pointer',
         fontFamily: 'inherit',
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        opacity: disabled ? 0.32 : 0.88,
+        opacity: muted ? 0.32 : 0.88,
         lineHeight: 0
       }}>
       {children}
@@ -345,7 +349,7 @@ function HomeBrandMark() {
 }
 
 // ─── SETUP SCREEN ─────────────────────────────────────────────────────────────
-function SetupScreen({ onComplete }) {
+function SetupScreen({ onComplete, hideBrand = false }) {
   const [q, setQ] = useState('');
   const taRef = useRef(null);
   const canSubmit = !!q.trim();
@@ -379,7 +383,7 @@ function SetupScreen({ onComplete }) {
         padding: '1.5rem 3rem',
         borderBottom: `1px solid ${C.border}`
       }}>
-        <HomeBrandMark />
+        {hideBrand ? <div /> : <HomeBrandMark />}
       </div>
 
       <div style={{
@@ -654,22 +658,35 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
 }
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
-function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, highlightSpeakers = false }) {
+function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, onWalkNudge, highlightSpeakers = false, hideBrand = false }) {
   const [showManage, setShowManage] = useState(false);
   const remaining = participants.filter((p) => !p.done);
   const total = participants.length;
   const done = participants.filter((p) => p.done).length;
+
+  // Let the step-5 coach card land first, then animate the Speakers highlight + arrow in.
+  const [highlightIn, setHighlightIn] = useState(false);
+  useEffect(() => {
+    if (!highlightSpeakers) { setHighlightIn(false); return undefined; }
+    const t = setTimeout(() => setHighlightIn(true), 550);
+    return () => clearTimeout(t);
+  }, [highlightSpeakers]);
 
   // Walk-through lock: only the action named by the active step is available.
   const walkActive = !!walkAllow;
   const canAddSpeaker = !walkActive || walkAllow === 'addSpeaker' || walkAllow === 'addMore';
   const canManage = !walkActive || walkAllow === 'manage';
   const canUseQR = !walkActive; // QR launcher is locked during the walk-through
+  const nudge = useCallback(() => { onWalkNudge && onWalkNudge(); }, [onWalkNudge]);
 
-  // "Manage your speakers" step advances once the host performs any management action,
-  // or simply opens the panel and closes it again.
-  const advanceManageStep = useCallback(() => {
+  // Opening Speakers advances the "Open Speakers" step; closing advances the "Close Speakers" step.
+  const openManage = useCallback(() => {
+    setShowManage(true);
     if (walkAllow === 'manage' && onWalkAdvance) onWalkAdvance('manage');
+  }, [walkAllow, onWalkAdvance]);
+
+  const advanceManageStep = useCallback(() => {
+    if (walkAllow === 'closeManage' && onWalkAdvance) onWalkAdvance('closeManage');
   }, [walkAllow, onWalkAdvance]);
 
   useEffect(() => {
@@ -725,6 +742,34 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     return () => window.removeEventListener('keydown', h);
   }, [onRegister, showManage, canAddSpeaker]);
 
+  // Off-path nudge: if the host presses a meaningful key the active step doesn't ask for,
+  // block it and shake the coach card to bring focus back to the current step.
+  useEffect(() => {
+    if (!walkActive || showManage) return undefined;
+    const h = (e) => {
+      const tag = (e.target && e.target.tagName) || '';
+      if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+      const isCmd = cmdPressed(e);
+      let disallowed = false;
+      if (isCmd && e.code === 'KeyD') {
+        disallowed = !(walkAllow === 'demo' || walkAllow === 'draw');
+      } else if (isCmd && e.code === 'KeyF') {
+        disallowed = walkAllow !== 'markFT';
+      } else if (!isCmd && !e.altKey && e.code === 'Space') {
+        disallowed = walkAllow !== 'draw';
+      } else if (!isCmd && !e.altKey && e.key.length === 1 && /[a-zA-Z0-9'\-]/.test(e.key)) {
+        disallowed = !canAddSpeaker;
+      }
+      if (disallowed) {
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        nudge();
+      }
+    };
+    window.addEventListener('keydown', h, true);
+    return () => window.removeEventListener('keydown', h, true);
+  }, [walkActive, walkAllow, showManage, canAddSpeaker, nudge]);
+
   return (
     <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
 
@@ -742,7 +787,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
 
       {/* Top bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 3rem', borderBottom: `1px solid ${C.border}` }}>
-        <HomeBrandMark />
+        {hideBrand ? <div /> : <HomeBrandMark />}
         <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
           {demoMode &&
           <span style={{
@@ -766,20 +811,66 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
               style={{
                 position: 'absolute',
                 inset: '-7px',
-                borderRadius: 14,
-                border: `2px solid ${C.gold}`,
-                boxShadow: `0 0 0 4px ${C.gold}28, 0 0 28px ${C.gold}44`,
-                animation: 'walkthroughHighlightPulse 2.2s ease-in-out infinite',
                 pointerEvents: 'none',
-                zIndex: 1
-              }}
-            />
+                zIndex: 1,
+                opacity: highlightIn ? 1 : 0,
+                transform: highlightIn ? 'scale(1)' : 'scale(0.82)',
+                transition: 'opacity 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+              }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  borderRadius: 14,
+                  border: `2px solid ${C.gold}`,
+                  boxShadow: `0 0 0 4px ${C.gold}28, 0 0 28px ${C.gold}44`,
+                  animation: highlightIn ? 'walkthroughHighlightPulse 2.2s ease-in-out infinite' : 'none'
+                }}
+              />
+            </div>
             }
-            <HomeSubduedButton ariaLabel="Manage speakers" onClick={() => setShowManage(true)} disabled={!canManage}>
+            {highlightSpeakers &&
+            <div
+              aria-hidden
+              style={{
+                position: 'absolute',
+                right: 'calc(100% + 14px)',
+                top: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                color: C.gold,
+                fontWeight: 800,
+                fontSize: '1rem',
+                whiteSpace: 'nowrap',
+                pointerEvents: 'none',
+                zIndex: 2,
+                opacity: highlightIn ? 1 : 0,
+                transform: highlightIn ? 'translateY(-50%) translateX(0)' : 'translateY(-50%) translateX(14px)',
+                transition: 'opacity 0.4s ease, transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)'
+              }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                animation: highlightIn ? 'walkthroughArrowNudge 1.1s ease-in-out infinite' : 'none'
+              }}>
+                <span style={{ letterSpacing: '0.04em' }}>Open this</span>
+                <span style={{ fontSize: '1.5rem', lineHeight: 1 }}>{'\u2192'}</span>
+              </div>
+            </div>
+            }
+            <HomeSubduedButton
+              ariaLabel="Manage speakers"
+              onClick={() => { if (canManage) openManage(); else nudge(); }}
+              locked={!canManage}>
               Speakers
             </HomeSubduedButton>
           </div>
-          <HomeIconButton ariaLabel="WhatsApp QR code" onClick={onShowQR} disabled={!canUseQR}>
+          <HomeIconButton
+            ariaLabel="WhatsApp QR code"
+            onClick={() => { if (canUseQR) onShowQR(); else nudge(); }}
+            locked={!canUseQR}>
             <QrCodeIcon />
           </HomeIconButton>
 
@@ -1070,44 +1161,129 @@ function BankDetailsCard() {
 }
 
 // ─── HOST WALK-THROUGH COACH ──────────────────────────────────────────────────
-function WalkthroughCoach({ title, body, stepNumber, totalSteps, isLast, onExit, onSkip, showSkip = false, progress = null }) {
-  const lines = Array.isArray(body) ? body : [body];
+// Gold key-cap chip used to emphasise the single key press a step asks for.
+function WalkKeyChip({ children }) {
+  return (
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      minWidth: '1.6rem',
+      height: '1.7rem',
+      padding: '0 0.5rem',
+      borderRadius: 7,
+      background: `${C.gold}1f`,
+      border: `1px solid ${C.gold}88`,
+      color: C.gold,
+      fontSize: '0.92rem',
+      fontWeight: 800,
+      lineHeight: 1,
+      boxShadow: `0 1px 0 ${C.gold}55, inset 0 1px 0 rgba(255,255,255,0.06)`
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isLast, onExit, onSkip, showSkip = false, progress = null, nudgeKey = 0 }) {
+  const lines = body ? (Array.isArray(body) ? body : [body]) : [];
   const showProgress = progress && Number.isFinite(progress.target);
+  const cueKeys = cue && Array.isArray(cue.keys) ? cue.keys : [];
+  const [shaking, setShaking] = useState(false);
+  const [popping, setPopping] = useState(false);
+
+  useEffect(() => {
+    if (!nudgeKey) return undefined;
+    setShaking(true);
+    const t = setTimeout(() => setShaking(false), 450);
+    return () => clearTimeout(t);
+  }, [nudgeKey]);
+
+  // Pop the card whenever the step changes so the eye is drawn to the new instruction.
+  useEffect(() => {
+    setPopping(true);
+    const t = setTimeout(() => setPopping(false), 420);
+    return () => clearTimeout(t);
+  }, [stepNumber]);
+
+  const glow = 'walkthroughCoachGlow 2.4s ease-in-out infinite';
+  const animation = shaking
+    ? `walkthroughShake 0.45s cubic-bezier(.36,.07,.19,.97) both, ${glow}`
+    : popping
+      ? `walkthroughCoachPop 0.42s ease-out, ${glow}`
+      : glow;
+
   return (
     <div style={{ position: 'fixed', inset: 0, zIndex: 400, pointerEvents: 'none' }}>
       <div style={{
         position: 'absolute',
-        right: 'clamp(1rem, 2.5vw, 2rem)',
-        bottom: 'clamp(1rem, 3vh, 2rem)',
+        left: 'clamp(1rem, 2.5vw, 2rem)',
+        top: 'clamp(1rem, 3vh, 2rem)',
         width: 'min(380px, calc(100vw - 2rem))',
-        background: C.surface,
-        border: `1px solid ${C.gold}66`,
+        background: `linear-gradient(158deg, #23233f 0%, ${C.surface} 58%)`,
+        border: `2px solid ${C.gold}`,
         borderRadius: 16,
-        boxShadow: '0 24px 70px rgba(0,0,0,0.55)',
         padding: '1.15rem 1.25rem',
+        paddingLeft: '1.4rem',
+        borderLeft: `6px solid ${C.gold}`,
         pointerEvents: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.7rem'
+        gap: '0.7rem',
+        transformOrigin: 'top left',
+        animation
       }} data-walkthrough-ui>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: C.gold, fontSize: '0.78rem', fontWeight: 800, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '0.4rem',
+            background: C.gold,
+            color: '#0b0b14',
+            fontSize: '0.72rem',
+            fontWeight: 800,
+            letterSpacing: '0.14em',
+            textTransform: 'uppercase',
+            padding: '0.28rem 0.65rem',
+            borderRadius: 999
+          }}>
+            <span aria-hidden style={{ fontSize: '0.85rem', lineHeight: 1 }}>{'\u2728'}</span>
             Host walk-through
           </span>
-          <span style={{ color: C.dim, fontSize: '0.8rem', fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: C.gold, fontSize: '0.82rem', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
             {stepNumber} / {totalSteps}
           </span>
         </div>
 
-        <div style={{ color: C.text, fontSize: '1.12rem', fontWeight: 800, letterSpacing: '-0.01em' }}>
+        <div style={{ color: C.text, fontSize: '1.22rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.22 }}>
           {title}
         </div>
 
+        {lines.length > 0 &&
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {lines.map((l, i) =>
-          <p key={i} style={{ margin: 0, color: C.muted, fontSize: '0.98rem', lineHeight: 1.5 }}>{l}</p>
+          <p key={i} style={{ margin: 0, color: C.muted, fontSize: '0.95rem', lineHeight: 1.45 }}>{l}</p>
           )}
         </div>
+        }
+
+        {cue && (cueKeys.length > 0 || cue.text) &&
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.4rem',
+          padding: '0.5rem 0.7rem',
+          background: `${C.gold}12`,
+          border: `1px solid ${C.gold}33`,
+          borderRadius: 10
+        }}>
+          {cueKeys.map((k, i) => <WalkKeyChip key={i}>{k}</WalkKeyChip>)}
+          {cue.text &&
+          <span style={{ color: C.text, fontSize: '0.95rem', fontWeight: 600 }}>{cue.text}</span>
+          }
+        </div>
+        }
 
         {showProgress &&
         <div style={{
