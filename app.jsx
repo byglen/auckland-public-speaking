@@ -46,8 +46,8 @@ const WALK_STEP_LANDING_DELAY_MS = 700;
 
 const WALK_STEPS = [
   {
-    title: 'Pick a question',
-    body: ['No need to decide now. Use anything just for this walk-through.', 'If you\u2019d like to choose a question for the event, tell Glen or Bat and we\u2019ll have it ready on the night.'],
+    title: 'Pick a prompt',
+    body: ['No need to decide now. Use anything just for this walk-through.', 'If you\u2019d like to choose a prompt for the event, tell Glen or Bat and we\u2019ll have it ready on the night.'],
     auto: (c) => c.screen === SCREEN.HOME,
   },
   {
@@ -115,14 +115,14 @@ const WALK_STEPS = [
   },
   {
     title: 'Give it up!',
-    body: ['Time to choose their question.'],
+    body: ['Time to choose their prompt.'],
     cue: { keys: ['Space'], text: 'to continue' },
     allow: 'revealAdvance',
     auto: (c) => c.screen === SCREEN.QSELECT,
   },
   {
-    title: 'Pick a question',
-    body: ['Question of the night, three randoms, or Yolo mode.'],
+    title: 'Pick a prompt',
+    body: ['Prompt of the night, three randoms, or Yolo mode.'],
     cue: { keys: ['\u2190', '\u2192'], text: 'browse · Space to pick' },
     // Advance only once the speech timer screen actually starts. For Yolo this means we wait
     // through the question reveal / countdown (coach hidden) instead of advancing on YOLO_PREP.

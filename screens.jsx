@@ -52,6 +52,22 @@ function fmt(secs) {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
+/** Whether a prompt reads as a question — i.e. it contains a question mark. Lets
+ *  the UI say "question" for actual questions and "prompt" for open-ended story
+ *  starters like "In a galaxy far, far away…". */
+function isQuestionPrompt(text) {
+  return typeof text === 'string' && text.includes('?');
+}
+
+/** The noun for a given prompt in UI copy: "question" when it contains a "?",
+ *  otherwise "prompt". Pass { cap: true } to capitalise the first letter. */
+function promptNoun(text, { cap = false } = {}) {
+  const word = isQuestionPrompt(text) ? 'question' : 'prompt';
+  return cap ? word.charAt(0).toUpperCase() + word.slice(1) : word;
+}
+window.isQuestionPrompt = isQuestionPrompt;
+window.promptNoun = promptNoun;
+
 /** Pick a draw winner; first-timers excluded from draws 1–2 unless no one else is eligible. */
 function pickDrawWinner(pool, spokenCount) {
   if (!pool.length) return { winner: null, winnerIdx: -1 };
@@ -147,7 +163,7 @@ function Btn({ children, onClick, variant = 'primary', size = 'md', disabled }) 
 }
 
 // ─── SHARED BRAND ─────────────────────────────────────────────────────────────
-function QuestionOfNightBadge({ large = false }) {
+function QuestionOfNightBadge({ large = false, text = '' }) {
   const s = large ? 2 : 1;
 
   return (
@@ -166,7 +182,7 @@ function QuestionOfNightBadge({ large = false }) {
       gap: `${0.45 * s}rem`
     }}>
       <span style={{ fontSize: `${1.05 * s}rem`, lineHeight: 1 }} aria-hidden>★</span>
-      Question of the Night
+      {promptNoun(text, { cap: true })} of the Night
     </span>
   );
 }
@@ -404,7 +420,7 @@ function SetupScreen({ onComplete, hideBrand = false }) {
           alignItems: 'center',
           gap: 'clamp(1.5rem, 3vh, 2.25rem)'
         }}>
-          <QuestionOfNightBadge />
+          <QuestionOfNightBadge text={q} />
 
           <div style={{ textAlign: 'center', maxWidth: 520 }}>
             <h1 style={{
@@ -415,7 +431,7 @@ function SetupScreen({ onComplete, hideBrand = false }) {
               lineHeight: 1.15,
               margin: 0
             }}>
-              Set tonight&apos;s question
+              Set tonight&apos;s {promptNoun(q)}
             </h1>
             <p style={{
               color: C.muted,
@@ -440,7 +456,7 @@ function SetupScreen({ onComplete, hideBrand = false }) {
               ref={taRef}
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Type your question here…"
+              placeholder={`Type your ${promptNoun(q)} here…`}
               rows={4}
               style={{
                 width: '100%',
@@ -470,7 +486,7 @@ function SetupScreen({ onComplete, hideBrand = false }) {
             paddingTop: '0.25rem'
           }}>
             <Btn variant="surface" size="md" onClick={pickRandom}>
-              {usedRandom ? 'Load another question' : 'Load random question'}
+              {usedRandom ? `Load another ${promptNoun(q)}` : `Load random ${promptNoun(q)}`}
             </Btn>
             <Btn
               variant="gold"
@@ -891,7 +907,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         minHeight: 0
       }}>
         <div style={{ marginBottom: '2rem' }}>
-          <QuestionOfNightBadge large />
+          <QuestionOfNightBadge large text={questionOfNight} />
         </div>
         <QuestionDisplayText style={{ margin: '0 auto 4rem', padding: '0 3rem' }}>
           {questionOfNight}
@@ -2372,7 +2388,7 @@ function QuestionSelectScreen({
         zIndex: 2
       }}>
         {isQotN ?
-        <QuestionOfNightBadge />
+        <QuestionOfNightBadge text={questionOfNight} />
         : isYolo ?
         <YoloModeBadge />
         : current ?
@@ -2384,7 +2400,7 @@ function QuestionSelectScreen({
           boxShadow: `0 0 28px ${C.accent}18`
         }}>
           <span style={{ fontSize: '1.1rem', lineHeight: 1 }} aria-hidden>🎲</span>
-          Random question {idx - 1}
+          Random {promptNoun(current)} {idx - 1}
         </span>
         : null
         }
@@ -2476,7 +2492,7 @@ function QuestionSelectScreen({
         gap: 'clamp(2rem, 5vw, 3.5rem)',
         zIndex: 3
       }}>
-        <KeyboardHint ariaLabel="Arrow keys to browse questions" caption="to browse questions">
+        <KeyboardHint ariaLabel="Arrow keys to browse prompts" caption="to browse prompts">
           <RetroArrowKeys />
         </KeyboardHint>
         <KeyboardHint
@@ -2569,7 +2585,7 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
         animation: 'yoloTeasePulse 1.8s ease-in-out infinite',
         userSelect: 'none'
       }}>
-        Your question…
+        Your {promptNoun(question)}…
       </div>
       }
 
