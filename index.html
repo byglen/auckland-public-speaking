@@ -4,33 +4,112 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Auckland Public Speaking</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
   <style>
+    /* ── Type — two voices ──────────────────────────────────────────────────
+       Canela Deck  = the stage (questions, names, quotes)
+       Theinhardt   = the machine (chrome, labels, timers, hints)          */
+
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-Thin-Trial.otf') format('opentype');
+      font-weight: 100; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-ThinItalic-Trial.otf') format('opentype');
+      font-weight: 100; font-style: italic; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-Light-Trial.otf') format('opentype');
+      font-weight: 300; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-LightItalic-Trial.otf') format('opentype');
+      font-weight: 300; font-style: italic; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-Regular-Trial.otf') format('opentype');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-RegularItalic-Trial.otf') format('opentype');
+      font-weight: 400; font-style: italic; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-Medium-Trial.otf') format('opentype');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-MediumItalic-Trial.otf') format('opentype');
+      font-weight: 500; font-style: italic; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-Bold-Trial.otf') format('opentype');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-BoldItalic-Trial.otf') format('opentype');
+      font-weight: 700; font-style: italic; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-Black-Trial.otf') format('opentype');
+      font-weight: 900; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-BlackItalic-Trial.otf') format('opentype');
+      font-weight: 900; font-style: italic; font-display: swap;
+    }
+
+    @font-face {
+      font-family: 'Theinhardt';
+      src: url('fonts/Theinhardt Light.otf') format('opentype');
+      font-weight: 300; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Theinhardt';
+      src: url('fonts/Theinhardt Regular.otf') format('opentype');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Theinhardt';
+      src: url('fonts/Theinhardt Medium.otf') format('opentype');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Theinhardt';
+      src: url('fonts/Theinhardt Bold.otf') format('opentype');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body, #root {
       width: 100%; height: 100%;
-      background: #0b0b14;
-      font-family: 'Outfit', sans-serif;
+      background: #0C0A08;
+      font-family: 'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
       overflow: hidden;
     }
 
     /* Keyframe animations used by screen components */
-    @keyframes nameFlick {
-      from { opacity: 0.4; transform: translateY(6px); }
-      to   { opacity: 1;   transform: translateY(0); }
-    }
-
-    @keyframes revealBounce {
-      0%   { opacity: 0; transform: scale(0.55) translateY(24px); }
-      65%  { opacity: 1; transform: scale(1.07) translateY(-6px); }
-      100% { transform: scale(1) translateY(0); opacity: 1; }
+    @keyframes revealEnter {
+      from { opacity: 0; transform: translateY(26px) scale(0.985); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
     }
 
     @keyframes fadeSlide {
@@ -39,21 +118,20 @@
     }
 
     @keyframes pulseBig {
-      0%, 100% { opacity: 1;   transform: scale(1); }
-      50%       { opacity: 0.7; transform: scale(0.97); }
+      0%, 100% { opacity: 1;    transform: scale(1); }
+      50%       { opacity: 0.76; transform: scale(0.99); }
     }
 
     @keyframes firstTimerChipPulse {
-      0%   { box-shadow: 0 0 0 0 rgba(212,168,75,0); transform: scale(1); }
-      40%  { box-shadow: 0 0 22px rgba(212,168,75,0.55); transform: scale(1.06); }
-      100% { box-shadow: 0 0 0 0 rgba(212,168,75,0); transform: scale(1); }
+      0%   { opacity: 0.35; }
+      35%  { opacity: 1; }
+      100% { opacity: 1; }
     }
 
-    @keyframes ledDigitPulse {
-      0%, 100% { opacity: 1; filter: brightness(1); }
-      48%      { opacity: 0.92; filter: brightness(0.94); }
-      50%      { opacity: 0.88; filter: brightness(0.88); }
-      52%      { opacity: 0.94; filter: brightness(0.96); }
+    @keyframes ftNamePulse {
+      0%   { color: #E8D5A4; }
+      55%  { color: #E8D5A4; }
+      100% { color: inherit; }
     }
 
     /* Wheel “currently under pointer” readout — short crossfade each slice change */
@@ -74,7 +152,7 @@
       50%       { opacity: 1;   transform: scale(1.02); }
     }
 
-    /* Next Speaker reveal — warm glow + floating applause */
+    /* Next Speaker reveal — warm spotlight bloom + rising gold dust */
     @keyframes revealGlowPulse {
       0%, 100% { opacity: 0.7; transform: scale(1); }
       50%       { opacity: 1;   transform: scale(1.05); }
@@ -85,27 +163,27 @@
       50%       { opacity: 0.75; transform: scale(1.04); }
     }
 
-    @keyframes applauseDrift0 {
-      0%   { transform: translate(0, 48px) rotate(-10deg) scale(0.45); opacity: 0; }
-      14%  { opacity: 0.95; }
-      100% { transform: translate(-42px, -240px) rotate(16deg) scale(1.05); opacity: 0; }
+    @keyframes dustRise0 {
+      0%   { transform: translate(0, 40px); opacity: 0; }
+      18%  { opacity: 0.85; }
+      100% { transform: translate(-34px, -300px); opacity: 0; }
     }
 
-    @keyframes applauseDrift1 {
-      0%   { transform: translate(0, 36px) rotate(8deg) scale(0.5); opacity: 0; }
-      14%  { opacity: 0.9; }
-      100% { transform: translate(52px, -280px) rotate(-22deg) scale(0.95); opacity: 0; }
+    @keyframes dustRise1 {
+      0%   { transform: translate(0, 30px); opacity: 0; }
+      18%  { opacity: 0.7; }
+      100% { transform: translate(40px, -340px); opacity: 0; }
     }
 
-    @keyframes applauseDrift2 {
-      0%   { transform: translate(0, 56px) rotate(0deg) scale(0.4); opacity: 0; }
-      16%  { opacity: 0.88; }
-      100% { transform: translate(-18px, -210px) rotate(28deg) scale(1.12); opacity: 0; }
+    @keyframes dustRise2 {
+      0%   { transform: translate(0, 48px); opacity: 0; }
+      20%  { opacity: 0.6; }
+      100% { transform: translate(-12px, -260px); opacity: 0; }
     }
 
-    @keyframes revealShimmer {
-      0%   { background-position: 200% center; }
-      100% { background-position: -200% center; }
+    @keyframes revealRule {
+      from { opacity: 0; transform: scaleX(0.3); }
+      to   { opacity: 1; transform: scaleX(1); }
     }
 
     @keyframes revealQuoteIn {
@@ -134,15 +212,9 @@
       100% { opacity: 1; transform: scale(1); }
     }
 
-    @keyframes yoloGoPop {
-      0%   { opacity: 0; transform: scale(0.5); }
-      70%  { opacity: 1; transform: scale(1.12); }
-      100% { opacity: 1; transform: scale(1); }
-    }
-
     @keyframes walkthroughHighlightPulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 0 4px rgba(212,168,75,0.22), 0 0 22px rgba(212,168,75,0.38); }
-      50%       { opacity: 0.88; box-shadow: 0 0 0 8px rgba(212,168,75,0.1), 0 0 36px rgba(212,168,75,0.52); }
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 4px rgba(201,169,106,0.2), 0 0 22px rgba(201,169,106,0.32); }
+      50%       { opacity: 0.88; box-shadow: 0 0 0 8px rgba(201,169,106,0.09), 0 0 34px rgba(201,169,106,0.44); }
     }
 
     @keyframes walkthroughShake {
@@ -157,21 +229,87 @@
       50%      { transform: translateX(7px); }
     }
 
-    @keyframes walkthroughCoachGlow {
-      0%, 100% { box-shadow: 0 24px 70px rgba(0,0,0,0.55), 0 0 0 1px rgba(212,168,75,0.45), 0 0 26px rgba(212,168,75,0.30); }
-      50%      { box-shadow: 0 24px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,168,75,0.8), 0 0 46px rgba(212,168,75,0.58); }
-    }
-
     @keyframes walkthroughCoachPop {
       0%   { transform: scale(0.94); }
       55%  { transform: scale(1.03); }
       100% { transform: scale(1); }
     }
 
+    /* Candle draw — idle flame wobble, storm-gutter, smoke, winner bloom */
+    @keyframes candleFlicker {
+      0%, 100% { transform: scaleY(1) scaleX(1) rotate(0deg); }
+      22%       { transform: scaleY(1.07) scaleX(0.95) rotate(-1.6deg); }
+      41%       { transform: scaleY(0.93) scaleX(1.06) rotate(1.3deg); }
+      62%       { transform: scaleY(1.05) scaleX(0.96) rotate(-0.9deg); }
+      81%       { transform: scaleY(0.96) scaleX(1.03) rotate(1.7deg); }
+    }
+
+    @keyframes candleFlickerHard {
+      0%, 100% { transform: scaleY(0.95) scaleX(1.04) rotate(-3deg); }
+      16%       { transform: scaleY(1.12) scaleX(0.9) rotate(4.2deg); }
+      32%       { transform: scaleY(0.82) scaleX(1.1) rotate(-5.2deg); }
+      47%       { transform: scaleY(1.08) scaleX(0.94) rotate(2.6deg); }
+      63%       { transform: scaleY(0.88) scaleX(1.07) rotate(-4.4deg); }
+      82%       { transform: scaleY(1.03) scaleX(0.96) rotate(3.6deg); }
+    }
+
+    @keyframes candleSmoke {
+      0%   { opacity: 0; transform: translate(0, 2px) scale(0.5) rotate(0deg); }
+      14%  { opacity: 0.55; }
+      100% { opacity: 0; transform: translate(30px, -110px) scale(1.7) rotate(26deg); }
+    }
+
+    @keyframes candleGlowPulse {
+      0%, 100% { opacity: 0.82; }
+      50%       { opacity: 1; }
+    }
+
+    /* Classic wheel — needle tick as each name passes the top */
+    @keyframes wheelPointerDip {
+      0%   { transform: translateX(-50%) translateY(0); }
+      45%  { transform: translateX(-50%) translateY(3.5px); }
+      100% { transform: translateX(-50%) translateY(0); }
+    }
+
+    /* The hat — roll-call drop-ins, shake, slip glimpses, winner toss */
+    @keyframes hatShake {
+      0%, 100% { transform: rotate(0deg) translate(0, 0); }
+      20%       { transform: rotate(-3.4deg) translate(-4px, 1px); }
+      40%       { transform: rotate(2.8deg) translate(4px, -2px); }
+      60%       { transform: rotate(-2.4deg) translate(-3px, 2px); }
+      80%       { transform: rotate(3.2deg) translate(3px, 0); }
+    }
+
+    @keyframes hatFlick {
+      0%   { transform: rotate(0deg) translateY(0); }
+      28%  { transform: rotate(-7deg) translateY(-7px); }
+      100% { transform: rotate(0deg) translateY(0); }
+    }
+
+    @keyframes hatDropIn {
+      0%   { transform: translate(var(--sx), -46vh) rotate(var(--r0)); opacity: 0; }
+      10%  { opacity: 1; }
+      88%  { opacity: 1; }
+      100% { transform: translate(0, 0) rotate(var(--r1)); opacity: 0; }
+    }
+
+    @keyframes hatSlipToss {
+      0%   { transform: translate(0, 0) rotate(0deg) scale(0.9); opacity: 0; }
+      14%  { opacity: 1; }
+      55%  { transform: translate(calc(var(--dx) * 0.7), var(--peak)) rotate(var(--rot)) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), 6px) rotate(calc(var(--rot) * 1.7)) scale(0.85); opacity: 0; }
+    }
+
+    @keyframes hatWinnerToss {
+      0%   { transform: translateY(26vh) rotate(-22deg) scale(0.72); opacity: 0; }
+      10%  { opacity: 1; }
+      100% { transform: translateY(0) rotate(7deg) scale(1); opacity: 1; }
+    }
+
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #2a2a48; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: #3A322A; border-radius: 3px; }
   </style>
 </head>
 <body>
@@ -183,6 +321,11 @@
   <script src="jazz-loop.js"></script>
   <script type="text/babel" src="wheel.jsx"></script>
   <script type="text/babel" src="screens.jsx"></script>
+  <script type="text/babel" src="candles.jsx"></script>
+  <script type="text/babel" src="classic-wheel.jsx"></script>
+  <script type="text/babel" src="lottery.jsx"></script>
+  <script type="text/babel" src="plinko.jsx"></script>
+  <script type="text/babel" src="tophat.jsx"></script>
   <script type="text/babel" src="app.jsx"></script>
 </body>
 </html>

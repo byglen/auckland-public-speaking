@@ -90,7 +90,10 @@ function drawCircularLabelText(ctx, str, cx, cy, radius, centerAngleRad, fontSpe
   ctx.restore();
 }
 
-const WEDGE_LIT_HUES = [218, 275, 198, 300, 30, 168];
+const WHEEL_UI_FONT = "'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif";
+
+/** Narrow champagne band — tonal variation, one material, no carnival hues. */
+const WEDGE_LIT_HUES = [42, 36, 45, 33, 40, 38];
 
 function wedgeLabelStyle(i, N) {
   const goldenCap = i === N - 1 && N % 2 === 1;
@@ -104,7 +107,7 @@ function wedgeLabelStyle(i, N) {
 function drawWedgeLabel(ctx, text, anchorX, textAlign, fontPx, style, boosting) {
   if (!text) return;
   const spacing = fontPx * 0.075;
-  ctx.font = `700 ${fontPx}px Outfit, system-ui, sans-serif`;
+  ctx.font = `500 ${fontPx}px ${WHEEL_UI_FONT}`;
   ctx.textBaseline = 'middle';
 
   const chars = [...text];
@@ -122,9 +125,9 @@ function drawWedgeLabel(ctx, text, anchorX, textAlign, fontPx, style, boosting) 
   let shadowColor;
   if (style.type === 'dark') {
     const cool = style.cool;
-    grad.addColorStop(0, cool ? 'rgba(148,162,192,0.38)' : 'rgba(175,162,188,0.36)');
-    grad.addColorStop(0.45, cool ? 'rgba(205,214,232,0.66)' : 'rgba(222,212,228,0.62)');
-    grad.addColorStop(1, cool ? 'rgba(138,152,182,0.34)' : 'rgba(165,155,180,0.32)');
+    grad.addColorStop(0, cool ? 'rgba(196,186,166,0.42)' : 'rgba(188,176,154,0.4)');
+    grad.addColorStop(0.45, cool ? 'rgba(234,226,208,0.7)' : 'rgba(228,218,198,0.66)');
+    grad.addColorStop(1, cool ? 'rgba(184,174,152,0.38)' : 'rgba(176,164,142,0.36)');
     shadowColor = 'rgba(0,0,0,0.55)';
   } else if (style.type === 'gold') {
     grad.addColorStop(0, 'rgba(195,158,88,0.52)');
@@ -133,11 +136,11 @@ function drawWedgeLabel(ctx, text, anchorX, textAlign, fontPx, style, boosting) 
     shadowColor = 'rgba(0,0,0,0.38)';
   } else {
     const h = style.hue;
-    grad.addColorStop(0, `hsla(${h}, 44%, 58%, 0.52)`);
-    grad.addColorStop(0.38, `hsla(${(h + 14) % 360}, 52%, 80%, 0.78)`);
-    grad.addColorStop(0.72, `hsla(${(h + 28) % 360}, 48%, 68%, 0.62)`);
-    grad.addColorStop(1, `hsla(${h}, 40%, 54%, 0.48)`);
-    shadowColor = `hsla(${h}, 28%, 6%, 0.42)`;
+    grad.addColorStop(0, `hsla(${h}, 34%, 62%, 0.55)`);
+    grad.addColorStop(0.38, `hsla(${(h + 6) % 360}, 46%, 84%, 0.8)`);
+    grad.addColorStop(0.72, `hsla(${(h + 10) % 360}, 40%, 72%, 0.64)`);
+    grad.addColorStop(1, `hsla(${h}, 30%, 58%, 0.5)`);
+    shadowColor = `hsla(${h}, 30%, 6%, 0.45)`;
   }
 
   ctx.save();
@@ -156,35 +159,9 @@ function drawWedgeLabel(ctx, text, anchorX, textAlign, fontPx, style, boosting) 
   ctx.restore();
 }
 
-/** Retro backlit LED counter — sits on turntable plinth corner */
+/** Quiet engraved counter — sits on turntable plinth corner */
 function RetroLedDisplay({ count }) {
   const n = Math.max(0, count ?? 0);
-  const digits = (n > 99 ? '99' : String(n).padStart(2, '0')).split('');
-
-  const digitStyle = {
-    width: 'clamp(18px, 3.2vw, 26px)',
-    height: 'clamp(28px, 4.8vw, 38px)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'linear-gradient(180deg, #060508 0%, #0c0a0e 45%, #040406 100%)',
-    borderRadius: 3,
-    boxShadow: 'inset 0 2px 5px rgba(0,0,0,0.95), inset 0 -1px 0 rgba(60,120,255,0.08)',
-    border: '1px solid rgba(0,0,0,0.65)',
-    fontFamily: "'Courier New', Courier, monospace",
-    fontSize: 'clamp(1.15rem, 2.6vw, 1.65rem)',
-    fontWeight: 700,
-    fontVariantNumeric: 'tabular-nums',
-    color: '#5a9cff',
-    textShadow: `
-      0 0 2px #6aabff,
-      0 0 8px rgba(74, 140, 255, 0.85),
-      0 0 18px rgba(58, 118, 255, 0.55),
-      0 0 32px rgba(40, 100, 255, 0.28)
-    `,
-    lineHeight: 1,
-    animation: 'ledDigitPulse 3.2s ease-in-out infinite'
-  };
 
   return (
     <div
@@ -197,48 +174,36 @@ function RetroLedDisplay({ count }) {
         pointerEvents: 'none'
       }}>
       <div style={{
-        background: 'linear-gradient(165deg, #22252f 0%, #12141c 55%, #0a0b10 100%)',
-        border: '1px solid rgba(255,255,255,0.09)',
-        borderRadius: 7,
-        padding: 'clamp(5px, 1vw, 7px) clamp(7px, 1.4vw, 10px) clamp(6px, 1.1vw, 8px)',
-        boxShadow: `
-          inset 0 1px 0 rgba(255,255,255,0.06),
-          inset 0 -2px 4px rgba(0,0,0,0.5),
-          0 3px 10px rgba(0,0,0,0.45)
-        `
+        display: 'flex',
+        alignItems: 'baseline',
+        gap: '0.5em',
+        padding: 'clamp(6px, 1.1vw, 9px) clamp(10px, 1.8vw, 14px)',
+        background: 'rgba(10,8,6,0.6)',
+        border: '1px solid rgba(244,239,230,0.1)',
+        borderRadius: 8,
+        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), inset 0 -2px 4px rgba(0,0,0,0.4)'
       }}>
-        <div style={{
-          fontSize: 'clamp(0.42rem, 0.95vw, 0.55rem)',
-          fontWeight: 800,
-          letterSpacing: '0.22em',
+        <span style={{
+          fontFamily: WHEEL_UI_FONT,
+          fontWeight: 500,
+          fontVariantNumeric: 'tabular-nums',
+          fontSize: 'clamp(1.05rem, 2.2vw, 1.5rem)',
+          color: '#E8D5A4',
+          lineHeight: 1
+        }}>
+          {n > 99 ? '99' : n}
+        </span>
+        <span style={{
+          fontFamily: WHEEL_UI_FONT,
+          fontWeight: 500,
+          fontSize: 'clamp(0.48rem, 1vw, 0.6rem)',
+          letterSpacing: '0.28em',
           textTransform: 'uppercase',
-          color: 'rgba(100, 165, 255, 0.78)',
-          textAlign: 'center',
-          marginBottom: 'clamp(3px, 0.6vw, 5px)',
-          textShadow: '0 0 6px rgba(74,140,255,0.4)'
+          color: 'rgba(244,239,230,0.5)',
+          lineHeight: 1
         }}>
           Left
-        </div>
-        <div style={{
-          display: 'flex',
-          gap: 'clamp(3px, 0.55vw, 5px)',
-          padding: 'clamp(3px, 0.6vw, 5px)',
-          background: '#030304',
-          borderRadius: 4,
-          boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.9)',
-          border: '1px solid rgba(0,0,0,0.55)',
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Scanline mesh */}
-          <div aria-hidden style={{
-            position: 'absolute', inset: 0, opacity: 0.12, pointerEvents: 'none',
-            background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.4) 2px, rgba(0,0,0,0.4) 3px)'
-          }} />
-          {digits.map((d, i) =>
-          <div key={i} style={{ ...digitStyle, animationDelay: `${i * 0.15}s` }}>{d}</div>
-          )}
-        </div>
+        </span>
       </div>
     </div>
   );
@@ -306,9 +271,9 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
 
     // Soft vignette beyond disc (vinyl platter in space — no gold roulette halo)
     const glow = ctx.createRadialGradient(cx, cy, outerR * 0.68, cx, cy, rimR + 22);
-    glow.addColorStop(0, boosting ? 'rgba(90,172,248,0.05)' : 'rgba(255,255,255,0.02)');
-    glow.addColorStop(0.62, boosting ? 'rgba(40,118,212,0.04)' : 'rgba(108,118,146,0.045)');
-    glow.addColorStop(1, 'rgba(11,11,20,0)');
+    glow.addColorStop(0, boosting ? 'rgba(232,213,164,0.05)' : 'rgba(255,255,255,0.02)');
+    glow.addColorStop(0.62, boosting ? 'rgba(201,169,106,0.04)' : 'rgba(146,138,122,0.045)');
+    glow.addColorStop(1, 'rgba(12,10,8,0)');
     ctx.fillStyle = glow;
     ctx.beginPath();
     ctx.arc(cx, cy, rimR + 18, 0, Math.PI * 2);
@@ -339,23 +304,23 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
       if (zebraDark) {
         const cool = ((i >>> 1) % 2) === 0;
         const rg = ctx.createRadialGradient(0, 0, wedgeToneInnerR, 0, 0, outerR);
-        rg.addColorStop(0, cool ? '#040407' : '#050508');
-        rg.addColorStop(0.73, cool ? '#0c1026' : '#110d18');
-        rg.addColorStop(1, cool ? '#141a2c' : '#191524');
+        rg.addColorStop(0, cool ? '#050403' : '#060504');
+        rg.addColorStop(0.73, cool ? '#171310' : '#131009');
+        rg.addColorStop(1, cool ? '#201A13' : '#1C1610');
         ctx.fillStyle = rg;
       } else if (goldenCap) {
         const rg = ctx.createRadialGradient(0, 0, wedgeToneInnerR * 1.1, 0, 0, outerR * 1.05);
         rg.addColorStop(0, 'hsl(40,62%,21%)');
-        rg.addColorStop(0.5, 'hsl(46,72%,53%)');
-        rg.addColorStop(1, 'hsl(32,61%,37%)');
+        rg.addColorStop(0.5, 'hsl(44,64%,52%)');
+        rg.addColorStop(1, 'hsl(34,56%,36%)');
         ctx.fillStyle = rg;
       } else {
         const hi = Math.floor(i / 2) % LIT_HUES.length;
         const hu = LIT_HUES[hi];
         const rg = ctx.createRadialGradient(0, 0, wedgeToneInnerR * 1.06, 0, 0, outerR * 1.06);
-        rg.addColorStop(0, `hsl(${hu}, 46%, 11%)`);
-        rg.addColorStop(0.5, `hsl(${(hu + 22) % 360}, 64%, 32%)`);
-        rg.addColorStop(1, `hsl(${(hu + 46) % 360}, 52%, 20%)`);
+        rg.addColorStop(0, `hsl(${hu}, 30%, 10%)`);
+        rg.addColorStop(0.5, `hsl(${(hu + 4) % 360}, 40%, 29%)`);
+        rg.addColorStop(1, `hsl(${(hu + 8) % 360}, 34%, 18%)`);
         ctx.fillStyle = rg;
       }
       ctx.fill();
@@ -415,9 +380,9 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
       0,
       grooveInnerR
     );
-    dwGrad.addColorStop(0.68, '#19181e');
-    dwGrad.addColorStop(0.86, '#24222c');
-    dwGrad.addColorStop(1, '#18161d');
+    dwGrad.addColorStop(0.68, '#1B1712');
+    dwGrad.addColorStop(0.86, '#272117');
+    dwGrad.addColorStop(1, '#1A1611');
     ctx.beginPath();
     ctx.arc(0, 0, grooveInnerR, 0, Math.PI * 2);
     ctx.arc(0, 0, labelPaperR, 0, Math.PI * 2, true);
@@ -425,22 +390,22 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
     ctx.fill();
 
     const paperGlow = ctx.createRadialGradient(-labelPaperR * 0.2, -labelPaperR * 0.38, 0, 0, 0, labelPaperR * 1.02);
-    paperGlow.addColorStop(0, '#fffaf2');
-    paperGlow.addColorStop(0.45, '#eae3d8');
-    paperGlow.addColorStop(0.78, '#c9c4b8');
-    paperGlow.addColorStop(1, '#8a8694');
+    paperGlow.addColorStop(0, '#FFFAF0');
+    paperGlow.addColorStop(0.45, '#EDE5D5');
+    paperGlow.addColorStop(0.78, '#CCC4B0');
+    paperGlow.addColorStop(1, '#948A72');
     ctx.beginPath();
     ctx.arc(0, 0, labelPaperR, 0, Math.PI * 2);
     ctx.fillStyle = paperGlow;
     ctx.fill();
 
     ctx.lineWidth = 1.85;
-    ctx.strokeStyle = 'rgba(42,94,248,0.28)';
+    ctx.strokeStyle = 'rgba(146,116,64,0.42)';
     ctx.beginPath();
     ctx.arc(0, 0, labelPaperR * 0.98, 0, Math.PI * 2);
     ctx.stroke();
     ctx.lineWidth = 1.1;
-    ctx.strokeStyle = 'rgba(26,52,132,0.22)';
+    ctx.strokeStyle = 'rgba(104,82,48,0.3)';
     ctx.beginPath();
     ctx.arc(0, 0, labelPaperR * 0.86, 0, Math.PI * 2);
     ctx.stroke();
@@ -460,9 +425,9 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
       0,
       arcTopR,
       -Math.PI / 2,
-      `900 ${lblArcPx}px Outfit,system-ui,sans-serif`,
-      '#1f243d',
-      'rgba(255,255,255,0.52)'
+      `700 ${lblArcPx}px ${WHEEL_UI_FONT}`,
+      '#33291A',
+      'rgba(255,255,255,0.5)'
     );
     drawCircularLabelText(
       ctx,
@@ -471,33 +436,33 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
       0,
       arcBotR,
       Math.PI / 2,
-      `900 ${lblArcPx}px Outfit,system-ui,sans-serif`,
-      '#1f243d',
-      'rgba(255,255,255,0.52)'
+      `700 ${lblArcPx}px ${WHEEL_UI_FONT}`,
+      '#33291A',
+      'rgba(255,255,255,0.5)'
     );
 
     if (size >= 420) {
       ctx.shadowBlur = 0;
-      ctx.font = `${Math.max(5.5, lblArcPx * 0.82)}px Outfit,system-ui,sans-serif`;
-      ctx.fillStyle = 'rgba(116,138,172,0.88)';
+      ctx.font = `500 ${Math.max(5.5, lblArcPx * 0.82)}px ${WHEEL_UI_FONT}`;
+      ctx.fillStyle = 'rgba(146,124,88,0.9)';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
       ctx.fillText('SIDE A', 0, -labelPaperR * 0.02);
-      ctx.font = `${Math.max(5, lblArcPx * 0.58)}px Outfit,system-ui,sans-serif`;
-      ctx.fillStyle = 'rgba(100,126,174,0.62)';
+      ctx.font = `500 ${Math.max(5, lblArcPx * 0.58)}px ${WHEEL_UI_FONT}`;
+      ctx.fillStyle = 'rgba(136,114,80,0.65)';
       ctx.fillText(String.fromCharCode(8226) + ' LIVE DRAW ' + String.fromCharCode(8226), 0, labelPaperR * 0.15);
     }
 
     const spindleR = Math.max(labelPaperR * 0.192, Math.min(labelPaperR * 0.22, size * 0.026));
     const holeGrad = ctx.createRadialGradient(-spindleR * 0.24, -spindleR * 0.2, spindleR * 0.06, 0, 0, spindleR);
-    holeGrad.addColorStop(0, '#2a3548');
-    holeGrad.addColorStop(0.45, '#0b0e16');
-    holeGrad.addColorStop(1, '#030306');
+    holeGrad.addColorStop(0, '#3D3426');
+    holeGrad.addColorStop(0.45, '#120E09');
+    holeGrad.addColorStop(1, '#050403');
     ctx.beginPath();
     ctx.arc(0, 0, spindleR, 0, Math.PI * 2);
     ctx.fillStyle = holeGrad;
     ctx.fill();
-    ctx.strokeStyle = 'rgba(180,210,250,0.22)';
+    ctx.strokeStyle = 'rgba(232,220,198,0.22)';
     ctx.lineWidth = 1.05;
     ctx.stroke();
 
@@ -547,24 +512,24 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
 
     // ── Outer edge reads as lacquer/black vinyl rim (subtle highlight + shadow — not roulette gold) ──
     ctx.lineWidth = 3.2;
-    ctx.strokeStyle = '#13141d';
+    ctx.strokeStyle = '#161310';
     ctx.beginPath();
     ctx.arc(cx, cy, outerR + 4.2, 0, Math.PI * 2);
     ctx.stroke();
 
     ctx.lineWidth = 2.1;
-    ctx.strokeStyle = '#24262f';
+    ctx.strokeStyle = '#282218';
     ctx.beginPath();
     ctx.arc(cx, cy, outerR + 3.1, 0, Math.PI * 2);
     ctx.stroke();
 
     if (boosting) {
       ctx.lineWidth = 2;
-      ctx.strokeStyle = 'rgba(120,218,255,0.32)';
+      ctx.strokeStyle = 'rgba(232,213,164,0.32)';
       ctx.beginPath();
       ctx.arc(cx, cy, outerR + 5, 0, Math.PI * 2);
       ctx.stroke();
-      ctx.strokeStyle = 'rgba(70,164,246,0.18)';
+      ctx.strokeStyle = 'rgba(201,169,106,0.18)';
       ctx.lineWidth = 1.35;
       ctx.beginPath();
       ctx.arc(cx, cy, outerR + 7, 0, Math.PI * 2);
@@ -590,14 +555,14 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
 
     // Inner delineation groove band → edge
     ctx.lineWidth = 1.15;
-    ctx.strokeStyle = boosting ? 'rgba(176,226,255,0.1)' : 'rgba(255,255,255,0.058)';
+    ctx.strokeStyle = boosting ? 'rgba(232,213,164,0.12)' : 'rgba(255,255,255,0.058)';
     ctx.beginPath();
     ctx.arc(cx, cy, outerR - 1, 0, Math.PI * 2);
     ctx.stroke();
 
     // Second micro highlight on outer lip (narrow specular wedge)
     ctx.lineWidth = 1;
-    ctx.strokeStyle = boosting ? 'rgba(200,240,255,0.11)' : 'rgba(226,231,238,0.075)';
+    ctx.strokeStyle = boosting ? 'rgba(240,230,208,0.11)' : 'rgba(238,232,222,0.075)';
     ctx.beginPath();
     ctx.arc(cx, cy, outerR + 5.05, Math.PI * 1.08, Math.PI * 1.42);
     ctx.stroke();
@@ -619,7 +584,7 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
       const wv = boosting ? 1.06 : gStr + 0.28;
       gl.addColorStop(0, `rgba(255,255,255,${0.02 * wv})`);
       gl.addColorStop(0.38, `rgba(255,242,218,${0.52 * gStr})`);
-      gl.addColorStop(0.62, `rgba(208,226,255,${0.38 * gStr})`);
+      gl.addColorStop(0.62, `rgba(240,232,214,${0.36 * gStr})`);
       gl.addColorStop(1, `rgba(255,255,255,${0.04 * wv})`);
       ctx.fillStyle = gl;
       ctx.globalAlpha = 0.92;
@@ -956,6 +921,17 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
     return () => window.removeEventListener('resize', onR);
   }, []);
 
+  // Repaint once webfonts land so canvas lettering uses Theinhardt, not the fallback
+  useEffect(() => {
+    let cancelled = false;
+    if (document.fonts?.ready) {
+      document.fonts.ready.then(() => {
+        if (!cancelled) draw(liveRotRef.current);
+      });
+    }
+    return () => { cancelled = true; };
+  }, []);
+
   return (
     <div
       style={{
@@ -970,10 +946,10 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
       borderRadius: 'clamp(14px, 2.6vw, 30px)',
       background: `linear-gradient(
         168deg,
-        rgba(38, 42, 56, 0.98) 0%,
-        rgba(20, 23, 32, 1) 38%,
-        rgba(14, 16, 24, 1) 72%,
-        rgba(10, 11, 17, 1) 100%
+        rgba(46, 39, 30, 0.98) 0%,
+        rgba(27, 22, 17, 1) 38%,
+        rgba(19, 15, 11, 1) 72%,
+        rgba(13, 10, 8, 1) 100%
       )`,
       boxShadow: `
         inset 0 1px 0 rgba(255, 255, 255, 0.075),
@@ -1001,10 +977,10 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
           opacity: 0.88
         }}>
         <svg width="34" height="34" viewBox="0 0 36 36" style={{ flexShrink: 0 }}>
-          <circle cx="18" cy="18" r="15.5" fill="#12151e" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
+          <circle cx="18" cy="18" r="15.5" fill="#171310" stroke="rgba(255,255,255,0.09)" strokeWidth="1" />
           <circle cx="18" cy="18" r="11.5" fill="none" stroke="rgba(0,0,0,0.5)" strokeWidth="0.85" />
-          <circle cx="18" cy="18" r="3" fill="#252a38" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
-          <line x1="18" y1="18" x2="18" y2="7.5" stroke="rgba(195,206,228,0.42)" strokeWidth="1.6" strokeLinecap="round" transform="rotate(48 18 18)" />
+          <circle cx="18" cy="18" r="3" fill="#2B2418" stroke="rgba(255,255,255,0.06)" strokeWidth="0.6" />
+          <line x1="18" y1="18" x2="18" y2="7.5" stroke="rgba(226,214,190,0.42)" strokeWidth="1.6" strokeLinecap="round" transform="rotate(48 18 18)" />
         </svg>
 
         <div
@@ -1020,7 +996,7 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
               width: '100%',
               height: 7,
               borderRadius: 4,
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(32,36,48,0.9) 40%, rgba(18,21,30,1) 100%)',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.55) 0%, rgba(42,36,27,0.9) 40%, rgba(24,19,14,1) 100%)',
               boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.65), inset 0 -1px 0 rgba(255,255,255,0.04)',
               border: '1px solid rgba(0,0,0,0.35)',
               position: 'relative'
@@ -1034,7 +1010,7 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
                 width: 13,
                 height: 17,
                 borderRadius: 3,
-                background: 'linear-gradient(165deg, #454e64 0%, #242a38 55%, #141820 100%)',
+                background: 'linear-gradient(165deg, #56492F 0%, #2E2618 55%, #191309 100%)',
                 boxShadow:
                   '0 1px 2px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.12)',
                 border: '1px solid rgba(0,0,0,0.35)'
@@ -1059,9 +1035,9 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
           padding: 'clamp(5px, 0.95vw, 10px)',
           background: `radial-gradient(
             circle at 50% 46%,
-            rgba(54, 58, 74, 0.35) 0%,
-            rgba(26, 28, 38, 0.92) 52%,
-            rgba(13, 14, 22, 1) 100%
+            rgba(66, 57, 43, 0.35) 0%,
+            rgba(32, 26, 20, 0.92) 52%,
+            rgba(16, 13, 10, 1) 100%
           )`,
           boxShadow: `
             inset 0 0 0 1px rgba(0, 0, 0, 0.45),
@@ -1102,13 +1078,13 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
               style={{ width: '100%', height: '100%', display: 'block', overflow: 'visible' }}>
               <defs>
                 <linearGradient id="apsTonearmTube" x1="10%" y1="0%" x2="92%" y2="100%">
-                  <stop offset="0%" stopColor="#ebedf6" />
-                  <stop offset="38%" stopColor="#9aaecc" />
-                  <stop offset="100%" stopColor="#39465e" />
+                  <stop offset="0%" stopColor="#F4F0E6" />
+                  <stop offset="38%" stopColor="#C4B89E" />
+                  <stop offset="100%" stopColor="#4E4432" />
                 </linearGradient>
                 <linearGradient id="apsHeadshellDark" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#44556e" />
-                  <stop offset="100%" stopColor="#171d2a" />
+                  <stop offset="0%" stopColor="#5C5038" />
+                  <stop offset="100%" stopColor="#1F1911" />
                 </linearGradient>
               </defs>
               {/* x=154 is stylus column; −53 aligns tip to platter centre (−π/2) */}
@@ -1120,8 +1096,8 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
                   width="44"
                   height="11"
                   rx="3"
-                  fill="#2a3140"
-                  stroke="#151a24"
+                  fill="#302A1F"
+                  stroke="#181410"
                   strokeWidth="1"
                 />
                 <ellipse
@@ -1130,16 +1106,16 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
                   rx="10"
                   ry="16"
                   transform="rotate(18 176 21)"
-                  fill="#2e3648"
-                  stroke="#1a2230"
+                  fill="#352E21"
+                  stroke="#1E1913"
                   strokeWidth="2"
                 />
-                <circle cx="172" cy="14" r="2" fill="rgba(235,239,246,0.45)" />
+                <circle cx="172" cy="14" r="2" fill="rgba(244,239,230,0.45)" />
                 {/* Neck — runs into ellipse bottom + under chrome so no seams */}
                 <path
                   d="M 168 36 C 170 43 173 53 173 62 L174 68 L173 71 L169 71 L166 62 C 165 54 164 46 164 39 Z"
-                  fill="#39465c"
-                  stroke="#273141"
+                  fill="#493F2C"
+                  stroke="#2C251A"
                   strokeWidth="1"
                   strokeLinejoin="round"
                 />
@@ -1161,7 +1137,7 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
                 <path
                   d="M 146 217 L154 224 L159 229 L154 231 L146 224 Z"
                   fill="url(#apsHeadshellDark)"
-                  stroke="#5b6f8e"
+                  stroke="#7E6F4E"
                   strokeWidth="1"
                   strokeLinejoin="round"
                 />
@@ -1171,17 +1147,17 @@ const SpinWheel = ({ names, winnerIdx, onComplete, spinKey, onPointerNameChange,
                   y1="230"
                   x2="154"
                   y2="252"
-                  stroke="#aebfe0"
+                  stroke="#DCD0B2"
                   strokeWidth="2.4"
                   strokeLinecap="round"
                 />
-                <polygon points="154,248 157,255 151,255" fill="#dce6fa" stroke="#8a9ab8" strokeWidth="0.9" />
+                <polygon points="154,248 157,255 151,255" fill="#F2EAD6" stroke="#A6987A" strokeWidth="0.9" />
                 <circle
                   cx="154"
                   cy="252"
                   r="3.4"
-                  fill="#f4f8ff"
-                  stroke="#7d8ca8"
+                  fill="#FAF6EA"
+                  stroke="#9A8C6E"
                   strokeWidth="1.15"
                 />
               </g>

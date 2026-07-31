@@ -101,15 +101,15 @@ const WALK_STEPS = [
   },
   {
     title: 'Run a draw',
-    body: ['Turn demo back on, then spin the wheel.'],
-    cue: { keys: ['Space'], text: 'to start spinning' },
+    body: ['Turn demo back on, then start the draw.'],
+    cue: { keys: ['Space'], text: 'to start the draw' },
     cueWhen: (c) => c.demoMode,
     allow: 'draw',
     auto: (c) => c.screen === SCREEN.DRAWING,
   },
   {
-    title: 'Spin it',
-    body: ['Let it slow down and land on a speaker.', 'In demo mode, press Enter to end the spin instantly.'],
+    title: 'Build it up',
+    body: ['Hold, then release — the draw decides who speaks.', 'In demo mode, press Enter to end the draw instantly.'],
     cue: { keys: ['Space'], text: 'hold, then release' },
     auto: (c) => c.drawPhase === 'reveal',
   },
@@ -498,7 +498,7 @@ function App() {
   }, [currentSpeaker]);
 
   return (
-    <div style={{ fontFamily: "'Outfit', sans-serif" }}>
+    <div style={{ fontFamily: "'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
       {screen === SCREEN.SETUP && (
         <SetupScreen onComplete={handleSetupDone} hideBrand={walkthrough && !walkCoachDismissed} />
       )}
