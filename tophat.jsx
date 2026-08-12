@@ -189,7 +189,7 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
       <div aria-hidden style={{
         position: 'absolute',
         inset: 0,
-        background: 'radial-gradient(ellipse 80% 74% at 50% 58%, rgba(224,133,68,0.14) 0%, rgba(201,169,106,0.05) 45%, transparent 74%)',
+        background: 'radial-gradient(ellipse 80% 74% at 50% 58%, rgba(233,79,46,0.16) 0%, rgba(233,79,46,0.05) 45%, transparent 74%)',
         opacity: shaking ? 1 : 0,
         transition: 'opacity 0.6s ease',
         pointerEvents: 'none'
@@ -212,8 +212,8 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
           letterSpacing: '0.34em',
           paddingLeft: '0.34em',
           textTransform: 'uppercase',
-          color: C.gold,
-          opacity: hudPhase === 'landed' ? 0 : 0.85,
+          color: C.blueDeep,
+          opacity: hudPhase === 'landed' ? 0 : 0.9,
           transition: 'opacity 0.6s ease'
         }}>
           Names in the hat
@@ -238,7 +238,7 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
           width: '130%',
           height: 44,
           borderRadius: '50%',
-          background: 'radial-gradient(ellipse, rgba(201,169,106,0.14) 0%, transparent 70%)'
+          background: 'radial-gradient(ellipse, rgba(43,28,16,0.22) 0%, transparent 70%)'
         }} />
 
         {/* slips layer — behind the hat so they vanish into the mouth */}
@@ -300,9 +300,9 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
               <stop offset="1" stopColor="#0F0C08" />
             </linearGradient>
             <linearGradient id="apsHatBand" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stopColor="#8F7440" />
-              <stop offset="0.5" stopColor="#C9A96A" />
-              <stop offset="1" stopColor="#8F7440" />
+              <stop offset="0" stopColor="#C93A1B" />
+              <stop offset="0.5" stopColor="#E94F2E" />
+              <stop offset="1" stopColor="#C93A1B" />
             </linearGradient>
             <linearGradient id="apsHatBrim" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor="#1B1610" />
@@ -314,11 +314,11 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
           <path
             d="M62 172 C58 122 60 78 66 44 Q130 32 194 44 C200 78 202 122 198 172 Z"
             fill="url(#apsHatCrown)"
-            stroke="rgba(244,239,230,0.14)"
+            stroke="rgba(43,28,16,0.4)"
             strokeWidth="1"
           />
           {/* mouth */}
-          <ellipse cx="130" cy="44" rx="65" ry="13" fill="#070505" stroke="rgba(244,239,230,0.1)" strokeWidth="1" />
+          <ellipse cx="130" cy="44" rx="65" ry="13" fill="#070505" stroke="rgba(43,28,16,0.3)" strokeWidth="1" />
           {/* band */}
           <path
             d="M60.5 158 C60 146 60 140 60.6 132 L199.4 132 C200 140 200 146 199.5 158 Z"
@@ -326,8 +326,8 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
             opacity="0.92"
           />
           {/* brim */}
-          <ellipse cx="130" cy="176" rx="126" ry="27" fill="url(#apsHatBrim)" stroke="rgba(244,239,230,0.16)" strokeWidth="1" />
-          <ellipse cx="130" cy="172" rx="126" ry="26" fill="url(#apsHatBrim)" stroke="rgba(244,239,230,0.1)" strokeWidth="1" />
+          <ellipse cx="130" cy="176" rx="126" ry="27" fill="url(#apsHatBrim)" stroke="rgba(43,28,16,0.4)" strokeWidth="1" />
+          <ellipse cx="130" cy="172" rx="126" ry="26" fill="url(#apsHatBrim)" stroke="rgba(43,28,16,0.3)" strokeWidth="1" />
         </svg>
       </div>
 
@@ -396,8 +396,9 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
             title={names[winnerIdx]}
             style={{
               fontFamily: F.stage,
-              fontWeight: 400,
+              fontWeight: 900,
               fontSize: 'clamp(2.2rem, 5.4vw, 4rem)',
+              letterSpacing: '-0.02em',
               lineHeight: 1.08,
               color: '#221A0E',
               textAlign: 'center',

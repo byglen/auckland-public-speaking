@@ -507,7 +507,7 @@ const LotteryDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
           style={{
             maxWidth: '86vw',
             fontFamily: F.stage,
-            fontWeight: 400,
+            fontWeight: 700,
             fontSize: 'clamp(2rem, 3.4vw, 3.2rem)',
             lineHeight: 1.1,
             color: C.goldBright,
@@ -525,12 +525,12 @@ const LotteryDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
           transition: 'opacity 0.4s ease'
         }}>
           {hudPhase === 'boost' ?
-          <KeyboardHint ariaLabel="Release space to draw a ball" caption="release to draw" urgent>
-            <RetroSpaceKey active />
+          <KeyboardHint dark ariaLabel="Release space to draw a ball" caption="release to draw" urgent>
+            <RetroSpaceKey dark active />
           </KeyboardHint>
           :
-          <KeyboardHint ariaLabel="Press and hold space to churn" caption="hold to churn">
-            <RetroSpaceKey />
+          <KeyboardHint dark ariaLabel="Press and hold space to churn" caption="hold to churn">
+            <RetroSpaceKey dark />
           </KeyboardHint>
           }
         </div>

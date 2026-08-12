@@ -445,12 +445,12 @@ const CandleDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
         pointerEvents: 'none'
       }}>
         {phase === 'build' ?
-        <KeyboardHint ariaLabel="Release space to let the wind decide" caption="release when ready" urgent>
-          <RetroSpaceKey active />
+        <KeyboardHint dark ariaLabel="Release space to let the wind decide" caption="release when ready" urgent>
+          <RetroSpaceKey dark active />
         </KeyboardHint>
         :
-        <KeyboardHint ariaLabel="Press and hold space to raise the wind" caption="hold to raise the wind">
-          <RetroSpaceKey />
+        <KeyboardHint dark ariaLabel="Press and hold space to raise the wind" caption="hold to raise the wind">
+          <RetroSpaceKey dark />
         </KeyboardHint>
         }
       </div>

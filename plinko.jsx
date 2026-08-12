@@ -457,7 +457,7 @@ const PlinkoDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
           style={{
             maxWidth: '86vw',
             fontFamily: F.stage,
-            fontWeight: 400,
+            fontWeight: 700,
             fontSize: 'clamp(2rem, 3.6vw, 3.4rem)',
             lineHeight: 1.1,
             color: C.goldBright,
@@ -486,12 +486,12 @@ const PlinkoDraw = ({ names, winnerIdx, spinKey, onComplete }) => {
         pointerEvents: 'none'
       }}>
         {hudPhase === 'boost' ?
-        <KeyboardHint ariaLabel="Release space to drop" caption="release to drop" urgent>
-          <RetroSpaceKey active />
+        <KeyboardHint dark ariaLabel="Release space to drop" caption="release to drop" urgent>
+          <RetroSpaceKey dark active />
         </KeyboardHint>
         :
-        <KeyboardHint ariaLabel="Press and hold space to aim" caption="hold to aim">
-          <RetroSpaceKey />
+        <KeyboardHint dark ariaLabel="Press and hold space to aim" caption="hold to aim">
+          <RetroSpaceKey dark />
         </KeyboardHint>
         }
       </div>

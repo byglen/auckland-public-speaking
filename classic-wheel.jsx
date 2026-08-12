@@ -692,7 +692,7 @@ const ClassicWheel = ({ names, winnerIdx, spinKey, onComplete }) => {
               style={{
                 maxWidth: '34%',
                 fontFamily: F.stage,
-                fontWeight: 400,
+                fontWeight: 700,
                 fontSize: 'clamp(1.7rem, 3vw, 2.9rem)',
                 lineHeight: 1.1,
                 color: hudPhase === 'landed' ? C.goldBright : C.gold,
@@ -748,12 +748,12 @@ const ClassicWheel = ({ names, winnerIdx, spinKey, onComplete }) => {
         pointerEvents: 'none'
       }}>
         {hudPhase === 'boost' ?
-        <KeyboardHint ariaLabel="Release space to draw" caption="release to draw" urgent>
-          <RetroSpaceKey active />
+        <KeyboardHint dark ariaLabel="Release space to draw" caption="release to draw" urgent>
+          <RetroSpaceKey dark active />
         </KeyboardHint>
         :
-        <KeyboardHint ariaLabel="Press and hold space to spin" caption="hold to spin">
-          <RetroSpaceKey />
+        <KeyboardHint dark ariaLabel="Press and hold space to spin" caption="hold to spin">
+          <RetroSpaceKey dark />
         </KeyboardHint>
         }
       </div>

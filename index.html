@@ -9,9 +9,9 @@
   <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
   <style>
-    /* ── Type — two voices ──────────────────────────────────────────────────
-       Canela Deck  = the stage (questions, names, quotes)
-       Theinhardt   = the machine (chrome, labels, timers, hints)          */
+    /* ── Type — one voice, Theinhardt, carried by weight ────────────────────
+       Black/Bold = stage moments (questions, names, timers)
+       Medium/Regular = chrome. (Canela faces kept below for reference only) */
 
     @font-face {
       font-family: 'Canela Deck';
@@ -94,12 +94,17 @@
       src: url('fonts/Theinhardt Bold.otf') format('opentype');
       font-weight: 700; font-style: normal; font-display: swap;
     }
+    @font-face {
+      font-family: 'Theinhardt';
+      src: url('fonts/theinhardt-black-webfont.ttf') format('truetype');
+      font-weight: 900; font-style: normal; font-display: swap;
+    }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body, #root {
       width: 100%; height: 100%;
-      background: #0C0A08;
+      background: #F6F1EA;
       font-family: 'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif;
       -webkit-font-smoothing: antialiased;
       text-rendering: optimizeLegibility;
@@ -129,8 +134,8 @@
     }
 
     @keyframes ftNamePulse {
-      0%   { color: #E8D5A4; }
-      55%  { color: #E8D5A4; }
+      0%   { color: #2F4FD6; }
+      55%  { color: #2F4FD6; }
       100% { color: inherit; }
     }
 
@@ -213,8 +218,8 @@
     }
 
     @keyframes walkthroughHighlightPulse {
-      0%, 100% { opacity: 1; box-shadow: 0 0 0 4px rgba(201,169,106,0.2), 0 0 22px rgba(201,169,106,0.32); }
-      50%       { opacity: 0.88; box-shadow: 0 0 0 8px rgba(201,169,106,0.09), 0 0 34px rgba(201,169,106,0.44); }
+      0%, 100% { opacity: 1; box-shadow: 0 0 0 4px rgba(233,79,46,0.25), 0 0 22px rgba(233,79,46,0.3); }
+      50%       { opacity: 0.88; box-shadow: 0 0 0 8px rgba(233,79,46,0.12), 0 0 34px rgba(233,79,46,0.42); }
     }
 
     @keyframes walkthroughShake {
@@ -309,7 +314,7 @@
     /* Scrollbar */
     ::-webkit-scrollbar { width: 6px; }
     ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #3A322A; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb { background: rgba(43,28,16,0.35); border-radius: 3px; }
   </style>
 </head>
 <body>
