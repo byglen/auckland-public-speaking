@@ -19,16 +19,30 @@ const SCREEN = {
   QR:       'qr',
 };
 
-function pickYoloQuestion(questionOfNight, usedQuestions, carouselOptions) {
+function pickYoloQuestion(questionOfNight, usedQuestions, carouselOptions, donePrompts) {
   const YOLO_SLOT = window.YOLO_SLOT;
-  const carouselRandoms = carouselOptions.filter(
+  const carouselTexts = carouselOptions.filter(
     (o) => o !== YOLO_SLOT && o !== questionOfNight
   );
-  const exclude = new Set([questionOfNight, ...carouselRandoms, ...usedQuestions]);
-  let pool = QUESTIONS.filter((q) => !exclude.has(q));
-  if (!pool.length) pool = QUESTIONS.filter((q) => !usedQuestions.has(q));
-  if (!pool.length) pool = [...QUESTIONS];
-  return pool[Math.floor(Math.random() * pool.length)];
+  return window.pickYoloPrompt({ donePrompts, usedQuestions, questionOfNight, carouselTexts });
+}
+
+// ─── DONE PROMPTS — persistent across reloads, portable as a JSON file ────────
+// Stored as prompt ids so rewording a prompt in data.js doesn't lose its status.
+const DONE_PROMPTS_KEY = 'aps.donePrompts.v1';
+
+function loadDonePrompts() {
+  try {
+    const raw = localStorage.getItem(DONE_PROMPTS_KEY);
+    const ids = raw ? JSON.parse(raw) : [];
+    return new Set(Array.isArray(ids) ? ids.filter((id) => PROMPT_BY_ID[id]) : []);
+  } catch (e) {
+    return new Set();
+  }
+}
+
+function saveDonePrompts(set) {
+  try { localStorage.setItem(DONE_PROMPTS_KEY, JSON.stringify([...set])); } catch (e) { /* private mode */ }
 }
 
 // Host walk-through — contextual coach steps that advance as the host performs each real action.
@@ -68,7 +82,7 @@ const WALK_STEPS = [
   {
     title: 'Add two more',
     titleFor: (c) => (c.count - c.addMoreBaseline >= 1 ? 'Add one more' : 'Add two more'),
-    body: ['Give the wheel a few options to spin.'],
+    body: ['Give the hat a few names to draw from.'],
     allow: 'addMore',
     progress: (c) => ({ current: Math.max(0, c.count - c.addMoreBaseline), target: 2 }),
     auto: (c) => c.count - c.addMoreBaseline >= 2,
@@ -101,28 +115,22 @@ const WALK_STEPS = [
   },
   {
     title: 'Run a draw',
-    body: ['Turn demo back on, then spin the wheel.'],
-    cue: { keys: ['Space'], text: 'to start spinning' },
+    body: ['Turn demo back on, then start the draw.'],
+    cue: { keys: ['Space'], text: 'to start the draw' },
     cueWhen: (c) => c.demoMode,
     allow: 'draw',
     auto: (c) => c.screen === SCREEN.DRAWING,
   },
   {
-    title: 'Spin it',
-    body: ['Let it slow down and land on a speaker.', 'In demo mode, press Enter to end the spin instantly.'],
+    title: 'Build it up',
+    body: ['Hold, then release — the draw decides who speaks.'],
     cue: { keys: ['Space'], text: 'hold, then release' },
-    auto: (c) => c.drawPhase === 'reveal',
-  },
-  {
-    title: 'Give it up!',
-    body: ['Time to choose their prompt.'],
-    cue: { keys: ['Space'], text: 'to continue' },
-    allow: 'revealAdvance',
+    // The hat shows the name, then moves to the prompt picker on its own.
     auto: (c) => c.screen === SCREEN.QSELECT,
   },
   {
     title: 'Pick a prompt',
-    body: ['Prompt of the night, three randoms, or Yolo mode.'],
+    body: ['Prompt of the night, two randoms, or Yolo mode.'],
     cue: { keys: ['\u2190', '\u2192'], text: 'browse · Space to pick' },
     // Advance only once the speech timer screen actually starts. For Yolo this means we wait
     // through the question reveal / countdown (coach hidden) instead of advancing on YOLO_PREP.
@@ -155,6 +163,7 @@ function App() {
   const [participants,    setParticipants]    = useState([]);
   const [currentSpeaker,  setCurrentSpeaker]  = useState(null);
   const [usedQuestions,   setUsedQuestions]   = useState(new Set());
+  const [donePrompts,     setDonePrompts]     = useState(loadDonePrompts);
   const [selectedQ,       setSelectedQ]       = useState(null);
   const [registerSeed,    setRegisterSeed]    = useState('');
   const [demoMode,        setDemoMode]        = useState(false);
@@ -184,6 +193,30 @@ function App() {
   const lastAddedParticipantRef = useRef(null);
   const firstTimerPulseTimerRef = useRef(null);
   const [firstTimerPulseName, setFirstTimerPulseName] = useState(null);
+
+  useEffect(() => { saveDonePrompts(donePrompts); }, [donePrompts]);
+
+  const demoModeRef = useRef(demoMode);
+  demoModeRef.current = demoMode;
+
+  /** Permanently retire a prompt once a real speech starts on it. Demo runs don't count. */
+  const markPromptDone = useCallback((text) => {
+    const id = PROMPT_BY_TEXT[text]?.id;
+    if (!id || demoModeRef.current) return;
+    setDonePrompts((prev) => (prev.has(id) ? prev : new Set([...prev, id])));
+  }, []);
+  const unmarkPromptDone = useCallback((text) => {
+    const id = PROMPT_BY_TEXT[text]?.id;
+    if (!id) return;
+    setDonePrompts((prev) => { if (!prev.has(id)) return prev; const next = new Set(prev); next.delete(id); return next; });
+  }, []);
+  const handleSetPromptDone = useCallback((id, done) => {
+    setDonePrompts((prev) => { const next = new Set(prev); if (done) next.add(id); else next.delete(id); return next; });
+  }, []);
+  const handleResetDonePrompts = useCallback(() => setDonePrompts(new Set()), []);
+  const handleImportDonePrompts = useCallback((ids) => {
+    setDonePrompts((prev) => new Set([...prev, ...ids.filter((id) => PROMPT_BY_ID[id])]));
+  }, []);
 
   const pickRevealQuoteForSession = useCallback(() => {
     const quote = pickRevealQuote(usedRevealQuotesRef.current);
@@ -440,42 +473,60 @@ function App() {
     setScreen(SCREEN.QSELECT);
   }, []);
 
+  // From the question-flow menu: send the drawn speaker back to the pool.
+  const handleQuestionBackHome = useCallback(() => {
+    setCurrentSpeaker(null);
+    setSelectedQ(null);
+    setQuestionSelectState(null);
+    setScreen(SCREEN.HOME);
+  }, []);
+  const handleRedraw = useCallback(() => {
+    setCurrentSpeaker(null);
+    setSelectedQ(null);
+    setQuestionSelectState(null);
+    setScreen(SCREEN.DRAWING);
+  }, []);
+
   const handleSpeechStart = useCallback((question, selectSnapshot) => {
     setQuestionSelectState(selectSnapshot);
     setSelectedQ(question);
     setUsedQuestions((prev) => new Set([...prev, question]));
+    markPromptDone(question);
     setYoloPrepQuestion(null);
     setScreen(SCREEN.SPEECH);
-  }, []);
+  }, [markPromptDone]);
 
   const handleYoloStart = useCallback((selectSnapshot) => {
-    const question = pickYoloQuestion(questionOfNight, usedQuestions, selectSnapshot.options);
+    const question = pickYoloQuestion(questionOfNight, usedQuestions, selectSnapshot.options, donePrompts);
     setQuestionSelectState(selectSnapshot);
     setUsedQuestions((prev) => new Set([...prev, question]));
     setYoloPrepQuestion(question);
     setScreen(SCREEN.YOLO_PREP);
-  }, [questionOfNight, usedQuestions]);
+  }, [questionOfNight, usedQuestions, donePrompts]);
 
   const handleYoloPrepComplete = useCallback(() => {
     setSelectedQ(yoloPrepQuestion);
+    markPromptDone(yoloPrepQuestion);
     setYoloPrepQuestion(null);
     setScreen(SCREEN.SPEECH);
-  }, [yoloPrepQuestion]);
+  }, [yoloPrepQuestion, markPromptDone]);
 
   const handleYoloPrepCancel = useCallback(() => {
     setYoloPrepQuestion(null);
     setScreen(SCREEN.QSELECT);
   }, []);
 
+  // Host backed out before the speech happened — the prompt goes back in the bank.
   const handleSpeechBack = useCallback(() => {
     setUsedQuestions((prev) => {
       const next = new Set(prev);
       if (selectedQ) next.delete(selectedQ);
       return next;
     });
+    if (selectedQ) unmarkPromptDone(selectedQ);
     setSelectedQ(null);
     setScreen(SCREEN.QSELECT);
-  }, [selectedQ]);
+  }, [selectedQ, unmarkPromptDone]);
 
   const handleSelectRestoreConsumed = useCallback(() => {
     setQuestionSelectState(null);
@@ -498,9 +549,9 @@ function App() {
   }, [currentSpeaker]);
 
   return (
-    <div style={{ fontFamily: "'Outfit', sans-serif" }}>
+    <div style={{ fontFamily: "'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif" }}>
       {screen === SCREEN.SETUP && (
-        <SetupScreen onComplete={handleSetupDone} hideBrand={walkthrough && !walkCoachDismissed} />
+        <SetupScreen onComplete={handleSetupDone} hideBrand={walkthrough && !walkCoachDismissed} donePrompts={donePrompts} />
       )}
       {screen === SCREEN.HOME && (
         <HomeScreen
@@ -525,6 +576,10 @@ function App() {
           onWalkNudge={triggerWalkNudge}
           highlightSpeakers={highlightSpeakers}
           hideBrand={walkthrough && !walkCoachDismissed}
+          donePrompts={donePrompts}
+          onSetPromptDone={handleSetPromptDone}
+          onResetDonePrompts={handleResetDonePrompts}
+          onImportDonePrompts={handleImportDonePrompts}
         />
       )}
       {screen === SCREEN.REGISTER && (
@@ -554,8 +609,12 @@ function App() {
           speakerName={currentSpeaker}
           questionOfNight={questionOfNight}
           usedQuestions={usedQuestions}
+          donePrompts={donePrompts}
           onStart={handleSpeechStart}
           onStartYolo={handleYoloStart}
+          onBackHome={handleQuestionBackHome}
+          onRedraw={remaining.length > 1 ? handleRedraw : undefined}
+          walkAllow={walkAllow}
           selectRestore={questionSelectState}
           onSelectRestoreConsumed={handleSelectRestoreConsumed}
         />

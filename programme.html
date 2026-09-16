@@ -4,25 +4,43 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>APS Programme</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
   <style>
+    @font-face {
+      font-family: 'Canela Deck';
+      src: url('fonts/CanelaDeck-Light-Trial.otf') format('opentype');
+      font-weight: 300; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Theinhardt';
+      src: url('fonts/Theinhardt Regular.otf') format('opentype');
+      font-weight: 400; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Theinhardt';
+      src: url('fonts/Theinhardt Medium.otf') format('opentype');
+      font-weight: 500; font-style: normal; font-display: swap;
+    }
+    @font-face {
+      font-family: 'Theinhardt';
+      src: url('fonts/Theinhardt Bold.otf') format('opentype');
+      font-weight: 700; font-style: normal; font-display: swap;
+    }
+
     :root {
-      --ink: #1a1a22;
-      --muted: #6b6b78;
-      --line: #e6e6ec;
-      --gold: #c08a1e;
-      --gold-soft: #f6edd8;
-      --banner: #eef4ee;
-      --banner-ink: #2f4a32;
+      --ink: #221D15;
+      --muted: #746B5C;
+      --line: #E8E4DA;
+      --gold: #C93A1B;
+      --gold-soft: #F5EFE0;
+      --banner: #F1EBDD;
+      --banner-ink: #5C4A1E;
     }
 
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
 
     html, body {
-      background: #f4f4f6;
-      font-family: 'Outfit', sans-serif;
+      background: #F5F3EE;
+      font-family: 'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif;
       color: var(--ink);
       -webkit-font-smoothing: antialiased;
     }
@@ -39,19 +57,28 @@
     /* ---- Header ---- */
     header { margin-bottom: 38px; }
 
-    .emoji { font-size: 46px; line-height: 1; display: block; margin-bottom: 16px; }
+    .eyebrow {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 18px;
+    }
 
     h1 {
-      font-size: 46px;
-      font-weight: 800;
-      letter-spacing: -0.02em;
+      font-family: 'Theinhardt', 'Helvetica Neue', sans-serif;
+      font-size: 52px;
+      font-weight: 700;
+      letter-spacing: -0.01em;
       line-height: 1.05;
     }
 
     .byline {
       margin-top: 12px;
       color: var(--muted);
-      font-weight: 500;
+      font-weight: 400;
       font-size: 16px;
     }
 
@@ -59,8 +86,8 @@
     .section { margin-top: 30px; break-inside: avoid; }
 
     .section h2 {
-      font-size: 21px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 500;
       letter-spacing: -0.01em;
       padding-bottom: 9px;
       border-bottom: 2px solid var(--line);
@@ -72,12 +99,12 @@
 
     .section h2 .time {
       color: var(--gold);
-      font-weight: 700;
+      font-weight: 500;
     }
 
     .section h2 .note {
       color: var(--muted);
-      font-weight: 500;
+      font-weight: 400;
       font-size: 15px;
     }
 
@@ -102,7 +129,7 @@
       border-radius: 4px;
     }
 
-    ul.checklist li strong { font-weight: 700; }
+    ul.checklist li strong { font-weight: 500; }
 
     /* ---- App overview (replacement) ---- */
     .overview {
@@ -115,7 +142,7 @@
 
     .overview p { font-size: 16px; line-height: 1.55; }
     .overview p + p { margin-top: 8px; }
-    .overview .lead { font-weight: 700; }
+    .overview .lead { font-weight: 500; }
 
     /* ---- Transition banners ---- */
     .banner {
@@ -124,8 +151,8 @@
       background: var(--banner);
       color: var(--banner-ink);
       border-radius: 8px;
-      font-weight: 700;
-      font-size: 18px;
+      font-weight: 500;
+      font-size: 17px;
       break-inside: avoid;
     }
 
@@ -156,8 +183,8 @@
 <body>
   <div class="page">
     <header>
-      <span class="emoji">&#128250;</span>
-      <h1>APS Programme</h1>
+      <span class="eyebrow">Auckland Public Speaking</span>
+      <h1>The Programme</h1>
     </header>
 
     <section class="section">

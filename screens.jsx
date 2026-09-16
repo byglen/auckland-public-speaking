@@ -11,24 +11,85 @@ window.IS_MAC = IS_MAC;
 window.cmdPressed = cmdPressed;
 window.kbd = kbd;
 
-// ─── COLOUR TOKENS ────────────────────────────────────────────────────────────
-const C = {
-  bg: '#0b0b14',
-  surface: '#16162a',
-  border: '#2a2a48',
-  accent: '#2f72f8', // electric blue
-  accentD: '#1a58d4',
-  gold: '#d4a84b',
-  dim: '#5060a0',
-  text: '#f0f0f8',
-  muted: '#9090c0',
-  pulseRed: '#ff4040',
-  pulseRedSoft: '#ff7878',
-  yolo: '#ff5070'
+// ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
+// One dark room (cool ink #101114, from Glen's Paper "aps typography style
+// guide"), plain white stage type, chrome tinted with powder blue at low alpha.
+// Sky blue is the badge/accent for the prompt of the night; vermilion stays
+// reserved for heat (hat band, TIME'S UP, Yolo). Stage type is Canela Deck
+// Bold — open tracking (+0.015em), generous leading — chrome is Theinhardt.
+const FIELD = {
+  blue: '#CDE4FE',       // powder blue — tints every hairline and muted label
+  sky: '#5696D2',        // filled badges (prompt of the night, feedback)
+  cobalt: '#2F4FD6',
+  vermilion: '#E94F2E',
+  caramel: '#C2874C',
+  cream: '#FFFFFF',      // stage text is plain white now (legacy key name kept)
+  chalk: '#E9F1FC',      // wordmark
+  ink: '#101114'
 };
+
+const C = {
+  bg: FIELD.ink,
+  surface: '#171A20',
+  border: 'rgba(205,228,254,0.22)',    // hairline
+  borderSoft: 'rgba(205,228,254,0.12)', // quieter hairline
+  gold: FIELD.vermilion,               // heat accent (legacy key name)
+  goldBright: '#FF6A47',
+  goldDim: 'rgba(233,79,46,0.5)',
+  dim: 'rgba(205,228,254,0.45)',
+  text: '#FFFFFF',
+  muted: 'rgba(205,228,254,0.70)',
+  cream: '#FFFFFF',
+  chalk: FIELD.chalk,
+  blue: FIELD.blue,
+  blueDeep: FIELD.blue,
+  sky: FIELD.sky,
+  olive: '#4A5524',
+  caramel: FIELD.caramel,
+  amber: '#D9A24A',
+  orange: '#E07A3A',
+  pulseRed: '#C93A1B',
+  pulseRedSoft: '#E94F2E',
+  feedback: FIELD.sky,
+  yolo: FIELD.ink
+};
+
+// Two voices: Canela Deck for the stage (prompts, names), Theinhardt for the
+// machine (labels, badges, timers, buttons, hints). Neue Montreal is the
+// wordmark only.
+const F = {
+  stage: "'Canela Deck', Georgia, 'Times New Roman', serif",
+  ui: "'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+  brand: "'Neue Montreal', 'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+};
+
+/** Small-caps label — the only treatment for eyebrows/labels. No pills, no borders. */
+function Eyebrow({ children, color = C.muted, large = false, tracking = '0.22em', style = {} }) {
+  return (
+    <span style={{
+      fontFamily: F.ui,
+      fontWeight: 700,
+      fontSize: large ? '1.22rem' : '0.88rem',
+      letterSpacing: tracking,
+      paddingLeft: tracking, // optically recentre tracked uppercase
+      textTransform: 'uppercase',
+      color,
+      ...style
+    }}>
+      {children}
+    </span>
+  );
+}
 
 /** Sentinel for the Yolo carousel slot (not a real question string). */
 const YOLO_SLOT = '__YOLO_SLOT__';
+
+/** WhatsApp group invite link. The QR on the end-of-night screen is generated
+ *  from this string in the browser (qrcode.js), so it can never expire on its
+ *  own. If an admin ever resets the group link in WhatsApp (Group info →
+ *  Invite via link → Reset link), paste the new one here. Keep it bare — no
+ *  ?s=sh&p=i… tracking suffix — so the code stays small and easy to scan. */
+const WHATSAPP_INVITE_URL = 'https://chat.whatsapp.com/Cuwr1jL6MczHeoRG1xG1hI';
 
 /** Bank transfer details shown at the end of the night — edit these to go live. */
 const BANK_DETAILS = {
@@ -136,23 +197,23 @@ function useBlockPointerInput(active) {
 // ─── SHARED BUTTON ────────────────────────────────────────────────────────────
 function Btn({ children, onClick, variant = 'primary', size = 'md', disabled }) {
   const base = {
-    fontFamily: 'inherit', cursor: disabled ? 'not-allowed' : 'pointer',
-    borderRadius: 14, border: 'none', fontWeight: 700,
-    letterSpacing: '0.04em', transition: 'opacity 0.15s, transform 0.1s',
+    fontFamily: F.ui, cursor: disabled ? 'not-allowed' : 'pointer',
+    borderRadius: 12, border: '1px solid transparent', fontWeight: 500,
+    letterSpacing: '0.01em', transition: 'opacity 0.15s, transform 0.1s',
     opacity: disabled ? 0.35 : 1
   };
   const sizes = {
-    sm: { padding: '0.65rem 1.5rem', fontSize: '1.05rem' },
-    md: { padding: '1rem 2.5rem', fontSize: '1.3rem' },
-    lg: { padding: '1.4rem 3.5rem', fontSize: '1.6rem' },
-    xl: { padding: '1.8rem 5rem', fontSize: '2rem' }
+    sm: { padding: '0.6rem 1.4rem', fontSize: '1rem' },
+    md: { padding: '0.95rem 2.3rem', fontSize: '1.15rem' },
+    lg: { padding: '1.3rem 3.2rem', fontSize: '1.4rem' },
+    xl: { padding: '1.7rem 4.5rem', fontSize: '1.7rem' }
   };
   const variants = {
-    primary: { background: C.accent, color: '#fff' },
-    gold: { background: C.gold, color: '#0b0b14' },
-    outline: { background: 'transparent', color: C.accent, border: `2px solid ${C.accent}` },
-    ghost: { background: 'transparent', color: C.dim, border: 'none' },
-    surface: { background: C.surface, color: C.muted, border: `1.5px solid ${C.border}` }
+    primary: { background: C.surface, color: C.text, border: `1px solid ${C.border}` },
+    gold: { background: C.surface, color: C.text, border: `1px solid ${C.border}` },
+    outline: { background: 'transparent', color: C.muted, border: `1px solid ${C.border}` },
+    ghost: { background: 'transparent', color: C.dim, border: '1px solid transparent' },
+    surface: { background: 'transparent', color: C.muted, border: `1px solid ${C.border}` }
   };
   return (
     <button onClick={disabled ? undefined : onClick}
@@ -163,75 +224,86 @@ function Btn({ children, onClick, variant = 'primary', size = 'md', disabled }) 
 }
 
 // ─── SHARED BRAND ─────────────────────────────────────────────────────────────
-function QuestionOfNightBadge({ large = false, text = '' }) {
-  const s = large ? 2 : 1;
-
+/** Pill badge — the label treatment for what a card *is*. `sky` (filled blue)
+ *  for the prompt of the night and feedback, `heat` for Yolo, `quiet` (outlined)
+ *  for the random prompts. Tracked caps in Theinhardt Bold, as in the style guide. */
+function Badge({ children, tone = 'sky', large = false, style = {} }) {
+  const tones = {
+    sky: { background: FIELD.sky, color: '#FFFFFF', border: '1px solid transparent' },
+    heat: { background: FIELD.vermilion, color: '#FFFFFF', border: '1px solid transparent' },
+    quiet: { background: 'transparent', color: 'rgba(205,228,254,0.82)', border: '1px solid rgba(205,228,254,0.32)' }
+  };
   return (
     <span style={{
-      background: `${C.gold}20`,
-      border: `${1.5 * s}px solid ${C.gold}55`,
-      color: C.gold,
-      borderRadius: 100,
-      padding: `${0.4 * s}rem ${1.25 * s}rem`,
-      fontSize: `${1 * s}rem`,
-      fontWeight: 700,
-      letterSpacing: '0.1em',
-      textTransform: 'uppercase',
       display: 'inline-flex',
       alignItems: 'center',
-      gap: `${0.45 * s}rem`
+      justifyContent: 'center',
+      borderRadius: 999,
+      padding: large ? '0.68rem 1.28rem' : '0.6rem 1.06rem',
+      paddingRight: large ? 'calc(1.28rem - 0.1em)' : 'calc(1.06rem - 0.1em)', // trailing tracking
+      fontFamily: F.ui,
+      fontWeight: 500,
+      fontSize: large ? 'clamp(0.85rem, 1.06vw, 1.06rem)' : 'clamp(0.77rem, 0.94vw, 0.94rem)',
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      lineHeight: 1.25,
+      whiteSpace: 'nowrap',
+      ...tones[tone],
+      ...style
     }}>
-      <span style={{ fontSize: `${1.05 * s}rem`, lineHeight: 1 }} aria-hidden>★</span>
-      {promptNoun(text, { cap: true })} of the Night
+      {children}
     </span>
+  );
+}
+
+/** Yolo: the lights go red. A deep blood-red ground with an ember underneath
+ *  and a glow that breathes slowly. Shared by the Yolo slot in the prompt
+ *  picker and the Yolo prep / countdown screen — where it holds perfectly
+ *  still, so the speaker's five seconds of thinking have nothing moving. */
+const YOLO_BACKDROP = 'radial-gradient(ellipse 100% 62% at 50% 112%, rgba(233,79,46,0.34) 0%, rgba(180,30,30,0.12) 45%, transparent 72%), linear-gradient(180deg, #1F0507 0%, #150306 55%, #0B0203 100%)';
+
+function YoloGlow({ still = false }) {
+  return (
+    <>
+      <div aria-hidden style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 72% 58% at 50% 58%, rgba(233,79,46,0.22) 0%, rgba(160,20,24,0.10) 45%, transparent 76%)',
+        opacity: still ? 0.6 : undefined,
+        animation: still ? 'none' : 'yoloBreathe 3.2s ease-in-out infinite'
+      }} />
+      <div aria-hidden style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)'
+      }} />
+    </>
+  );
+}
+
+function QuestionOfNightBadge({ large = false, text = '' }) {
+  return (
+    <Badge tone="sky" large={large}>
+      {promptNoun(text, { cap: true })} of the Night
+    </Badge>
   );
 }
 
 function YoloModeBadge({ large = false }) {
-  const s = large ? 2 : 1;
-
   return (
-    <span style={{
-      background: `${C.yolo}22`,
-      border: `${1.5 * s}px solid ${C.yolo}66`,
-      color: C.yolo,
-      borderRadius: 100,
-      padding: `${0.4 * s}rem ${1.25 * s}rem`,
-      fontSize: `${1 * s}rem`,
-      fontWeight: 700,
-      letterSpacing: '0.1em',
-      textTransform: 'uppercase',
-      display: 'inline-flex',
-      alignItems: 'center',
-      gap: `${0.45 * s}rem`,
-      boxShadow: `0 0 28px ${C.yolo}22`
-    }}>
-      <span style={{ fontSize: `${1.15 * s}rem`, lineHeight: 1, fontWeight: 900 }} aria-hidden>?</span>
+    <Badge tone="heat" large={large}>
       Yolo mode
-    </span>
+    </Badge>
   );
 }
 
 function FeedbackBadge({ large = false }) {
-  const s = large ? 2 : 1;
-  const blue = '#4a78d8';
-
   return (
-    <span style={{
-      background: `${blue}22`,
-      border: `${1.5 * s}px solid ${blue}66`,
-      color: blue,
-      borderRadius: 100,
-      padding: `${0.4 * s}rem ${1.25 * s}rem`,
-      fontSize: `${1 * s}rem`,
-      fontWeight: 700,
-      letterSpacing: '0.1em',
-      textTransform: 'uppercase',
-      display: 'inline-flex',
-      alignItems: 'center'
-    }}>
+    <Badge tone="sky" large={large}>
       Feedback
-    </span>
+    </Badge>
   );
 }
 
@@ -244,15 +316,15 @@ function QuestionDisplayText({ children, style = {} }) {
       alignItems: 'center',
       textAlign: 'center',
       color: C.text,
-      textWrap: 'pretty',
-      fontFamily: 'Outfit',
+      textWrap: 'balance',
+      fontFamily: F.stage,
       fontWeight: 700,
-      letterSpacing: '-0.1px',
-      fontSize: 'clamp(3rem, 6.2vw, 7rem)',
-      lineHeight: 1.1,
+      letterSpacing: '0.015em',
+      fontSize: 'clamp(3rem, 6.1vw, 7rem)',
+      lineHeight: 1.22,
       ...style
     }}>
-      <span style={{ maxWidth: 1500 }}>{children}</span>
+      <span style={{ maxWidth: 'min(1280px, 100%)' }}>{children}</span>
     </div>
   );
 }
@@ -268,17 +340,17 @@ function HomeSubduedButton({ children, onClick, ariaLabel, disabled = false, loc
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: `${C.surface}cc`,
+        background: 'transparent',
         border: `1px solid ${C.border}`,
         color: C.muted,
-        padding: '0.5rem 0.95rem',
-        borderRadius: 9,
+        padding: '0.5rem 1rem',
+        borderRadius: 10,
         cursor: muted ? 'not-allowed' : 'pointer',
-        fontSize: '0.98rem',
-        fontWeight: 600,
-        fontFamily: 'inherit',
-        letterSpacing: '0.01em',
-        opacity: muted ? 0.32 : 0.88
+        fontSize: '0.95rem',
+        fontWeight: 500,
+        fontFamily: F.ui,
+        letterSpacing: '0.02em',
+        opacity: muted ? 0.32 : 0.9
       }}>
       {children}
     </button>
@@ -294,17 +366,17 @@ function HomeIconButton({ ariaLabel, onClick, children, disabled = false, locked
       onClick={onClick}
       disabled={disabled}
       style={{
-        background: `${C.surface}cc`,
+        background: 'transparent',
         border: `1px solid ${C.border}`,
         color: C.muted,
-        padding: '0.48rem 0.58rem',
-        borderRadius: 9,
+        padding: '0.48rem 0.6rem',
+        borderRadius: 10,
         cursor: muted ? 'not-allowed' : 'pointer',
-        fontFamily: 'inherit',
+        fontFamily: F.ui,
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        opacity: muted ? 0.32 : 0.88,
+        opacity: muted ? 0.32 : 0.9,
         lineHeight: 0
       }}>
       {children}
@@ -329,43 +401,28 @@ function BackIcon() {
 }
 
 function HomeBrandMark() {
-  const brandBlue = '#4A76D4';
-
   return (
     <div
       aria-label="Auckland Public Speaking"
       style={{
-        width: 'fit-content',
-        background: '#141422',
-        border: `1px solid ${C.border}`,
-        borderRadius: 9,
-        padding: '1.02rem 1.74rem',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05)',
-        lineHeight: 1.08
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        fontFamily: F.brand,
+        fontSize: '0.95rem',
+        lineHeight: 1.2,
+        letterSpacing: '0.02em',
+        color: C.chalk,
+        whiteSpace: 'nowrap'
       }}>
-      <div style={{
-        fontSize: 'clamp(1.32rem, 1.68vw + 0.42rem, 1.62rem)',
-        fontWeight: 400,
-        color: 'rgba(255,255,255,0.9)',
-        letterSpacing: '-0.015em'
-      }}>
-        Auckland
-      </div>
-      <div style={{
-        fontSize: 'clamp(1.32rem, 1.68vw + 0.42rem, 1.62rem)',
-        fontWeight: 800,
-        color: brandBlue,
-        letterSpacing: '-0.015em',
-        marginTop: '0.12em'
-      }}>
-        Public Speaking
-      </div>
+      <span style={{ fontWeight: 500 }}>Auckland</span>
+      <span style={{ fontWeight: 700 }}>Public Speaking</span>
     </div>
   );
 }
 
 // ─── SETUP SCREEN ─────────────────────────────────────────────────────────────
-function SetupScreen({ onComplete, hideBrand = false }) {
+function SetupScreen({ onComplete, hideBrand = false, donePrompts = new Set() }) {
   const [q, setQ] = useState('');
   const [usedRandom, setUsedRandom] = useState(false);
   const taRef = useRef(null);
@@ -384,22 +441,22 @@ function SetupScreen({ onComplete, hideBrand = false }) {
   }, [q, canSubmit, onComplete]);
 
   const pickRandom = () => {
-    const pool = QUESTIONS.filter((x) => x !== q);
-    setQ(pool[Math.floor(Math.random() * pool.length)]);
+    const pool = eligiblePrompts({ donePrompts, questionOfNight: q });
+    setQ(pickOne(pool).text);
     setUsedRandom(true);
     taRef.current?.focus();
   };
 
   return (
     <div style={{
-      background: `radial-gradient(ellipse 125% 95% at 50% 22%, rgba(212,168,75,0.11) 0%, rgba(212,168,75,0.04) 40%, ${C.bg} 76%)`,
+      background: C.bg,
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column'
     }}>
       <div style={{
-        padding: '1.5rem 3rem',
-        borderBottom: `1px solid ${C.border}`
+        padding: '1.6rem 3rem',
+        borderBottom: `1px solid ${C.borderSoft}`
       }}>
         {hideBrand ? <div /> : <HomeBrandMark />}
       </div>
@@ -414,30 +471,31 @@ function SetupScreen({ onComplete, hideBrand = false }) {
       }}>
         <div style={{
           width: '100%',
-          maxWidth: 720,
+          maxWidth: 760,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
-          gap: 'clamp(1.5rem, 3vh, 2.25rem)'
+          gap: 'clamp(1.75rem, 3.5vh, 2.5rem)'
         }}>
           <QuestionOfNightBadge text={q} />
 
-          <div style={{ textAlign: 'center', maxWidth: 520 }}>
+          <div style={{ textAlign: 'center', maxWidth: 560 }}>
             <h1 style={{
               color: C.text,
-              fontSize: 'clamp(2rem, 3.5vw + 0.75rem, 3rem)',
-              fontWeight: 800,
-              letterSpacing: '-0.02em',
-              lineHeight: 1.15,
+              fontFamily: F.stage,
+              fontSize: 'clamp(2.4rem, 3.4vw + 0.9rem, 3.5rem)',
+              fontWeight: 700,
+              letterSpacing: '0.01em',
+              lineHeight: 1.1,
               margin: 0
             }}>
               Set tonight&apos;s {promptNoun(q)}
             </h1>
             <p style={{
               color: C.muted,
-              fontSize: 'clamp(1rem, 1.1vw + 0.35rem, 1.15rem)',
-              marginTop: '0.75rem',
-              lineHeight: 1.55,
+              fontSize: 'clamp(1rem, 1.1vw + 0.35rem, 1.12rem)',
+              marginTop: '1rem',
+              lineHeight: 1.6,
               marginBottom: 0
             }}>
               This appears on the home screen and is offered first when speakers choose.
@@ -446,33 +504,31 @@ function SetupScreen({ onComplete, hideBrand = false }) {
 
           <div style={{
             width: '100%',
-            background: C.surface,
-            border: `1.5px solid ${canSubmit ? `${C.gold}50` : C.border}`,
-            borderRadius: 18,
-            transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
-            boxShadow: canSubmit ? `0 0 36px ${C.gold}10` : 'none'
+            borderBottom: `1px solid ${canSubmit ? C.goldDim : C.border}`,
+            transition: 'border-color 0.3s ease'
           }}>
             <textarea
               ref={taRef}
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder={`Type your ${promptNoun(q)} here…`}
-              rows={4}
+              rows={3}
               style={{
                 width: '100%',
                 boxSizing: 'border-box',
                 background: 'transparent',
                 border: 'none',
-                borderRadius: 18,
-                padding: 'clamp(1.25rem, 2.5vw, 1.75rem) clamp(1.25rem, 2.5vw, 1.75rem)',
+                padding: 'clamp(1rem, 2vw, 1.5rem) 0.25rem',
                 color: C.text,
-                fontSize: 'clamp(1.2rem, 1.4vw + 0.45rem, 1.45rem)',
-                fontFamily: 'inherit',
-                fontWeight: 500,
-                resize: 'vertical',
+                caretColor: C.gold,
+                fontSize: 'clamp(1.6rem, 1.8vw + 0.6rem, 2.1rem)',
+                fontFamily: F.stage,
+                fontWeight: 700,
+                resize: 'none',
                 outline: 'none',
-                lineHeight: 1.5,
-                minHeight: '7.5rem'
+                lineHeight: 1.4,
+                minHeight: '7rem',
+                textAlign: 'center'
               }}
             />
           </div>
@@ -483,7 +539,7 @@ function SetupScreen({ onComplete, hideBrand = false }) {
             flexWrap: 'wrap',
             justifyContent: 'center',
             width: '100%',
-            paddingTop: '0.25rem'
+            paddingTop: '0.5rem'
           }}>
             <Btn variant="surface" size="md" onClick={pickRandom}>
               {usedRandom ? `Load another ${promptNoun(q)}` : `Load random ${promptNoun(q)}`}
@@ -529,7 +585,7 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(4,4,12,0.72)',
+        background: 'rgba(0,0,0,0.55)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '1.5rem'
       }}
@@ -543,20 +599,20 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
           maxHeight: 'min(85vh, 720px)',
           background: C.surface,
           border: `1px solid ${C.border}`,
-          borderRadius: 18,
-          boxShadow: '0 30px 80px rgba(0,0,0,0.55)',
+          borderRadius: 16,
+          boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
         }}>
         <div style={{
           padding: '1.35rem 1.5rem',
-          borderBottom: `1px solid ${C.border}`,
+          borderBottom: `1px solid ${C.borderSoft}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center'
         }}>
           <div>
-            <div style={{ color: C.text, fontSize: '1.35rem', fontWeight: 800 }}>Manage Speakers</div>
-            <div style={{ color: C.dim, fontSize: '0.92rem', marginTop: '0.25rem' }}>
+            <div style={{ color: C.text, fontSize: '1.3rem', fontWeight: 500, letterSpacing: '-0.01em' }}>Manage Speakers</div>
+            <div style={{ color: C.dim, fontSize: '0.92rem', marginTop: '0.3rem' }}>
               {pending.length} in draw · {done.length} spoken
             </div>
           </div>
@@ -572,7 +628,7 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
           </button>
         </div>
 
-        <div style={{ padding: '1rem 1.5rem', borderBottom: `1px solid ${C.border}`, display: 'flex', gap: '0.5rem' }}>
+        <div style={{ padding: '1rem 1.5rem', borderBottom: `1px solid ${C.borderSoft}`, display: 'flex', gap: '0.5rem' }}>
           <input
             ref={inputRef}
             value={newName}
@@ -580,9 +636,9 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitAdd(); } }}
             placeholder="Add a speaker…"
             style={{
-              flex: 1, background: C.bg, border: `1.5px solid ${C.border}`,
-              borderRadius: 10, padding: '0.65rem 1rem',
-              color: C.text, fontSize: '1.05rem', fontFamily: 'inherit', outline: 'none'
+              flex: 1, background: 'rgba(205,228,254,0.04)', border: `1px solid ${C.border}`,
+              borderRadius: 10, padding: '0.65rem 1rem', caretColor: C.gold,
+              color: C.text, fontSize: '1.02rem', fontFamily: F.ui, outline: 'none'
             }}
           />
           <Btn variant="primary" size="sm" onClick={submitAdd}>Add</Btn>
@@ -600,24 +656,24 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
             style={{
               display: 'flex', alignItems: 'center', gap: '0.65rem',
               padding: '0.65rem 1.5rem',
-              borderBottom: `1px solid ${C.border}40`
+              borderBottom: `1px solid ${C.borderSoft}`
             }}>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{
                 color: p.done ? C.dim : C.text,
-                fontSize: '1.1rem',
-                fontWeight: 600,
+                fontSize: '1.08rem',
+                fontWeight: 400,
                 textDecoration: p.done ? 'line-through' : 'none'
               }}>
                 {p.name}
               </div>
               <div style={{
-                fontSize: '0.78rem',
-                fontWeight: 700,
-                letterSpacing: '0.08em',
+                fontSize: '0.7rem',
+                fontWeight: 500,
+                letterSpacing: '0.16em',
                 textTransform: 'uppercase',
-                marginTop: '0.15rem',
-                color: p.done ? `${C.dim}cc` : p.firstTimer ? C.gold : C.accent
+                marginTop: '0.2rem',
+                color: p.done ? C.dim : p.firstTimer ? C.gold : C.muted
               }}>
                 {p.done ? 'Spoken' : p.firstTimer ? 'First timer · In draw' : 'In draw'}
               </div>
@@ -653,7 +709,7 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
 
         <div style={{
           padding: '1rem 1.5rem',
-          borderTop: `1px solid ${C.border}`,
+          borderTop: `1px solid ${C.borderSoft}`,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.75rem'
         }}>
           <Btn
@@ -675,9 +731,275 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
   );
 }
 
+// ─── PROMPT SELECTION ─────────────────────────────────────────────────────────
+function pickOne(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/** Prompts still on the table: not permanently done, not used tonight, not the
+ *  prompt of the night, not already on screen. If a rule empties the pool the
+ *  constraints relax in order (done → used → on-screen) so a long-running
+ *  bank never leaves a speaker with nothing. */
+function eligiblePrompts({ donePrompts, usedQuestions, questionOfNight, excludeTexts = [] }) {
+  const done = donePrompts || new Set();
+  const used = usedQuestions || new Set();
+  const onScreen = new Set([questionOfNight, ...excludeTexts]);
+  const tiers = [
+    (p) => !done.has(p.id) && !used.has(p.text) && !onScreen.has(p.text),
+    (p) => !used.has(p.text) && !onScreen.has(p.text),
+    (p) => !onScreen.has(p.text),
+    () => true
+  ];
+  for (const keep of tiers) {
+    const pool = PROMPTS.filter(keep);
+    if (pool.length) return pool;
+  }
+  return PROMPTS;
+}
+
+/** The two random options offered to a speaker.
+ *  A: a random "about you" prompt.
+ *  B: scenario or big (coin flip), from a different theme than A; falls back to
+ *     the other style, then to any style, before giving up on the theme rule. */
+function pickSpeakerOptions({ donePrompts, usedQuestions, questionOfNight }) {
+  const pool = eligiblePrompts({ donePrompts, usedQuestions, questionOfNight });
+  const you = pool.filter((p) => p.type === 'you');
+  const a = pickOne(you.length ? you : pool);
+  const want = Math.random() < 0.5 ? 'scenario' : 'big';
+  const other = want === 'scenario' ? 'big' : 'scenario';
+  const rest = pool.filter((p) => p.id !== a.id);
+  const candidates = [
+    rest.filter((p) => p.type === want && p.theme !== a.theme),
+    rest.filter((p) => p.type === other && p.theme !== a.theme),
+    rest.filter((p) => p.theme !== a.theme),
+    rest
+  ].find((list) => list.length);
+  const b = candidates ? pickOne(candidates) : null;
+  return b ? [a.text, b.text] : [a.text];
+}
+
+/** Yolo: any style, but from a theme none of the on-screen randoms use. */
+function pickYoloPrompt({ donePrompts, usedQuestions, questionOfNight, carouselTexts }) {
+  const pool = eligiblePrompts({ donePrompts, usedQuestions, questionOfNight, excludeTexts: carouselTexts });
+  const takenThemes = new Set(carouselTexts.map((t) => PROMPT_BY_TEXT[t]?.theme).filter(Boolean));
+  const offTheme = pool.filter((p) => !takenThemes.has(p.theme));
+  return pickOne(offTheme.length ? offTheme : pool).text;
+}
+
+// ─── PROMPTS MODAL (done list — persistent, exportable) ───────────────────────
+function downloadJson(filename, obj) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function PromptsModal({ donePrompts, onClose, onSetDone, onResetAll, onImport }) {
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState(donePrompts.size ? 'done' : 'all');
+  const [notice, setNotice] = useState('');
+  const fileRef = useRef(null);
+  const searchRef = useRef(null);
+
+  useEffect(() => {
+    searchRef.current?.focus();
+    const h = (e) => { if (e.code === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
+
+  const q = query.trim().toLowerCase();
+  const rows = PROMPTS.filter((p) =>
+    (view === 'all' || donePrompts.has(p.id)) &&
+    (!q || p.text.toLowerCase().includes(q) || PROMPT_THEMES[p.theme].toLowerCase().includes(q))
+  );
+  const doneCount = donePrompts.size;
+  const left = PROMPTS.length - doneCount;
+
+  const exportDone = () => {
+    downloadJson(`aps-prompts-done-${new Date().toISOString().slice(0, 10)}.json`, {
+      app: 'auckland-public-speaking',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      donePrompts: [...donePrompts]
+    });
+    setNotice(`Exported ${doneCount} done prompt${doneCount === 1 ? '' : 's'}.`);
+  };
+
+  const importFile = async (file) => {
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const ids = Array.isArray(data) ? data : data && data.donePrompts;
+      if (!Array.isArray(ids)) throw new Error('not a prompts export');
+      const valid = ids.filter((id) => typeof id === 'string' && PROMPT_BY_ID[id]);
+      const added = valid.filter((id) => !donePrompts.has(id)).length;
+      onImport(valid);
+      setNotice(`Imported ${valid.length} — ${added} new. Merged with what was already here.`);
+      setView('done');
+    } catch (e) {
+      setNotice("That file isn't a prompts export.");
+    }
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const tab = (key, label) => (
+    <button
+      type="button"
+      onClick={() => setView(key)}
+      style={{
+        background: 'none', border: 'none', cursor: 'pointer', padding: '0.35rem 0',
+        fontFamily: F.ui, fontSize: '0.92rem', fontWeight: 500, letterSpacing: '0.02em',
+        color: view === key ? C.text : C.dim,
+        borderBottom: `2px solid ${view === key ? C.gold : 'transparent'}`
+      }}>
+      {label}
+    </button>
+  );
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '1.5rem'
+      }}
+      onMouseDown={onClose}>
+      <div
+        role="dialog"
+        aria-label="Prompts"
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{
+          width: 'min(680px, 100%)',
+          maxHeight: 'min(85vh, 780px)',
+          background: C.surface,
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
+        <div style={{
+          padding: '1.35rem 1.5rem 1rem',
+          borderBottom: `1px solid ${C.borderSoft}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'
+        }}>
+          <div>
+            <div style={{ color: C.text, fontSize: '1.3rem', fontWeight: 500, letterSpacing: '-0.01em' }}>Prompts</div>
+            <div style={{ color: C.dim, fontSize: '0.92rem', marginTop: '0.3rem' }}>
+              {doneCount} done · {left} left of {PROMPTS.length}. A prompt is marked done the moment a speech starts on it, and stays done across reloads.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: 'none', border: 'none', color: C.dim,
+              fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1, padding: '0.25rem'
+            }}>
+            ×
+          </button>
+        </div>
+
+        <div style={{ padding: '0.75rem 1.5rem', borderBottom: `1px solid ${C.borderSoft}`, display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+          {tab('done', `Done (${doneCount})`)}
+          {tab('all', `All (${PROMPTS.length})`)}
+          <input
+            ref={searchRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search prompts or themes…"
+            style={{
+              flex: 1, marginLeft: 'auto', background: 'rgba(205,228,254,0.04)', border: `1px solid ${C.border}`,
+              borderRadius: 10, padding: '0.55rem 0.9rem', caretColor: C.gold,
+              color: C.text, fontSize: '0.98rem', fontFamily: F.ui, outline: 'none', minWidth: 0
+            }}
+          />
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
+          {rows.length === 0 &&
+          <div style={{ color: C.dim, textAlign: 'center', padding: '2.5rem 1.5rem', fontSize: '1.05rem' }}>
+            {view === 'done' && !q ? 'Nothing marked done yet.' : 'No prompts match.'}
+          </div>
+          }
+          {rows.map((p) => {
+            const isDone = donePrompts.has(p.id);
+            return (
+              <div
+                key={p.id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.65rem',
+                  padding: '0.6rem 1.5rem',
+                  borderBottom: `1px solid ${C.borderSoft}`
+                }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    color: isDone ? C.dim : C.text,
+                    fontSize: '1.02rem',
+                    fontWeight: 400,
+                    textDecoration: isDone ? 'line-through' : 'none',
+                    lineHeight: 1.35
+                  }}>
+                    {p.text}
+                  </div>
+                </div>
+                <Btn variant="surface" size="sm" onClick={() => onSetDone(p.id, !isDone)}>
+                  {isDone ? 'Not done' : 'Mark done'}
+                </Btn>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{
+          padding: '1rem 1.5rem',
+          borderTop: `1px solid ${C.borderSoft}`,
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.6rem'
+        }}>
+          <Btn variant="surface" size="sm" disabled={doneCount === 0} onClick={exportDone}>Export done list</Btn>
+          <Btn variant="surface" size="sm" onClick={() => fileRef.current?.click()}>Import…</Btn>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={(e) => importFile(e.target.files && e.target.files[0])}
+            style={{ display: 'none' }}
+          />
+          <Btn
+            variant="outline"
+            size="sm"
+            disabled={doneCount === 0}
+            onClick={() => {
+              if (doneCount === 0) return;
+              if (window.confirm(`Mark all ${doneCount} prompt${doneCount === 1 ? '' : 's'} as not done? Export first if you might want them back.`)) {
+                onResetAll();
+                setNotice('All prompts are back in the hat.');
+              }
+            }}>
+            Reset all
+          </Btn>
+          <span style={{ flex: 1, minWidth: 120, color: C.muted, fontSize: '0.9rem', textAlign: 'right' }}>{notice}</span>
+          <Btn variant="gold" size="sm" onClick={onClose}>Done</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
-function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, onWalkNudge, highlightSpeakers = false, hideBrand = false }) {
+function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, onWalkNudge, highlightSpeakers = false, hideBrand = false, donePrompts = new Set(), onSetPromptDone, onResetDonePrompts, onImportDonePrompts }) {
   const [showManage, setShowManage] = useState(false);
+  const [showPrompts, setShowPrompts] = useState(false);
+  const modalOpen = showManage || showPrompts;
   const remaining = participants.filter((p) => !p.done);
   const total = participants.length;
   const done = participants.filter((p) => p.done).length;
@@ -715,7 +1037,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
 
   // ⌘D / Ctrl+D — toggle demo mode (sample speakers + accelerated speech timers)
   useEffect(() => {
-    if (!onToggleDemo || showManage) return;
+    if (!onToggleDemo || modalOpen) return;
     if (walkAllow && walkAllow !== 'demo' && walkAllow !== 'draw') return;
     const h = (e) => {
       if (!cmdPressed(e) || e.code !== 'KeyD') return;
@@ -726,11 +1048,11 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onToggleDemo, showManage, walkAllow]);
+  }, [onToggleDemo, modalOpen, walkAllow]);
 
   // Block Space → draw while manage modal is open
   useEffect(() => {
-    if (!showManage) return;
+    if (!modalOpen) return;
     const h = (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
@@ -739,11 +1061,11 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h, true);
     return () => window.removeEventListener('keydown', h, true);
-  }, [showManage]);
+  }, [modalOpen]);
 
   // Listen for any letter key press → launch register screen with that char
   useEffect(() => {
-    if (showManage || !canAddSpeaker) return;
+    if (modalOpen || !canAddSpeaker) return;
     const h = (e) => {
       // Skip if modifier keys held, or if user is typing in an input already
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -758,12 +1080,12 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onRegister, showManage, canAddSpeaker]);
+  }, [onRegister, modalOpen, canAddSpeaker]);
 
   // Off-path nudge: if the host presses a meaningful key the active step doesn't ask for,
   // block it and shake the coach card to bring focus back to the current step.
   useEffect(() => {
-    if (!walkActive || showManage) return undefined;
+    if (!walkActive || modalOpen) return undefined;
     const h = (e) => {
       const tag = (e.target && e.target.tagName) || '';
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -786,7 +1108,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h, true);
     return () => window.removeEventListener('keydown', h, true);
-  }, [walkActive, walkAllow, showManage, canAddSpeaker, nudge]);
+  }, [walkActive, walkAllow, modalOpen, canAddSpeaker, nudge]);
 
   return (
     <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
@@ -802,27 +1124,33 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         onResetAll={onResetSpeakers}
       />
       }
+      {showPrompts && onSetPromptDone &&
+      <PromptsModal
+        donePrompts={donePrompts}
+        onClose={() => setShowPrompts(false)}
+        onSetDone={onSetPromptDone}
+        onResetAll={onResetDonePrompts}
+        onImport={onImportDonePrompts}
+      />
+      }
 
       {/* Top bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 3rem', borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.6rem 3rem', borderBottom: `1px solid ${C.borderSoft}` }}>
         {hideBrand ? <div /> : <HomeBrandMark />}
-        <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {demoMode &&
           <span style={{
-            color: C.gold,
-            fontSize: '0.95rem',
+            color: FIELD.blue,
+            fontSize: '0.8rem',
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
             fontWeight: 700,
-            padding: '0.38rem 0.8rem',
-            borderRadius: 9,
-            border: `1px solid ${C.gold}55`,
-            background: `${C.gold}12`
+            fontFamily: F.ui
           }}>
             Demo · {kbd('D')} to exit
           </span>
           }
-          <div style={{ position: 'relative', display: 'inline-flex' }}>
+          <div style={{ position: 'relative', display: 'inline-flex', gap: '0.65rem' }}>
             {highlightSpeakers &&
             <div
               aria-hidden
@@ -858,7 +1186,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
                 alignItems: 'center',
                 gap: '0.45rem',
                 color: C.gold,
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
                 whiteSpace: 'nowrap',
                 pointerEvents: 'none',
@@ -884,6 +1212,14 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
               locked={!canManage}>
               Speakers
             </HomeSubduedButton>
+            {onSetPromptDone &&
+            <HomeSubduedButton
+              ariaLabel="Prompts — done list"
+              onClick={() => { if (canUseQR) setShowPrompts(true); else nudge(); }}
+              locked={!canUseQR}>
+              Prompts
+            </HomeSubduedButton>
+            }
           </div>
           <HomeIconButton
             ariaLabel="WhatsApp QR code"
@@ -906,7 +1242,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         textAlign: 'center',
         minHeight: 0
       }}>
-        <div style={{ marginBottom: '2rem' }}>
+        <div style={{ marginBottom: '2.5rem' }}>
           <QuestionOfNightBadge large text={questionOfNight} />
         </div>
         <QuestionDisplayText style={{ margin: '0 auto 4rem', padding: '0 3rem' }}>
@@ -917,13 +1253,27 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         <div style={{ color: C.muted, fontSize: '1.6rem' }}></div>
         }
         {total > 0 && remaining.length === 0 &&
-        <div style={{ color: C.gold, fontSize: '2.8rem', fontWeight: 800 }}>All speakers done — great night!</div>
+        <div style={{
+          color: FIELD.blue,
+          fontFamily: F.stage,
+          fontWeight: 700,
+          fontSize: 'clamp(2.2rem, 3.2vw, 3rem)'
+        }}>
+          All speakers done — great night.
+        </div>
         }
       </div>
 
-      {/* Speaker chips */}
+      {/* Speaker roll — quiet outlined pills in the same voice as the top-right buttons */}
       {total > 0 &&
-      <div style={{ padding: '1.25rem 3rem', borderTop: `1px solid ${C.border}`, display: 'flex', flexWrap: 'wrap', gap: '0.65rem', justifyContent: 'center' }}>
+      <div style={{
+        padding: '1.25rem 3rem 1.5rem',
+        borderTop: `1px solid ${C.borderSoft}`,
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: '0.5rem',
+        justifyContent: 'center'
+      }}>
           {participants.map((p) => {
             const pulsing = firstTimerPulseName === p.name;
             const showFt = p.firstTimer && !p.done;
@@ -931,35 +1281,29 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         <span key={p.name} style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '0.45rem',
-          padding: '0.4rem 1.1rem',
-          borderRadius: 100,
-          background: pulsing
-            ? `${C.gold}30`
-            : showFt
-            ? `${C.gold}14`
-            : p.done ? `${C.dim}20` : `${C.accent}18`,
-          border: pulsing || showFt ? `1px solid ${C.gold}44` : '1px solid transparent',
-          color: p.done ? C.dim : showFt ? C.gold : C.muted,
-          fontSize: '1rem',
-          fontWeight: showFt ? 600 : 400,
+          gap: '0.4rem',
+          padding: '0.42rem 0.85rem',
+          borderRadius: 10,
+          border: `1px solid ${p.done ? C.borderSoft : C.border}`,
+          fontFamily: F.ui,
+          color: p.done ? C.dim : C.muted,
+          fontSize: '0.92rem',
+          fontWeight: 500,
+          letterSpacing: '0.02em',
+          lineHeight: 1.2,
+          opacity: p.done ? 0.6 : 0.9,
           textDecoration: p.done ? 'line-through' : 'none',
-          animation: pulsing ? 'firstTimerChipPulse 1s ease-out' : undefined
+          textDecorationColor: 'rgba(205,228,254,0.4)',
+          animation: pulsing ? 'ftNamePulse 1.2s ease-out' : undefined
         }}>
               {p.name}
               {showFt &&
-              <span style={{
-                fontSize: '0.62rem',
-                fontWeight: 800,
-                letterSpacing: '0.08em',
-                padding: '0.14rem 0.36rem',
-                borderRadius: 4,
-                background: `${C.gold}22`,
-                border: `1px solid ${C.gold}50`,
-                color: C.gold,
+              <span aria-label="first timer" style={{
+                fontSize: '0.72em',
+                color: FIELD.blue,
                 lineHeight: 1
               }}>
-                FT
+                ✦
               </span>
               }
             </span>
@@ -998,8 +1342,12 @@ function RegistrationScreen({ initialChar = '', onAdd, onDone }) {
   return (
     <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 6rem', gap: '3rem' }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ color: C.dim, fontSize: '1.2rem', letterSpacing: '0.35em', textTransform: 'uppercase', marginBottom: '1rem' }}>Add Your Name</div>
-        <p style={{ color: C.muted, fontSize: '1.6rem', marginTop: '0.5rem' }}>Type your name, then press <span style={{ color: C.text, fontWeight: 700 }}>Enter</span></p>
+        <div style={{ marginBottom: '1.25rem' }}>
+          <Badge tone="quiet" large>Add your name</Badge>
+        </div>
+        <p style={{ color: 'rgba(205,228,254,0.88)', fontSize: '1.45rem', marginTop: '0.5rem', fontWeight: 500 }}>
+          Type your name, then press <span style={{ color: FIELD.cream, fontWeight: 700 }}>Enter</span>
+        </p>
       </div>
 
       <input
@@ -1016,25 +1364,63 @@ function RegistrationScreen({ initialChar = '', onAdd, onDone }) {
           maxWidth: 1500,
           background: 'transparent',
           border: 'none',
-          borderBottom: `4px solid ${C.accent}`,
+          borderBottom: '2px solid rgba(205,228,254,0.6)',
           padding: '1.5rem 1rem',
-          color: C.text,
-          fontSize: 'clamp(5rem, 11vw, 11rem)',
-          fontFamily: 'inherit',
-          fontWeight: 800,
+          color: FIELD.cream,
+          fontSize: 'clamp(4.5rem, 10vw, 10rem)',
+          fontFamily: F.stage,
+          fontWeight: 700,
           textAlign: 'center',
-          letterSpacing: '-0.02em',
+          letterSpacing: '0',
           outline: 'none',
-          caretColor: C.accent
+          caretColor: FIELD.cream
         }} />
 
-      <div style={{ color: C.dim, fontSize: '1.1rem', letterSpacing: '0.15em', textTransform: 'uppercase' }}>
+      <div style={{ color: 'rgba(205,228,254,0.55)', fontSize: '1.05rem', letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 700 }}>
         Press Esc to cancel
       </div>
     </div>);
 }
 
 // ─── QR CODE SCREEN ───────────────────────────────────────────────────────────
+/** Static QR rendered as crisp SVG from a string. Error level M (15% damage
+ *  tolerance) suits a projector; typeNumber 0 picks the smallest version that
+ *  fits. Falls back to the raw link as text if qrcode.js failed to load. */
+function QRCodeSvg({ value, label, style = {} }) {
+  const cells = React.useMemo(() => {
+    if (typeof qrcode !== 'function') return null;
+    const qr = qrcode(0, 'M');
+    qr.addData(value);
+    qr.make();
+    const n = qr.getModuleCount();
+    const rects = [];
+    for (let r = 0; r < n; r++) {
+      let run = 0;
+      for (let c = 0; c <= n; c++) {
+        const dark = c < n && qr.isDark(r, c);
+        if (dark) { run += 1; continue; }
+        if (run) { rects.push(`M${c - run} ${r}h${run}v1h-${run}z`); run = 0; }
+      }
+    }
+    return { n, d: rects.join('') };
+  }, [value]);
+
+  if (!cells) {
+    return <div style={{ ...style, color: '#111', fontFamily: F.ui, fontSize: '0.9rem', wordBreak: 'break-all' }}>{value}</div>;
+  }
+  return (
+    <svg
+      role="img"
+      aria-label={label}
+      viewBox={`0 0 ${cells.n} ${cells.n}`}
+      shapeRendering="crispEdges"
+      style={style}>
+      <rect width={cells.n} height={cells.n} fill="#fff" />
+      <path d={cells.d} fill="#111" />
+    </svg>
+  );
+}
+
 function QRScreen({ onBack }) {
   useEffect(() => {
     const h = (e) => {
@@ -1051,7 +1437,7 @@ function QRScreen({ onBack }) {
     <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column' }}>
 
       {/* Top bar — consistent with home */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.5rem 3rem', borderBottom: `1px solid ${C.border}` }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.6rem 3rem', borderBottom: `1px solid ${C.borderSoft}` }}>
         <HomeBrandMark />
         <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
           <HomeIconButton ariaLabel="Close — back to home" onClick={onBack}>
@@ -1082,14 +1468,14 @@ function QRScreen({ onBack }) {
           {/* ── WhatsApp join ── */}
           <div style={QR_PANEL_STYLE}>
             <div style={QR_EYEBROW_STYLE}>Join our WhatsApp</div>
-            <div style={{ background: '#fff', padding: 'clamp(1rem, 1.6vw, 1.5rem)', borderRadius: 16 }}>
-              <img
-                src="whatsapp-qr.png"
-                alt="WhatsApp group QR code"
-                style={{ display: 'block', width: 'min(34vh, 320px)', height: 'min(34vh, 320px)', imageRendering: 'pixelated' }}
+            <div style={{ background: '#fff', padding: 'clamp(1rem, 1.6vw, 1.5rem)', borderRadius: 12 }}>
+              <QRCodeSvg
+                value={WHATSAPP_INVITE_URL}
+                label="WhatsApp group QR code"
+                style={{ display: 'block', width: 'min(34vh, 320px)', height: 'min(34vh, 320px)' }}
               />
             </div>
-            <p style={{ color: C.muted, fontSize: '1.05rem', fontWeight: 400, margin: '1.25rem 0 0', lineHeight: 1.5 }}>
+            <p style={{ color: C.muted, fontSize: '1.02rem', fontWeight: 400, margin: '1.25rem 0 0', lineHeight: 1.5 }}>
               Point your camera at the code
             </p>
           </div>
@@ -1110,19 +1496,21 @@ const QR_PANEL_STYLE = {
   flexDirection: 'column',
   alignItems: 'center',
   textAlign: 'center',
-  background: C.surface,
+  background: 'rgba(244,239,230,0.02)',
   border: `1px solid ${C.border}`,
-  borderRadius: 20,
+  borderRadius: 16,
   padding: 'clamp(1.5rem, 2.5vw, 2.25rem)'
 };
 
 const QR_EYEBROW_STYLE = {
-  color: C.muted,
-  fontSize: '0.9rem',
-  letterSpacing: '0.2em',
+  color: C.gold,
+  fontFamily: F.ui,
+  fontSize: '0.82rem',
+  letterSpacing: '0.3em',
+  paddingLeft: '0.3em',
   textTransform: 'uppercase',
-  fontWeight: 600,
-  marginBottom: '1.25rem'
+  fontWeight: 500,
+  marginBottom: '1.4rem'
 };
 
 function BankDetailRow({ label, value, mono = false, last = false }) {
@@ -1130,26 +1518,26 @@ function BankDetailRow({ label, value, mono = false, last = false }) {
     <div style={{
       display: 'flex',
       flexDirection: 'column',
-      gap: '0.3rem',
+      gap: '0.35rem',
       padding: '0.95rem 0',
-      borderBottom: last ? 'none' : `1px solid ${C.border}`
+      borderBottom: last ? 'none' : `1px solid ${C.borderSoft}`
     }}>
       <span style={{
-        color: C.muted,
-        fontSize: '0.8rem',
-        fontWeight: 600,
-        letterSpacing: '0.16em',
+        color: C.dim,
+        fontSize: '0.72rem',
+        fontWeight: 500,
+        letterSpacing: '0.2em',
         textTransform: 'uppercase'
       }}>
         {label}
       </span>
       <span style={{
         color: C.text,
-        fontSize: mono ? 'clamp(1.6rem, 2.4vw, 2.2rem)' : 'clamp(1.45rem, 2vw, 1.9rem)',
-        fontWeight: 700,
-        letterSpacing: mono ? '0.04em' : '-0.01em',
+        fontSize: mono ? 'clamp(1.5rem, 2.2vw, 2rem)' : 'clamp(1.35rem, 1.9vw, 1.75rem)',
+        fontWeight: 500,
+        letterSpacing: mono ? '0.03em' : '0',
         fontVariantNumeric: mono ? 'tabular-nums' : 'normal',
-        lineHeight: 1.1
+        lineHeight: 1.15
       }}>
         {value}
       </span>
@@ -1165,7 +1553,7 @@ function BankDetailsCard() {
       textAlign: 'left'
     }}>
       <div style={QR_EYEBROW_STYLE}>Support the night</div>
-      <p style={{ color: C.muted, fontSize: '1.05rem', fontWeight: 400, margin: '-0.5rem 0 0.5rem', lineHeight: 1.55 }}>
+      <p style={{ color: C.muted, fontSize: '1.02rem', fontWeight: 400, margin: '-0.5rem 0 0.5rem', lineHeight: 1.6 }}>
         We have a koha for meetup fees to keep the group running. Anything is appreciated — around $2–$5 is recommended.
       </p>
 
@@ -1179,7 +1567,7 @@ function BankDetailsCard() {
 }
 
 // ─── HOST WALK-THROUGH COACH ──────────────────────────────────────────────────
-// Gold key-cap chip used to emphasise the single key press a step asks for.
+// Minimal key chip used to emphasise the single key press a step asks for.
 function WalkKeyChip({ children }) {
   return (
     <span style={{
@@ -1188,15 +1576,16 @@ function WalkKeyChip({ children }) {
       justifyContent: 'center',
       minWidth: '1.6rem',
       height: '1.7rem',
-      padding: '0 0.5rem',
-      borderRadius: 7,
-      background: `${C.gold}1f`,
-      border: `1px solid ${C.gold}88`,
-      color: C.gold,
-      fontSize: '0.92rem',
-      fontWeight: 800,
-      lineHeight: 1,
-      boxShadow: `0 1px 0 ${C.gold}55, inset 0 1px 0 rgba(255,255,255,0.06)`
+      padding: '0 0.55rem',
+      borderRadius: 6,
+      background: 'rgba(205,228,254,0.05)',
+      border: '1px solid rgba(205,228,254,0.4)',
+      boxShadow: 'inset 0 -1.5px 0 rgba(0,0,0,0.2)',
+      color: C.text,
+      fontFamily: F.ui,
+      fontSize: '0.88rem',
+      fontWeight: 500,
+      lineHeight: 1
     }}>
       {children}
     </span>
@@ -1224,12 +1613,11 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
     return () => clearTimeout(t);
   }, [stepNumber]);
 
-  const glow = 'walkthroughCoachGlow 2.4s ease-in-out infinite';
   const animation = shaking
-    ? `walkthroughShake 0.45s cubic-bezier(.36,.07,.19,.97) both, ${glow}`
+    ? 'walkthroughShake 0.45s cubic-bezier(.36,.07,.19,.97) both'
     : popping
-      ? `walkthroughCoachPop 0.42s ease-out, ${glow}`
-      : glow;
+      ? 'walkthroughCoachPop 0.42s ease-out'
+      : 'none';
 
   const atBottom = placement === 'bottom-left';
   const edge = atBottom
@@ -1243,49 +1631,41 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
         left: 'clamp(1rem, 2.5vw, 2rem)',
         ...edge,
         width: 'min(380px, calc(100vw - 2rem))',
-        background: `linear-gradient(158deg, #23233f 0%, ${C.surface} 58%)`,
-        border: `2px solid ${C.gold}`,
-        borderRadius: 16,
-        padding: '1.15rem 1.25rem',
-        paddingLeft: '1.4rem',
-        borderLeft: `6px solid ${C.gold}`,
+        background: '#FDFAF4',
+        border: `1px solid ${C.goldDim}`,
+        borderRadius: 14,
+        padding: '1.2rem 1.35rem',
+        boxShadow: '0 18px 48px rgba(0,0,0,0.28)',
         pointerEvents: 'auto',
         display: 'flex',
         flexDirection: 'column',
-        gap: '0.7rem',
+        gap: '0.75rem',
         transformOrigin: atBottom ? 'bottom left' : 'top left',
         animation
       }} data-walkthrough-ui>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
           <span style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '0.4rem',
-            background: C.gold,
-            color: '#0b0b14',
-            fontSize: '0.72rem',
-            fontWeight: 800,
-            letterSpacing: '0.14em',
-            textTransform: 'uppercase',
-            padding: '0.28rem 0.65rem',
-            borderRadius: 999
+            color: C.gold,
+            fontSize: '0.7rem',
+            fontWeight: 500,
+            letterSpacing: '0.26em',
+            textTransform: 'uppercase'
           }}>
-            <span aria-hidden style={{ fontSize: '0.85rem', lineHeight: 1 }}>{'\u2728'}</span>
             Host walk-through
           </span>
-          <span style={{ color: C.gold, fontSize: '0.82rem', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: C.dim, fontSize: '0.82rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
             {stepNumber} / {totalSteps}
           </span>
         </div>
 
-        <div style={{ color: C.text, fontSize: '1.22rem', fontWeight: 800, letterSpacing: '-0.01em', lineHeight: 1.22 }}>
+        <div style={{ color: C.text, fontSize: '1.2rem', fontWeight: 500, letterSpacing: '-0.01em', lineHeight: 1.25 }}>
           {title}
         </div>
 
         {lines.length > 0 &&
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
           {lines.map((l, i) =>
-          <p key={i} style={{ margin: 0, color: C.muted, fontSize: '0.95rem', lineHeight: 1.45 }}>{l}</p>
+          <p key={i} style={{ margin: 0, color: C.muted, fontSize: '0.95rem', fontWeight: 400, lineHeight: 1.5 }}>{l}</p>
           )}
         </div>
         }
@@ -1295,15 +1675,15 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
           display: 'flex',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '0.4rem',
-          padding: '0.5rem 0.7rem',
-          background: `${C.gold}12`,
-          border: `1px solid ${C.gold}33`,
+          gap: '0.45rem',
+          padding: '0.55rem 0.7rem',
+          background: 'rgba(233,79,46,0.08)',
+          border: '1px solid rgba(233,79,46,0.3)',
           borderRadius: 10
         }}>
           {cueKeys.map((k, i) => <WalkKeyChip key={i}>{k}</WalkKeyChip>)}
           {cue.text &&
-          <span style={{ color: C.text, fontSize: '0.95rem', fontWeight: 600 }}>{cue.text}</span>
+          <span style={{ color: C.text, fontSize: '0.95rem', fontWeight: 400 }}>{cue.text}</span>
           }
         </div>
         }
@@ -1311,15 +1691,15 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
         {showProgress &&
         <div style={{
           display: 'flex', alignItems: 'center', gap: '0.6rem',
-          padding: '0.55rem 0.75rem',
-          background: `${C.gold}12`,
-          border: `1px solid ${C.gold}33`,
+          padding: '0.55rem 0.7rem',
+          background: 'rgba(233,79,46,0.08)',
+          border: '1px solid rgba(233,79,46,0.3)',
           borderRadius: 10
         }}>
-          <span style={{ color: C.gold, fontSize: '0.95rem', fontWeight: 800, fontVariantNumeric: 'tabular-nums' }}>
+          <span style={{ color: C.gold, fontSize: '0.92rem', fontWeight: 500, fontVariantNumeric: 'tabular-nums' }}>
             Added {Math.min(progress.current, progress.target)} of {progress.target}
           </span>
-          <div style={{ flex: 1, height: 6, borderRadius: 999, background: `${C.gold}22`, overflow: 'hidden' }}>
+          <div style={{ flex: 1, height: 3, borderRadius: 999, background: 'rgba(233,79,46,0.2)', overflow: 'hidden' }}>
             <div style={{
               height: '100%',
               width: `${Math.min(100, (progress.current / progress.target) * 100)}%`,
@@ -1344,7 +1724,7 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
             onClick={onSkip}
             style={{
               background: 'none', border: 'none', color: C.dim,
-              fontFamily: 'inherit', fontSize: '0.9rem', fontWeight: 600,
+              fontFamily: F.ui, fontSize: '0.88rem', fontWeight: 400,
               cursor: 'pointer', padding: 0, textDecoration: 'underline', opacity: 0.85
             }}>
             Skip walk-through
@@ -1355,8 +1735,8 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
             type="button"
             onClick={onExit}
             style={{
-              background: C.gold, color: '#0b0b14', border: 'none', borderRadius: 10,
-              padding: '0.5rem 1.15rem', fontFamily: 'inherit', fontWeight: 800,
+              background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10,
+              padding: '0.55rem 1.2rem', fontFamily: F.ui, fontWeight: 500,
               fontSize: '0.95rem', cursor: 'pointer'
             }}>
             Finish
@@ -1375,7 +1755,7 @@ function WalkthroughIntroModal({ onStart, programmeHref = 'programme.html' }) {
       position: 'fixed', inset: 0, zIndex: 600,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 'clamp(1rem, 4vw, 2.5rem)',
-      background: 'rgba(7,7,16,0.78)',
+      background: 'rgba(0,0,0,0.6)',
       backdropFilter: 'blur(4px)',
       WebkitBackdropFilter: 'blur(4px)'
     }} data-walkthrough-ui>
@@ -1383,37 +1763,40 @@ function WalkthroughIntroModal({ onStart, programmeHref = 'programme.html' }) {
         width: 'min(560px, 100%)',
         maxHeight: 'calc(100vh - 2rem)',
         overflowY: 'auto',
-        background: `linear-gradient(158deg, #23233f 0%, ${C.surface} 60%)`,
-        border: `2px solid ${C.gold}`,
-        borderRadius: 18,
-        padding: 'clamp(1.5rem, 4vw, 2.25rem)',
+        background: '#FDFAF4',
+        border: `1px solid ${C.goldDim}`,
+        borderRadius: 16,
+        padding: 'clamp(1.75rem, 4vw, 2.5rem)',
         display: 'flex',
         flexDirection: 'column',
-        gap: '1rem',
-        boxShadow: '0 24px 70px rgba(0,0,0,0.55), 0 0 32px rgba(212,168,75,0.22)',
+        gap: '1.1rem',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
         animation: 'walkthroughCoachPop 0.42s ease-out'
       }}>
         <span style={{
           alignSelf: 'flex-start',
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '0.4rem',
-          color: C.muted,
+          color: C.gold,
           fontSize: '0.72rem',
-          fontWeight: 700,
-          letterSpacing: '0.16em',
+          fontWeight: 500,
+          letterSpacing: '0.26em',
           textTransform: 'uppercase'
         }}>
-          <span aria-hidden style={{ fontSize: '0.8rem', lineHeight: 1, opacity: 0.7 }}>{'\u2728'}</span>
           Host walk-through
         </span>
 
-        <div style={{ color: C.text, fontSize: 'clamp(1.5rem, 4vw, 1.9rem)', fontWeight: 800, letterSpacing: '-0.015em', lineHeight: 1.15 }}>
-          Thanks for hosting Auckland Public Speaking {'\uD83D\uDC4F'}
+        <div style={{
+          color: C.text,
+          fontFamily: F.stage,
+          fontSize: 'clamp(1.7rem, 4vw, 2.2rem)',
+          fontWeight: 700,
+          letterSpacing: '-0.01em',
+          lineHeight: 1.18
+        }}>
+          Thanks for hosting Auckland Public Speaking
         </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-          <p style={{ margin: 0, color: C.muted, fontSize: '18px', lineHeight: 1.5 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
+          <p style={{ margin: 0, color: C.muted, fontSize: '1.05rem', fontWeight: 400, lineHeight: 1.55 }}>
             Grab the programme so you{'\u2019'}ve got the runsheet handy:
           </p>
           <a
@@ -1428,22 +1811,22 @@ function WalkthroughIntroModal({ onStart, programmeHref = 'programme.html' }) {
               background: 'transparent',
               color: C.gold,
               textDecoration: 'none',
-              border: `1.5px solid ${C.gold}66`,
+              border: `1px solid ${C.goldDim}`,
               borderRadius: 10,
-              padding: '0.5rem 1rem',
-              fontWeight: 700,
-              fontSize: '0.92rem'
+              padding: '0.55rem 1.1rem',
+              fontWeight: 500,
+              fontSize: '0.95rem'
             }}>
-            <span aria-hidden style={{ fontSize: '1rem', lineHeight: 1 }}>{'\uD83D\uDCC4'}</span>
-            Download the programme
+            Open the programme
+            <span aria-hidden style={{ fontSize: '0.9rem', lineHeight: 1 }}>{'\u2197'}</span>
           </a>
         </div>
 
-        <p style={{ margin: 0, color: C.muted, fontSize: '18px', lineHeight: 1.5 }}>
+        <p style={{ margin: 0, color: C.muted, fontSize: '1.05rem', fontWeight: 400, lineHeight: 1.55 }}>
           It{'\u2019'}s just a rough guide. You{'\u2019'}re completely free to add your own spin and run the night however feels right to you.
         </p>
 
-        <p style={{ margin: 0, color: C.muted, fontSize: '18px', lineHeight: 1.5 }}>
+        <p style={{ margin: 0, color: C.muted, fontSize: '1.05rem', fontWeight: 400, lineHeight: 1.55 }}>
           When you{'\u2019'}re ready, we{'\u2019'}ll walk you through how the app works so you can confidently explain it to the room and facilitate the evening. It takes about 5 minutes.
         </p>
 
@@ -1453,17 +1836,16 @@ function WalkthroughIntroModal({ onStart, programmeHref = 'programme.html' }) {
           style={{
             marginTop: '0.5rem',
             alignSelf: 'stretch',
-            background: C.gold,
-            color: '#0b0b14',
-            border: 'none',
-            borderRadius: 14,
+            background: C.surface,
+            color: C.text,
+            border: `1px solid ${C.border}`,
+            borderRadius: 12,
             padding: '0.95rem 1.5rem',
-            fontFamily: 'inherit',
-            fontWeight: 800,
-            fontSize: '1.12rem',
+            fontFamily: F.ui,
+            fontWeight: 500,
+            fontSize: '1.1rem',
             letterSpacing: '0.01em',
-            cursor: 'pointer',
-            boxShadow: '0 10px 30px rgba(212,168,75,0.32)'
+            cursor: 'pointer'
           }}>
           Start the walk-through
         </button>
@@ -1484,17 +1866,17 @@ function WalkthroughRestartButton({ onRestart }) {
           right: 'clamp(1rem, 2.5vw, 2rem)',
           bottom: 'clamp(1rem, 3vh, 2rem)',
           pointerEvents: 'auto',
-          background: C.gold,
-          color: '#0b0b14',
-          border: 'none',
-          borderRadius: 12,
-          padding: '0.65rem 1.25rem',
-          fontFamily: 'inherit',
-          fontWeight: 800,
-          fontSize: '0.95rem',
+          background: 'rgba(253,250,244,0.95)',
+          color: C.gold,
+          border: `1px solid ${C.goldDim}`,
+          borderRadius: 10,
+          padding: '0.6rem 1.2rem',
+          fontFamily: F.ui,
+          fontWeight: 500,
+          fontSize: '0.92rem',
           cursor: 'pointer',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.45), 0 0 24px rgba(212,168,75,0.25)',
-          letterSpacing: '0.01em'
+          boxShadow: '0 8px 28px rgba(0,0,0,0.25)',
+          letterSpacing: '0.02em'
         }}>
         Restart walk-through
       </button>
@@ -1502,20 +1884,29 @@ function WalkthroughRestartButton({ onRestart }) {
   );
 }
 
-// ─── RETRO KEY HINTS (shared skeuomorphic keyboard UI) ───────────────────────
-const RETRO_KEY_FACE = {
-  background: 'linear-gradient(180deg, #eceef4 0%, #d4d8e4 38%, #b8becf 100%)',
-  border: '1px solid #949eb4',
-  boxShadow: '0 3px 0 #707888, inset 0 1px 0 rgba(255,255,255,0.72), inset 0 -1px 0 rgba(0,0,0,0.08)',
-  color: '#2c3344'
+// ─── KEY HINTS (shared minimal keyboard UI) ──────────────────────────────────
+const KEY_FACE = {
+  background: 'rgba(205,228,254,0.05)',
+  border: '1.5px solid rgba(205,228,254,0.45)',
+  boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.25)',
+  color: 'rgba(205,228,254,0.85)',
+  fontFamily: F.ui
 };
 
-function RetroSpaceKey({ active = false }) {
+const KEY_FACE_DARK = {
+  background: 'rgba(205,228,254,0.07)',
+  border: '1.5px solid rgba(205,228,254,0.55)',
+  boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.3)',
+  color: 'rgba(205,228,254,0.92)',
+  fontFamily: F.ui
+};
+
+function RetroSpaceKey({ active = false, dark = false, label = 'SPACE' }) {
   const activeStyle = active ? {
-    background: 'linear-gradient(180deg, #ffe8e8 0%, #ffc8c8 38%, #e8a0a0 100%)',
-    border: '1px solid #d87878',
-    boxShadow: '0 1px 0 #a85858, inset 0 1px 0 rgba(255,255,255,0.72), inset 0 -1px 0 rgba(0,0,0,0.08), 0 0 24px rgba(255,64,64,0.28)',
-    color: '#4a1820',
+    background: 'rgba(233,79,46,0.16)',
+    border: '1.5px solid rgba(233,79,46,0.9)',
+    boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.2)',
+    color: dark ? FIELD.vermilion : C.goldBright,
     transform: 'translateY(2px)'
   } : {};
   return (
@@ -1525,43 +1916,44 @@ function RetroSpaceKey({ active = false }) {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minWidth: 'clamp(185px, 32.5vw, 285px)',
-        height: 'clamp(48px, 6.5vh, 63px)',
-        padding: '0 1.5rem',
-        borderRadius: 8,
-        fontSize: 'clamp(1.1rem, 2.1vw, 1.31rem)',
-        fontWeight: 800,
-        letterSpacing: '0.22em',
-        ...RETRO_KEY_FACE,
+        minWidth: 'clamp(210px, 36vw, 312px)',
+        height: 'clamp(55px, 7.2vh, 70px)',
+        padding: '0 1.8rem',
+        borderRadius: 12,
+        fontSize: 'clamp(1.14rem, 2.16vw, 1.32rem)',
+        fontWeight: 700,
+        letterSpacing: '0.32em',
+        paddingLeft: 'calc(1.8rem + 0.32em)',
+        ...(dark ? KEY_FACE_DARK : KEY_FACE),
         ...activeStyle
       }}>
-      SPACE
+      {label}
     </div>
   );
 }
 
-function RetroArrowKeys() {
+function RetroArrowKeys({ dark = false }) {
   const square = {
-    width: 'clamp(46px, 8vw, 58px)',
-    height: 'clamp(46px, 8vw, 58px)',
+    width: 'clamp(53px, 9vw, 65px)',
+    height: 'clamp(53px, 9vw, 65px)',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 8,
-    fontSize: 'clamp(1.15rem, 2.2vw, 1.45rem)',
-    fontWeight: 800,
+    borderRadius: 12,
+    fontSize: 'clamp(1.26rem, 2.4vw, 1.56rem)',
+    fontWeight: 500,
     lineHeight: 1,
-    ...RETRO_KEY_FACE
+    ...(dark ? KEY_FACE_DARK : KEY_FACE)
   };
   return (
-    <div aria-hidden style={{ display: 'inline-flex', alignItems: 'center', gap: 'clamp(5px, 1vw, 8px)' }}>
+    <div aria-hidden style={{ display: 'inline-flex', alignItems: 'center', gap: 'clamp(7px, 1.2vw, 11px)' }}>
       <div style={square}>←</div>
       <div style={square}>→</div>
     </div>
   );
 }
 
-function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, urgent = false }) {
+function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, urgent = false, dark = false }) {
   return (
     <div
       role="status"
@@ -1570,7 +1962,7 @@ function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, u
         display: 'flex',
         flexDirection: 'column',
         alignItems: align === 'right' ? 'flex-end' : align === 'left' ? 'flex-start' : 'center',
-        gap: '0.65rem',
+        gap: '0.85rem',
         animation: 'pulseBig 2.8s ease-in-out infinite',
         opacity: 0.94,
         ...style
@@ -1578,10 +1970,11 @@ function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, u
       {children}
       {caption &&
       <span style={{
-        fontSize: 'clamp(0.95rem, 1.55vw, 1.12rem)',
+        fontFamily: F.ui,
+        fontSize: 'clamp(1.1rem, 1.8vw, 1.26rem)',
         fontWeight: 500,
-        color: urgent ? C.pulseRedSoft : C.text,
-        letterSpacing: '0.02em',
+        color: urgent ? C.pulseRedSoft : dark ? 'rgba(205,228,254,0.85)' : C.muted,
+        letterSpacing: '0.03em',
         textAlign: align === 'right' ? 'right' : align === 'left' ? 'left' : 'center'
       }}>
         {caption}
@@ -1614,7 +2007,7 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
         left: 'clamp(0.85rem, 2vw, 1.35rem)',
         zIndex: 60
       }}>
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }} data-walkthrough-ui>
         <button
           type="button"
           aria-label="Menu"
@@ -1622,17 +2015,18 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
           disabled={disableMenu}
           onClick={() => { if (disableMenu) return; setOpen((o) => !o); }}
           style={{
-            background: `${C.surface}cc`,
+            background: C.surface,
             border: `1px solid ${C.border}`,
-            color: C.muted,
-            padding: '0.35rem 0.65rem',
-            borderRadius: 8,
+            color: C.text,
+            padding: '0.38rem 0.7rem',
+            borderRadius: 9,
             cursor: disableMenu ? 'not-allowed' : 'pointer',
-            fontSize: '0.88rem',
-            fontWeight: 600,
-            fontFamily: 'inherit',
+            fontSize: '0.86rem',
+            fontWeight: 500,
+            fontFamily: F.ui,
             letterSpacing: '0.04em',
-            opacity: disableMenu ? 0.32 : 0.82
+            opacity: disableMenu ? 0.4 : 0.92,
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)'
           }}>
           ☰ Menu
         </button>
@@ -1648,7 +2042,7 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
           border: `1px solid ${C.border}`,
           borderRadius: 10,
           padding: '0.35rem 0',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.45)'
+          boxShadow: '0 12px 36px rgba(0,0,0,0.25)'
         }}>
           {showRespin &&
           <button
@@ -1657,8 +2051,8 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
             style={{
               display: 'block', width: '100%', textAlign: 'left',
               background: 'none', border: 'none', cursor: 'pointer',
-              color: C.muted, fontFamily: 'inherit', fontSize: '0.95rem',
-              fontWeight: 600, padding: '0.6rem 1rem'
+              color: C.muted, fontFamily: F.ui, fontSize: '0.95rem',
+              fontWeight: 400, padding: '0.6rem 1rem'
             }}>
             Respin
           </button>
@@ -1671,12 +2065,13 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
               display: 'block', width: '100%', textAlign: 'left',
               background: 'none', border: 'none',
               cursor: disableBackHome ? 'not-allowed' : 'pointer',
-              color: disableBackHome ? C.dim : C.text, fontFamily: 'inherit', fontSize: '0.95rem',
-              fontWeight: 600, padding: '0.6rem 1rem',
+              color: disableBackHome ? C.dim : C.text, fontFamily: F.ui, fontSize: '0.95rem',
+              fontWeight: 400, padding: '0.6rem 1rem',
               opacity: disableBackHome ? 0.5 : 1
             }}>
             ← Back to home
           </button>
+
         </div>
         }
       </div>
@@ -1684,35 +2079,26 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
   );
 }
 
-// ─── NEXT SPEAKER CELEBRATION ───────────────────────────────────────────────
-const REVEAL_EMOJIS = ['👏', '🙌', '🎉', '✨', '⭐', '💫', '🎊', '👏'];
-
+// ─── NEXT SPEAKER CELEBRATION — spotlight bloom + rising gold dust ───────────
 function seededRevealParticles(seed, count) {
   let s = seed * 9973 + 1;
   const rnd = () => { s = s * 16807 % 2147483647; return (s - 1) / 2147483646; };
   return Array.from({ length: count }, (_, i) => ({
     id: i,
-    emoji: REVEAL_EMOJIS[i % REVEAL_EMOJIS.length],
     left: `${rnd() * 100}%`,
-    bottom: `${-8 + rnd() * 28}%`,
-    size: `${1.5 + rnd() * 2.6}rem`,
-    delay: `${rnd() * 2.6}s`,
-    duration: `${2.6 + rnd() * 3.4}s`,
+    bottom: `${-6 + rnd() * 30}%`,
+    size: 2.5 + rnd() * 4.5,
+    delay: `${rnd() * 3.2}s`,
+    duration: `${4 + rnd() * 3.5}s`,
     variant: i % 3
   }));
 }
 
 function SpeakerRevealCelebration({ seed = 0 }) {
-  const particles = React.useMemo(() => seededRevealParticles(seed, 34), [seed]);
+  const particles = React.useMemo(() => seededRevealParticles(seed, 28), [seed]);
 
   return (
     <div aria-hidden style={{ position: 'absolute', inset: 0, pointerEvents: 'none', overflow: 'hidden', zIndex: 0 }}>
-      <div style={{
-        position: 'absolute',
-        inset: '-25%',
-        background: 'radial-gradient(circle at 50% 42%, rgba(212,168,75,0.24) 0%, rgba(255,120,60,0.06) 38%, transparent 62%)',
-        animation: 'revealGlowPulse 3.2s ease-in-out infinite'
-      }} />
       {particles.map((p) =>
       <div
         key={p.id}
@@ -1720,14 +2106,13 @@ function SpeakerRevealCelebration({ seed = 0 }) {
           position: 'absolute',
           left: p.left,
           bottom: p.bottom,
-          fontSize: p.size,
-          lineHeight: 1,
-          animation: `applauseDrift${p.variant} ${p.duration} ease-in-out ${p.delay} infinite`,
-          filter: 'drop-shadow(0 2px 10px rgba(212,168,75,0.4))',
+          width: p.size * 1.6,
+          height: p.size * 1.6,
+          borderRadius: p.id % 3 === 0 ? 1 : '50%',
+          background: p.id % 4 === 0 ? FIELD.blue : 'rgba(205,228,254,0.9)',
+          animation: `dustRise${p.variant} ${p.duration} ease-in-out ${p.delay} infinite`,
           willChange: 'transform, opacity'
-        }}>
-          {p.emoji}
-        </div>
+        }} />
       )}
     </div>
   );
@@ -1776,74 +2161,69 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
     }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{
-          color: C.gold,
-          fontSize: 'clamp(1rem, 1.6vw + 0.4rem, 1.35rem)',
-          letterSpacing: '0.42em',
+          color: FIELD.blue,
+          fontFamily: F.ui,
+          fontSize: 'clamp(1.05rem, 1.4vw + 0.4rem, 1.3rem)',
+          letterSpacing: '0.24em',
+          paddingLeft: '0.24em',
           textTransform: 'uppercase',
           fontWeight: 700,
-          marginBottom: 'clamp(1.25rem, 3vh, 2rem)',
-          animation: 'fadeSlide 0.55s ease both',
-          opacity: 0.92
+          marginBottom: 'clamp(1.5rem, 3.5vh, 2.25rem)',
+          animation: 'fadeSlide 0.55s ease both'
         }}>
           {added ? "You're on the list" : 'Already registered'}
         </div>
         <div style={{
+          fontFamily: F.stage,
           fontSize: 'clamp(4rem, 10vw, 9rem)',
-          fontWeight: 900,
-          color: C.gold,
-          letterSpacing: '-0.03em',
-          lineHeight: 1,
-          animation: 'fadeSlide 0.55s ease 0.1s both',
-          filter: 'drop-shadow(0 4px 20px rgba(212,168,75,0.2))'
+          fontWeight: 700,
+          color: FIELD.cream,
+          letterSpacing: '0',
+          lineHeight: 0.98,
+          animation: 'fadeSlide 0.55s ease 0.1s both'
         }}>
           {name}
         </div>
         {showFt &&
         <div style={{
-          marginTop: 'clamp(1rem, 2.5vh, 1.5rem)',
+          marginTop: 'clamp(1.25rem, 3vh, 1.75rem)',
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '0.45rem',
-          padding: '0.4rem 1.1rem',
-          borderRadius: 100,
-          background: `${C.gold}22`,
-          border: `1px solid ${C.gold}55`,
-          color: C.gold,
-          fontSize: '0.95rem',
+          gap: '0.55rem',
+          color: FIELD.blue,
+          fontFamily: F.ui,
+          fontSize: '0.9rem',
           fontWeight: 700,
-          letterSpacing: '0.12em',
+          letterSpacing: '0.28em',
+          paddingLeft: '0.28em',
           textTransform: 'uppercase',
-          animation: 'firstTimerChipPulse 1s ease-out'
+          animation: 'firstTimerChipPulse 1s ease-out both'
         }}>
+          <span aria-hidden style={{ fontSize: '0.8rem' }}>✦</span>
           First timer
         </div>
         }
         <div style={{
-          marginTop: 'clamp(1.25rem, 3vh, 2rem)',
-          fontSize: 'clamp(1.5rem, 2.8vw + 0.5rem, 2.25rem)',
-          fontWeight: 700,
-          letterSpacing: '0.06em',
-          background: added
-            ? `linear-gradient(105deg, #ffe8a8 0%, ${C.gold} 38%, #fff4d0 52%, ${C.gold} 68%, #c8922e 100%)`
-            : `linear-gradient(105deg, #c8d0e8 0%, ${C.muted} 45%, #e8ecf8 55%, ${C.muted} 100%)`,
-          backgroundSize: '220% auto',
-          WebkitBackgroundClip: 'text',
-          backgroundClip: 'text',
-          color: 'transparent',
+          marginTop: 'clamp(1.5rem, 3.5vh, 2.25rem)',
+          fontFamily: F.stage,
+          fontSize: 'clamp(1.6rem, 2.5vw + 0.5rem, 2.2rem)',
+          fontWeight: 500,
+          letterSpacing: '0',
+          color: added ? FIELD.blue : 'rgba(205,228,254,0.7)',
           textTransform: 'lowercase',
-          animation: 'revealQuoteIn 0.75s ease 0.55s both, revealShimmer 4.5s linear 1.3s infinite',
-          filter: added ? 'drop-shadow(0 3px 20px rgba(212,168,75,0.28))' : 'none'
+          animation: 'revealQuoteIn 0.75s ease 0.55s both'
         }}>
           {added ? 'added.' : 'welcome back.'}
         </div>
         {continueAdding && !suppressAddHints &&
         <p style={{
           marginTop: 'clamp(2rem, 4vh, 2.75rem)',
-          color: C.dim,
-          fontSize: '0.95rem',
-          letterSpacing: '0.14em',
+          color: 'rgba(205,228,254,0.55)',
+          fontFamily: F.ui,
+          fontSize: '0.9rem',
+          letterSpacing: '0.18em',
           textTransform: 'uppercase',
-          fontWeight: 600,
+          fontWeight: 500,
           animation: 'fadeSlide 0.55s ease 0.85s both',
           opacity: 0.85
         }}>
@@ -1868,55 +2248,16 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
 
   const remaining = participants.filter((p) => !p.done);
 
-  // Lock the participant pool for the spin so React state changes don't reshuffle the wheel mid-animation
+  // Lock the participant pool for the spin so React state changes don't reshuffle the hat mid-draw
   const [spinPool, setSpinPool] = useState([]);
   const [spinWinnerIdx, setSpinWinnerIdx] = useState(-1);
   const [spinKey, setSpinKey] = useState(0);
 
-  const [spinFocusName, setSpinFocusName] = useState('');
-  const [spinFocusKey, setSpinFocusKey] = useState(0);
-  const spinPointerLastRef = useRef(null);
-
-  /** True once user has released Space after a boost — gates name readout vs hold hint */
-  const [spinPastBoost, setSpinPastBoost] = useState(false);
-  const spinWasBoostingRef = useRef(false);
-
-  const [spinSpaceHeld, setSpinSpaceHeld] = useState(false);
-  const spinSpaceHeldRef = useRef(false);
   const lastRevealAdvanceRef = useRef(0);
 
   useEffect(() => {
     if (phase === 'reveal') lastRevealAdvanceRef.current = 0;
   }, [phase, winner?.name]);
-
-  useEffect(() => {
-    if (phase !== 'spinning') setSpinSpaceHeld(false);
-    if (phase !== 'spinning') {
-      setSpinPastBoost(false);
-      spinWasBoostingRef.current = false;
-    }
-  }, [phase]);
-
-  useEffect(() => {
-    spinSpaceHeldRef.current = spinSpaceHeld;
-  }, [spinSpaceHeld]);
-
-  const onSpinBoostChange = useCallback((held) => {
-    const h = !!held;
-    spinSpaceHeldRef.current = h;
-    if (spinWasBoostingRef.current && !h) setSpinPastBoost(true);
-    spinWasBoostingRef.current = h;
-    setSpinSpaceHeld(h);
-  }, []);
-
-  const onWheelPointerName = useCallback((name) => {
-    if (name == null || name === '') return;
-    if (spinSpaceHeldRef.current) return;
-    if (spinPointerLastRef.current === name) return;
-    spinPointerLastRef.current = name;
-    setSpinFocusName(name);
-    setSpinFocusKey((k) => k + 1);
-  }, []);
 
   const launchSpinFromPool = useCallback((pool, spokenCount) => {
     if (pool.length === 0) return;
@@ -1927,16 +2268,12 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     setSpinKey((k) => k + 1);
     setWinner(w);
     setPhase('spinning');
-    setSpinFocusName('');
-    setSpinPastBoost(false);
-    spinWasBoostingRef.current = false;
-    spinPointerLastRef.current = null;
   }, []);
 
   const startDraw = useCallback(() => {
     if (phase !== 'ready' || remaining.length === 0) return;
     const spokenCount = participants.filter((p) => p.done).length;
-    // One person left — skip wheel, go straight to Next Speaker reveal
+    // One person left — skip the hat, go straight to Next Speaker reveal
     if (remaining.length === 1) {
       const { winner: w } = pickDrawWinner(remaining, spokenCount);
       if (!w) return;
@@ -1958,7 +2295,7 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
 
   const prevDemoModeRef = useRef(demoMode);
 
-  // ⌘D swaps speaker roster — refresh locked spin pool + wheel slices to match
+  // ⌘D swaps speaker roster — refresh locked spin pool to match
   useEffect(() => {
     if (prevDemoModeRef.current === demoMode) return;
     prevDemoModeRef.current = demoMode;
@@ -1975,36 +2312,18 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       setRevealQuote(pickRevealQuoteForSession());
       setNameKey((k) => k + 1);
       setPhase('reveal');
-      setSpinFocusName('');
-      setSpinPastBoost(false);
-      spinWasBoostingRef.current = false;
-      spinPointerLastRef.current = null;
       return;
     }
 
     launchSpinFromPool([...remaining], spokenCount);
   }, [demoMode, remaining, participants, launchSpinFromPool, pickRevealQuoteForSession]);
 
+  // The hat has already presented the name — go straight to the question flow.
+  // (The one-speaker shortcut still uses the reveal screen, since there is no hat.)
   const onSpinComplete = useCallback(() => {
-    setRevealQuote(pickRevealQuoteForSession());
-    setNameKey((k) => k + 1);
-    setPhase('reveal');
-  }, [pickRevealQuoteForSession]);
+    if (winner) onComplete({ name: winner.name });
+  }, [winner, onComplete]);
 
-  /** Demo only — Return skips spin and jumps straight to a random reveal */
-  const skipSpinToReveal = useCallback(() => {
-    if (!demoMode || phase !== 'spinning' || spinPool.length === 0) return;
-    const spokenCount = participants.filter((p) => p.done).length;
-    const { winner: w } = pickDrawWinner(spinPool, spokenCount);
-    if (!w) return;
-    setWinner(w);
-    setRevealQuote(pickRevealQuoteForSession());
-    setNameKey((k) => k + 1);
-    setPhase('reveal');
-    setSpinSpaceHeld(false);
-    spinWasBoostingRef.current = false;
-    setSpinPastBoost(false);
-  }, [demoMode, phase, spinPool, participants, pickRevealQuoteForSession]);
 
   // Skip pre-draw screen — go straight to spin (or reveal if one left)
   useEffect(() => {
@@ -2027,18 +2346,6 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
   }, [phase, winner, onComplete]);
-
-  // Demo mode — Return during spin skips to random reveal
-  useEffect(() => {
-    if (!demoMode || phase !== 'spinning') return;
-    const h = (e) => {
-      if (e.code !== 'Enter') return;
-      e.preventDefault();
-      skipSpinToReveal();
-    };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, [demoMode, phase, skipSpinToReveal]);
 
   // ⌘D / Ctrl+D — toggle demo mode (same as home screen)
   useEffect(() => {
@@ -2074,135 +2381,31 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       position: 'relative',
       overflow: 'hidden',
       background: phase === 'reveal'
-        ? `radial-gradient(ellipse 105% 95% at 50% 44%, rgba(212,168,75,0.2) 0%, rgba(212,168,75,0.07) 38%, ${C.bg} 76%)`
-        : spinSpaceHeld
-        ? `radial-gradient(ellipse 92% 88% at 50% 38%, rgba(255,64,64,0.22) 0%, #150508 42%, ${C.bg} 88%)`
+        ? `radial-gradient(ellipse 120% 90% at 50% 18%, rgba(233,79,46,0.22) 0%, rgba(233,79,46,0.06) 45%, ${C.bg} 78%)`
         : C.bg,
-      boxShadow: phase === 'reveal'
-        ? 'inset 0 0 120px rgba(212,168,75,0.1)'
-        : spinSpaceHeld ? 'inset 0 0 140px rgba(255,64,64,0.12)' : 'none',
-      transition: 'background 0.55s ease, box-shadow 0.55s ease'
+      transition: 'background 0.55s ease'
     }}>
-
-      {phase === 'spinning' && spinSpaceHeld &&
-      <div
-        aria-hidden
-        style={{
-          pointerEvents: 'none',
-          position: 'absolute',
-          inset: 0,
-          zIndex: 0,
-          background: 'radial-gradient(circle at 50% -10%, rgba(255,64,64,0.18) 0%, transparent 48%)',
-          animation: 'spinHoldPulse 2.4s ease-in-out infinite',
-          opacity: 0.9
-        }}
-      />
-      }
 
       <div style={{ position: 'relative', zIndex: 1, width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
       {(phase === 'spinning' || phase === 'reveal') && adminMenu}
       {/* Decorative rings (visible on Next Speaker) */}
       {phase === 'reveal' &&
       <>
-        <div style={{ position: 'absolute', width: 800, height: 800, borderRadius: '50%', border: `1px solid ${C.gold}28`, pointerEvents: 'none', animation: 'revealRingPulse 3s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', width: 560, height: 560, borderRadius: '50%', border: `1px solid ${C.gold}38`, pointerEvents: 'none', animation: 'revealRingPulse 3s ease-in-out 0.45s infinite' }} />
+        <div style={{ position: 'absolute', width: 800, height: 800, borderRadius: '50%', border: '1.5px solid rgba(205,228,254,0.2)', pointerEvents: 'none', animation: 'revealRingPulse 3s ease-in-out infinite' }} />
+        <div style={{ position: 'absolute', width: 560, height: 560, borderRadius: '50%', border: '1.5px solid rgba(205,228,254,0.28)', pointerEvents: 'none', animation: 'revealRingPulse 3s ease-in-out 0.45s infinite' }} />
       </>
       }
 
-      {/* ── SPINNING ── */}
+      {/* ── SPINNING — the hat ── */}
       {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 &&
-      <div style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        flex: 1,
-        minHeight: 0,
-        padding: 'clamp(0.35rem, 1.5vh, 1rem)',
-        overflow: 'visible'
-      }}>
-        <div style={{
-          flexShrink: 0,
-          width: 'min(94vw, min(84vh, 1020px))',
-          position: 'relative',
-          zIndex: 1,
-          transition:
-            'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), filter 0.38s cubic-bezier(0.25, 0.46, 0.45, 1)',
-          transform: spinSpaceHeld ? 'scale(1.035)' : 'scale(1)',
-          filter: spinSpaceHeld
-            ? 'saturate(1.1) brightness(1.04) drop-shadow(0 0 28px rgba(255,180,115,0.38)) drop-shadow(0 0 64px rgba(70,155,255,0.4)) drop-shadow(0 0 20px rgba(255,64,64,0.2))'
-            : 'none'
-        }}>
-          {window.SpinWheel && React.createElement(window.SpinWheel, {
-            names: spinPool.map((p) => p.name),
-            winnerIdx: spinWinnerIdx,
-            spinKey: spinKey,
-            remainingCount: remaining.length,
-            onComplete: onSpinComplete,
-            onPointerNameChange: onWheelPointerName,
-            onSpaceBoostChange: onSpinBoostChange
-          })}
-        </div>
-
-        <div style={{
-          position: 'absolute',
-          top: 'calc(50% - min(47vw, min(42vh, 510px)))',
-          left: 'calc(50% + min(47vw, min(42vh, 510px)) + clamp(1.25rem, 3vw, 3rem))',
-          right: 'clamp(1rem, 2vw, 2rem)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          minHeight: spinPastBoost ? 'clamp(3rem, 6.2vw, 7rem)' : undefined,
-          minWidth: 0,
-          pointerEvents: 'none',
-          zIndex: 50,
-          overflow: 'hidden'
-        }}>
-          {spinSpaceHeld ?
-          <KeyboardHint
-            ariaLabel="Release space to stop"
-            caption="release to stop"
-            align="center"
-            urgent
-          >
-            <RetroSpaceKey active />
-          </KeyboardHint>
-          : spinPastBoost && spinFocusName ?
-          <div
-            key={spinFocusKey}
-            title={spinFocusName}
-            style={{
-              width: '100%',
-              minWidth: 0,
-              fontFamily: 'Outfit',
-              fontSize: 'clamp(2.25rem, 4.5vw, 5rem)',
-              fontWeight: 700,
-              color: C.gold,
-              lineHeight: 1.1,
-              letterSpacing: '-0.1px',
-              textAlign: 'center',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              textShadow: '0 4px 32px rgba(0,0,0,0.55), 0 0 56px rgba(212,168,75,0.22)',
-              animation: 'spinNameSwap 0.1s cubic-bezier(0.22, 1, 0.36, 1) both',
-              willChange: 'transform, opacity'
-            }}>
-            {spinFocusName}
-          </div>
-          : spinPastBoost ?
-          null
-          :
-          <KeyboardHint
-            ariaLabel="Press and hold space to spin"
-            caption="Press and hold"
-            align="center"
-          >
-            <RetroSpaceKey />
-          </KeyboardHint>
-          }
-        </div>
+      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 0, alignSelf: 'stretch' }}>
+        {window.HatDraw && React.createElement(window.HatDraw, {
+          names: spinPool.map((p) => p.name),
+          winnerIdx: spinWinnerIdx,
+          spinKey: spinKey,
+          doneCount: participants.filter((p) => p.done).length,
+          onComplete: onSpinComplete
+        })}
       </div>
       }
 
@@ -2212,57 +2415,66 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
         <SpeakerRevealCelebration seed={nameKey} />
         <div style={{ textAlign: 'center', position: 'relative', zIndex: 2 }}>
           <div style={{
-          color: C.gold,
-          fontSize: 'clamp(1rem, 1.6vw + 0.4rem, 1.35rem)',
-          letterSpacing: '0.42em',
+          color: FIELD.blue,
+          fontFamily: F.ui,
+          fontSize: 'clamp(1.05rem, 1.5vw + 0.4rem, 1.35rem)',
+          letterSpacing: '0.24em',
+          paddingLeft: '0.24em',
           textTransform: 'uppercase',
           fontWeight: 700,
-          marginBottom: 'clamp(1.25rem, 3vh, 2rem)',
-          animation: 'fadeSlide 0.55s ease both',
-          opacity: 0.92
+          marginBottom: 'clamp(1.5rem, 3.5vh, 2.25rem)',
+          animation: 'fadeSlide 0.55s ease both'
         }}>
             Give it up for
           </div>
           <div key={nameKey} style={{
+            fontFamily: F.stage,
             fontSize: 'clamp(5.5rem, 13vw, 13rem)',
-            fontWeight: 900,
-            color: C.gold,
-            letterSpacing: '-0.03em',
-            lineHeight: 1,
-            animation: 'revealBounce 0.65s cubic-bezier(0.34, 1.56, 0.64, 1)',
-            filter: 'drop-shadow(0 6px 28px rgba(212,168,75,0.35))'
+            fontWeight: 700,
+            color: FIELD.cream,
+            letterSpacing: '0',
+            lineHeight: 0.96,
+            animation: 'revealEnter 0.8s cubic-bezier(0.19, 1, 0.22, 1) both'
           }}>
               {winner.name}
             </div>
+          <div
+            key={`${nameKey}-rule`}
+            aria-hidden
+            style={{
+              width: 88,
+              height: 2,
+              margin: 'clamp(1.75rem, 3.5vh, 2.5rem) auto 0',
+              background: `linear-gradient(90deg, transparent, ${FIELD.cream}, transparent)`,
+              animation: 'revealRule 0.9s ease 0.4s both'
+            }}
+          />
           {revealQuote &&
           <p
             key={`${nameKey}-quote`}
             style={{
               maxWidth: 'min(720px, 90vw)',
-              margin: 'clamp(1.75rem, 3.5vh, 2.5rem) auto 0',
+              margin: 'clamp(1.5rem, 3vh, 2.25rem) auto 0',
               padding: '0 1rem',
-              fontSize: 'clamp(1.215rem, 2.16vw + 0.36rem, 1.71rem)',
-              fontWeight: 600,
-              lineHeight: 1.45,
-              letterSpacing: '-0.015em',
-              background: `linear-gradient(105deg, #ffe8a8 0%, ${C.gold} 38%, #fff4d0 52%, ${C.gold} 68%, #c8922e 100%)`,
-              backgroundSize: '220% auto',
-              WebkitBackgroundClip: 'text',
-              backgroundClip: 'text',
-              color: 'transparent',
-              animation: 'revealQuoteIn 0.75s ease 0.55s both, revealShimmer 4.5s linear 1.3s infinite',
-              filter: 'drop-shadow(0 3px 20px rgba(212,168,75,0.28))'
+              fontFamily: F.stage,
+              fontSize: 'clamp(1.4rem, 2.1vw + 0.45rem, 1.9rem)',
+              fontWeight: 500,
+              lineHeight: 1.4,
+              letterSpacing: '0',
+              color: 'rgba(205,228,254,0.92)',
+              animation: 'revealQuoteIn 0.75s ease 0.55s both'
             }}
           >
-            {revealQuote}
+            “{revealQuote}”
           </p>
           }
           <KeyboardHint
             ariaLabel="Press space to continue"
             caption="to continue"
             style={{ marginTop: 'clamp(2rem, 4vh, 3rem)' }}
+            dark
           >
-            <RetroSpaceKey />
+            <RetroSpaceKey dark />
           </KeyboardHint>
         </div>
       </>
@@ -2279,8 +2491,12 @@ function QuestionSelectScreen({
   speakerName,
   questionOfNight,
   usedQuestions,
+  donePrompts = new Set(),
   onStart,
   onStartYolo,
+  onBackHome,
+  onRedraw,
+  walkAllow = null,
   selectRestore = null,
   onSelectRestoreConsumed
 }) {
@@ -2311,23 +2527,25 @@ function QuestionSelectScreen({
       return;
     }
     if (didRestoreRef.current) return;
-    const available = QUESTIONS.filter((q) => !usedQuestions.has(q) && q !== questionOfNight);
-    const shuffled = [...available].sort(() => Math.random() - 0.5).slice(0, 3);
-    setOptions([YOLO_SLOT, questionOfNight, ...shuffled]);
+    const randoms = pickSpeakerOptions({ donePrompts, usedQuestions, questionOfNight });
+    setOptions([YOLO_SLOT, questionOfNight, ...randoms]);
     setIdx(1);
     setQKey((k) => k + 1);
-  }, [speakerName, questionOfNight, usedQuestions, selectRestore, onSelectRestoreConsumed]);
+  }, [speakerName, questionOfNight, usedQuestions, donePrompts, selectRestore, onSelectRestoreConsumed]);
 
   const isYolo = options[idx] === YOLO_SLOT;
   const isQotN = options[idx] === questionOfNight;
   const current = isYolo ? '' : (options[idx] || '');
 
+  // Guard against a keypress landing before options populate (len 0 → idx NaN, wedging the carousel)
   const goLeft = useCallback(() => {
-    setIdx((i) => (i - 1 + options.length) % options.length);
+    if (!options.length) return;
+    setIdx((i) => ((Number.isInteger(i) ? i : 1) - 1 + options.length) % options.length);
     setQKey((k) => k + 1);
   }, [options.length]);
   const goRight = useCallback(() => {
-    setIdx((i) => (i + 1) % options.length);
+    if (!options.length) return;
+    setIdx((i) => ((Number.isInteger(i) ? i : 1) + 1) % options.length);
     setQKey((k) => k + 1);
   }, [options.length]);
 
@@ -2349,17 +2567,20 @@ function QuestionSelectScreen({
 
   if (!options.length) return null;
 
+  // Prompt of the night sits on the same ground as Home. Moving to a random
+  // prompt shifts the room into deep navy with a low blue glow from the floor;
+  // Yolo turns the lights red. Nothing here should read as light coming in.
   const questionSelectBackdrop = isYolo
-    ? `radial-gradient(ellipse 125% 95% at 50% 28%, rgba(255,80,120,0.22) 0%, rgba(255,60,100,0.08) 42%, ${C.bg} 78%)`
+    ? YOLO_BACKDROP
     : isQotN
-    ? `radial-gradient(ellipse 125% 95% at 50% 28%, rgba(212,168,75,0.16) 0%, rgba(212,168,75,0.06) 42%, ${C.bg} 78%)`
-    : `radial-gradient(ellipse 125% 95% at 50% 28%, rgba(47,114,248,0.14) 0%, rgba(47,114,248,0.05) 42%, ${C.bg} 78%)`;
+    ? C.bg
+    : 'radial-gradient(ellipse 100% 62% at 50% 112%, rgba(86,150,210,0.24) 0%, rgba(86,150,210,0.07) 45%, transparent 72%), linear-gradient(180deg, #0B1322 0%, #0A0F1B 55%, #080B12 100%)';
 
   const dotColor = (i) => {
-    if (i !== idx) return `${C.dim}50`;
-    if (options[i] === YOLO_SLOT) return C.yolo;
-    if (options[i] === questionOfNight) return C.gold;
-    return C.accent;
+    if (i !== idx) return 'rgba(205,228,254,0.35)';
+    if (options[i] === YOLO_SLOT) return FIELD.vermilion;
+    if (options[i] === questionOfNight) return FIELD.sky;
+    return C.text;
   };
 
   return (
@@ -2374,6 +2595,16 @@ function QuestionSelectScreen({
       padding: '2rem 6rem',
       position: 'relative'
     }}>
+      {isYolo && <YoloGlow />}
+      {onBackHome &&
+      <DrawingAdminMenu
+        onBackHome={onBackHome}
+        showRespin={!!onRedraw}
+        onRespin={onRedraw}
+        disableBackHome={!!walkAllow}
+        disableMenu={!!walkAllow}
+      />
+      }
 
       {/* Badge + pager — top centre */}
       <div style={{
@@ -2392,23 +2623,16 @@ function QuestionSelectScreen({
         : isYolo ?
         <YoloModeBadge />
         : current ?
-        <span style={{
-          background: `${C.accent}1a`, border: `1.5px solid ${C.accent}70`,
-          color: C.accent, borderRadius: 100, padding: '0.4rem 1.25rem',
-          fontSize: '1rem', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase',
-          display: 'inline-flex', alignItems: 'center', gap: '0.45rem',
-          boxShadow: `0 0 28px ${C.accent}18`
-        }}>
-          <span style={{ fontSize: '1.1rem', lineHeight: 1 }} aria-hidden>🎲</span>
+        <Badge tone="quiet">
           Random {promptNoun(current)} {idx - 1}
-        </span>
+        </Badge>
         : null
         }
 
         <div style={{ display: 'flex', gap: '0.6rem', alignItems: 'center' }}>
           {options.map((_, i) =>
           <div key={i} aria-hidden style={{
-            width: i === idx ? 32 : 10, height: 10, borderRadius: 100,
+            width: i === idx ? 28 : 8, height: 8, borderRadius: 100,
             background: dotColor(i),
             transition: 'all 0.25s'
           }} />
@@ -2444,18 +2668,19 @@ function QuestionSelectScreen({
             position: 'absolute',
             inset: 0,
             borderRadius: '50%',
-            border: `3px solid ${C.yolo}55`,
-            boxShadow: `0 0 60px ${C.yolo}33, inset 0 0 40px ${C.yolo}18`,
-            animation: 'yoloPulse 2.4s ease-in-out infinite'
+            border: '2px solid rgba(233,79,46,0.85)',
+            boxShadow: '0 0 40px rgba(233,79,46,0.35), inset 0 0 40px rgba(233,79,46,0.18)',
+            background: 'rgba(233,79,46,0.06)',
+            animation: 'yoloPulse 2.8s ease-in-out infinite'
           }} />
           <div style={{
-            fontFamily: 'Outfit',
+            fontFamily: F.stage,
             fontSize: 'clamp(6rem, 14vw, 10rem)',
-            fontWeight: 900,
-            color: C.yolo,
+            fontWeight: 700,
+            color: FIELD.cream,
             lineHeight: 1,
-            textShadow: `0 0 48px ${C.yolo}66`,
-            animation: 'yoloPulse 2.4s ease-in-out infinite',
+            textShadow: '0 0 36px rgba(233,79,46,0.7), 0 0 90px rgba(233,79,46,0.35)',
+            animation: 'yoloPulse 2.8s ease-in-out infinite',
             userSelect: 'none'
           }} aria-hidden>
             ?
@@ -2473,6 +2698,7 @@ function QuestionSelectScreen({
           bottom: 'clamp(12rem, 18vh, 15rem)',
           alignItems: 'center',
           padding: 'clamp(7.5rem, 12vh, 9.5rem) 3rem 0',
+          color: C.text,
           animation: 'fadeSlide 0.22s ease-out'
         }}>
         {current}
@@ -2492,14 +2718,15 @@ function QuestionSelectScreen({
         gap: 'clamp(2rem, 5vw, 3.5rem)',
         zIndex: 3
       }}>
-        <KeyboardHint ariaLabel="Arrow keys to browse prompts" caption="to browse prompts">
-          <RetroArrowKeys />
+        <KeyboardHint ariaLabel="Arrow keys to browse prompts" caption="to browse prompts" dark>
+          <RetroArrowKeys dark />
         </KeyboardHint>
         <KeyboardHint
           ariaLabel={isYolo ? 'Press space to accept the challenge' : 'Press space to start speech'}
           caption={isYolo ? 'to accept the challenge' : 'to start speech'}
+          dark
         >
-          <RetroSpaceKey />
+          <RetroSpaceKey dark />
         </KeyboardHint>
       </div>
     </div>);
@@ -2561,7 +2788,7 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
 
   return (
     <div style={{
-      background: `radial-gradient(ellipse 120% 90% at 50% 22%, rgba(255,80,120,0.18) 0%, rgba(255,50,90,0.06) 45%, ${C.bg} 80%)`,
+      background: YOLO_BACKDROP,
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -2569,20 +2796,22 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
       justifyContent: 'center',
       padding: '2rem 4rem',
       position: 'relative',
-      transition: 'background 0.6s ease'
+      overflow: 'hidden'
     }}>
+      <YoloGlow still />
       <div style={{ position: 'absolute', top: '2.5rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 2 }}>
         <YoloModeBadge />
       </div>
 
       {showTease &&
       <div style={{
-        color: C.muted,
-        fontSize: 'clamp(1.4rem, 2.8vw, 2rem)',
-        fontWeight: 600,
-        letterSpacing: '0.14em',
+        color: 'rgba(205,228,254,0.82)',
+        fontFamily: F.ui,
+        fontSize: 'clamp(1.5rem, 2.8vw, 2rem)',
+        fontWeight: 700,
+        letterSpacing: '0.18em',
+        paddingLeft: '0.18em',
         textTransform: 'uppercase',
-        animation: 'yoloTeasePulse 1.8s ease-in-out infinite',
         userSelect: 'none'
       }}>
         Your {promptNoun(question)}…
@@ -2594,6 +2823,7 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
         style={{
           maxWidth: 1500,
           padding: '0 2rem',
+          color: FIELD.cream,
           marginBottom: showCountdown ? 'clamp(2rem, 5vh, 3.5rem)' : 0,
           animation: phase === 'reveal'
             ? `yoloQuestionReveal ${revealAnimMs}ms cubic-bezier(0.22, 1, 0.36, 1) both`
@@ -2608,14 +2838,13 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
       <div
         key={countdown}
         style={{
-          fontSize: 'clamp(8rem, 22vw, 16rem)',
+          fontFamily: F.ui,
+          fontSize: 'clamp(8rem, 22vw, 15rem)',
           fontWeight: 900,
-          color: C.text,
-          letterSpacing: '-0.04em',
+          color: FIELD.vermilion,
+          letterSpacing: '-0.03em',
           lineHeight: 1,
           fontVariantNumeric: 'tabular-nums',
-          animation: 'yoloCountPop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both',
-          textShadow: '0 4px 32px rgba(0,0,0,0.45)',
           userSelect: 'none'
         }}>
         {countdown}
@@ -2806,23 +3035,23 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
     return () => window.removeEventListener('keydown', h);
   }, [onComplete, onBackToQuestions, requireFullSpeech]);
 
-  // ── derive visuals ──
+  // ── derive visuals — the whole field changes colour as time runs down ──
   let bgColor = C.bg;
   if (phase === 'speech') {
-    if (speechSecs >= 120) bgColor = flashOn ? '#4d0000' : '#280000';else
-    if (speechSecs >= 90) bgColor = '#280a00';else
-    if (speechSecs >= 60) bgColor = '#1c1000';
+    if (speechSecs >= 120) bgColor = flashOn ? '#4A0E05' : '#2A0803';else
+    if (speechSecs >= 90) bgColor = '#2A0A03';else
+    if (speechSecs >= 60) bgColor = '#1F1206';
   } else if (phase === 'feedback') {
-    bgColor = '#090d1a';
+    bgColor = '#0C1119';
   } else if (phase === 'alarm') {
-    bgColor = '#1a0000';
+    bgColor = '#1E0602';
   }
 
+  const hotField = phase === 'alarm' || (phase === 'speech' && speechSecs >= 90);
   let timerColor = C.text;
   if (phase === 'speech') {
-    if (speechSecs >= 120) timerColor = '#ff5050';else
-    if (speechSecs >= 90) timerColor = '#ff7030';else
-    if (speechSecs >= 60) timerColor = '#ffb040';
+    if (speechSecs >= 90) timerColor = FIELD.cream;else
+    if (speechSecs >= 60) timerColor = C.text;
   }
 
   const feedLeft = Math.max(0, 120 - feedSecs);
@@ -2845,19 +3074,21 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
         padding: '4rem'
       }}>
           <div style={{
-          fontSize: 'clamp(4rem, 10vw, 9rem)',
-          fontWeight: 900, color: '#ff4040',
-          letterSpacing: '-0.02em', lineHeight: 1.1,
+          fontFamily: F.stage,
+          fontSize: 'clamp(4rem, 9vw, 8.5rem)',
+          fontWeight: 700, color: FIELD.cream,
+          letterSpacing: '0', lineHeight: 1.08,
           animation: 'pulseBig 0.9s ease-in-out infinite'
         }}>
-            Next Speaker, Please!
+            Next speaker, please
           </div>
           <KeyboardHint
             ariaLabel="Press space to continue"
             caption="to continue"
             style={{ marginTop: '2.5rem' }}
+            dark
           >
-            <RetroSpaceKey />
+            <RetroSpaceKey dark />
           </KeyboardHint>
         </div>
       }
@@ -2870,7 +3101,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
           flexShrink: 0,
           padding: 'clamp(1.25rem, 2.5vh, 1.75rem) clamp(2rem, 4vw, 3rem) clamp(1.25rem, 2.5vh, 1.75rem)',
           display: 'flex', justifyContent: 'center',
-          borderBottom: `1px solid ${phase === 'feedback' ? '#1a2a4a' : C.border}`
+          borderBottom: `1px solid ${hotField ? 'rgba(205,228,254,0.3)' : C.borderSoft}`
         }}>
             <div style={{
               maxWidth: 'min(1280px, 94%)',
@@ -2879,11 +3110,14 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
               textAlign: 'center'
             }}>
               <div style={{
-              color: C.text,
-              fontSize: 'clamp(3.06rem, 5.28vw + 1.32rem, 4.92rem)',
-              lineHeight: 1.1,
-              fontWeight: 600,
-              opacity: 0.95,
+              color: hotField ? FIELD.cream : C.text,
+              fontFamily: F.stage,
+              fontSize: 'clamp(3.2rem, 5.2vw + 1.2rem, 5rem)',
+              lineHeight: 1.15,
+              fontWeight: 700,
+              letterSpacing: '0.015em',
+              textWrap: 'balance',
+              transition: 'color 0.8s ease',
               overflowWrap: 'break-word'
             }}>
                 {question}
@@ -2912,17 +3146,18 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
               {phase === 'feedback' && <FeedbackBadge large />}
 
               <div style={{
-                fontSize: 'clamp(8.5rem, 20vw, 22rem)',
-                fontWeight: 900,
+                fontFamily: F.ui,
+                fontSize: 'clamp(8.5rem, 20vw, 21rem)',
+                fontWeight: 700,
                 color: phase === 'feedback'
-                  ? (feedLeft < 30 ? '#ff8060' : '#4a78d8')
+                  ? (feedLeft < 30 ? FIELD.vermilion : FIELD.blue)
                   : timerColor,
-                letterSpacing: '-0.05em',
+                letterSpacing: '-0.025em',
                 lineHeight: 0.9,
                 fontVariantNumeric: 'tabular-nums',
                 transition: timerFastForward ? 'color 0.35s ease' : 'color 0.8s ease',
                 transform: timerFastForward ? 'scale(1.02)' : 'scale(1)',
-                filter: timerFastForward ? 'brightness(1.12)' : 'none',
+                filter: timerFastForward ? 'brightness(1.06)' : 'none',
                 userSelect: 'none'
               }}>
                 {phase === 'feedback' ? fmt(feedLeft) : fmt(speechSecs)}
@@ -2932,25 +3167,26 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
                 minHeight: 'clamp(2rem, 4vh, 2.75rem)',
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'center'
+                justifyContent: 'center',
+                fontFamily: F.ui
               }}>
                 {phase === 'speech' && speechSecs >= 60 && speechSecs < 90 &&
-                <div style={{ color: '#ffb040', fontSize: '2.2rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+                <div style={{ color: C.text, fontSize: '1.85rem', fontWeight: 700, letterSpacing: '0.22em', paddingLeft: '0.22em' }}>
                   ONE MINUTE
                 </div>
                 }
                 {phase === 'speech' && speechSecs >= 90 && speechSecs < 120 &&
-                <div style={{ color: '#ff7030', fontSize: '2.2rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+                <div style={{ color: FIELD.cream, fontSize: '1.85rem', fontWeight: 700, letterSpacing: '0.22em', paddingLeft: '0.22em' }}>
                   WRAP IT UP SOON
                 </div>
                 }
                 {phase === 'speech' && speechSecs >= 120 &&
-                <div style={{ color: '#ff5050', fontSize: '2.5rem', fontWeight: 800, letterSpacing: '0.08em', animation: 'pulseBig 0.9s ease-in-out infinite' }}>
+                <div style={{ color: FIELD.cream, fontSize: '2rem', fontWeight: 900, letterSpacing: '0.22em', paddingLeft: '0.22em', animation: 'pulseBig 0.9s ease-in-out infinite' }}>
                   TIME'S UP
                 </div>
                 }
                 {phase === 'feedback' && feedLeft < 30 &&
-                <div style={{ color: '#ff8060', fontSize: '2.2rem', fontWeight: 700, letterSpacing: '0.08em' }}>
+                <div style={{ color: FIELD.vermilion, fontSize: '1.85rem', fontWeight: 700, letterSpacing: '0.22em', paddingLeft: '0.22em' }}>
                   ALMOST DONE
                 </div>
                 }
@@ -2969,8 +3205,9 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
             <KeyboardHint
               ariaLabel={phase === 'speech' ? 'Press space to end speech' : 'Press space to finish feedback'}
               caption={phase === 'speech' ? 'to end speech' : 'to finish feedback'}
+              dark={hotField}
             >
-              <RetroSpaceKey />
+              <RetroSpaceKey dark={hotField} />
             </KeyboardHint>
           </div>
         </>
@@ -2993,5 +3230,13 @@ Object.assign(window, {
   WalkthroughIntroModal,
   WalkthroughRestartButton,
   SpeakerAddedBeat,
-  YOLO_SLOT
+  YOLO_SLOT,
+  // Prompt selection (shared with app.jsx)
+  eligiblePrompts,
+  pickSpeakerOptions,
+  pickYoloPrompt,
+  // Shared primitives for the hat draw (tophat.jsx)
+  KeyboardHint,
+  RetroSpaceKey,
+  APS_THEME: { C, F }
 });
