@@ -41,6 +41,27 @@ function loadDonePrompts() {
   }
 }
 
+// Cloud copy: /api/done (see api/done.js). Browser storage stays as the fast
+// local copy and the fallback when the API is absent (local dev) or the store
+// isn't connected yet.
+const DONE_API = '/api/done';
+
+async function fetchCloudDonePrompts() {
+  const r = await fetch(DONE_API, { cache: 'no-store' });
+  if (!r.ok) throw new Error(String(r.status));
+  const data = await r.json();
+  return Array.isArray(data.donePrompts) ? data.donePrompts.filter((id) => PROMPT_BY_ID[id]) : [];
+}
+
+async function putCloudDonePrompts(set) {
+  const r = await fetch(DONE_API, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ donePrompts: [...set] })
+  });
+  if (!r.ok) throw new Error(String(r.status));
+}
+
 function saveDonePrompts(set) {
   try { localStorage.setItem(DONE_PROMPTS_KEY, JSON.stringify([...set])); } catch (e) { /* private mode */ }
 }
@@ -195,6 +216,43 @@ function App() {
   const [firstTimerPulseName, setFirstTimerPulseName] = useState(null);
 
   useEffect(() => { saveDonePrompts(donePrompts); }, [donePrompts]);
+
+  // Cloud sync. On boot, merge whatever the server has into the local list
+  // (union, so nothing is ever lost from either side). After that, every
+  // change is pushed, debounced, and only once the initial load has settled —
+  // so a fresh browser with an empty list can never wipe the server copy.
+  //   doneSync: 'loading' | 'synced' | 'saving' | 'local' (no store) | 'error'
+  const [doneSync, setDoneSync] = useState('loading');
+  const cloudReadyRef = useRef(false);
+  const lastPushedRef = useRef(null);
+  useEffect(() => {
+    let cancelled = false;
+    fetchCloudDonePrompts()
+      .then((ids) => {
+        if (cancelled) return;
+        setDonePrompts((prev) => {
+          const next = new Set([...prev, ...ids]);
+          lastPushedRef.current = next.size === ids.length && ids.every((id) => next.has(id)) ? [...next].sort().join(',') : null;
+          return next;
+        });
+        cloudReadyRef.current = true;
+        setDoneSync('synced');
+      })
+      .catch(() => { if (!cancelled) setDoneSync('local'); });
+    return () => { cancelled = true; };
+  }, []);
+  useEffect(() => {
+    if (!cloudReadyRef.current) return undefined;
+    const key = [...donePrompts].sort().join(',');
+    if (key === lastPushedRef.current) return undefined;
+    setDoneSync('saving');
+    const t = setTimeout(() => {
+      putCloudDonePrompts(donePrompts)
+        .then(() => { lastPushedRef.current = key; setDoneSync('synced'); })
+        .catch(() => setDoneSync('error'));
+    }, 600);
+    return () => clearTimeout(t);
+  }, [donePrompts]);
 
   const demoModeRef = useRef(demoMode);
   demoModeRef.current = demoMode;
@@ -580,6 +638,7 @@ function App() {
           onSetPromptDone={handleSetPromptDone}
           onResetDonePrompts={handleResetDonePrompts}
           onImportDonePrompts={handleImportDonePrompts}
+          doneSync={doneSync}
         />
       )}
       {screen === SCREEN.REGISTER && (

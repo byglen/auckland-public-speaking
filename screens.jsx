@@ -821,7 +821,7 @@ function downloadJson(filename, obj) {
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function PromptsModal({ donePrompts, onClose, onSetDone, onResetAll, onImport }) {
+function PromptsModal({ donePrompts, onClose, onSetDone, onResetAll, onImport, doneSync = 'local' }) {
   const [query, setQuery] = useState('');
   const [view, setView] = useState(donePrompts.size ? 'done' : 'all');
   const [notice, setNotice] = useState('');
@@ -916,7 +916,20 @@ function PromptsModal({ donePrompts, onClose, onSetDone, onResetAll, onImport })
           <div>
             <div style={{ color: C.text, fontSize: '1.3rem', fontWeight: 500, letterSpacing: '-0.01em' }}>Prompts</div>
             <div style={{ color: C.dim, fontSize: '0.92rem', marginTop: '0.3rem' }}>
-              {doneCount} done · {left} left of {PROMPTS.length}. A prompt is marked done the moment a speech starts on it, and stays done across reloads.
+              {doneCount} done · {left} left of {PROMPTS.length}. A prompt is marked done the moment a speech starts on it.
+            </div>
+            <div style={{
+              marginTop: '0.45rem',
+              fontSize: '0.82rem',
+              fontWeight: 500,
+              letterSpacing: '0.02em',
+              color: doneSync === 'error' ? C.gold : doneSync === 'synced' ? 'rgba(134,196,150,0.9)' : C.dim
+            }}>
+              {doneSync === 'synced' && '● Saved to the cloud — any browser or device sees the same list.'}
+              {doneSync === 'saving' && '● Saving to the cloud…'}
+              {doneSync === 'loading' && '● Checking the cloud copy…'}
+              {doneSync === 'local' && '○ Saved on this device only — no cloud store connected. Export as a backup.'}
+              {doneSync === 'error' && '● Cloud save failed — kept on this device. Export as a backup.'}
             </div>
           </div>
           <button
@@ -1018,7 +1031,7 @@ function PromptsModal({ donePrompts, onClose, onSetDone, onResetAll, onImport })
 }
 
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
-function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, onWalkNudge, highlightSpeakers = false, hideBrand = false, donePrompts = new Set(), onSetPromptDone, onResetDonePrompts, onImportDonePrompts }) {
+function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, onWalkNudge, highlightSpeakers = false, hideBrand = false, donePrompts = new Set(), onSetPromptDone, onResetDonePrompts, onImportDonePrompts, doneSync = 'local' }) {
   const [showManage, setShowManage] = useState(false);
   const [showPrompts, setShowPrompts] = useState(false);
   const modalOpen = showManage || showPrompts;
@@ -1153,6 +1166,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         onSetDone={onSetPromptDone}
         onResetAll={onResetDonePrompts}
         onImport={onImportDonePrompts}
+        doneSync={doneSync}
       />
       }
 
