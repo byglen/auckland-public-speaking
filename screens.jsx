@@ -501,9 +501,9 @@ function SetupScreen({ onComplete, hideBrand = false, donePrompts = new Set() })
 
           <div style={{ textAlign: 'center', maxWidth: 560 }}>
             <h1 style={{
-              color: C.text,
               fontFamily: F.stage,
               fontSize: 'clamp(2.4rem, 3.4vw + 0.9rem, 3.5rem)',
+              ...stageInk(),
               fontWeight: 700,
               letterSpacing: '0.01em',
               lineHeight: 1.1,
@@ -2260,7 +2260,7 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
           fontFamily: F.stage,
           fontSize: 'clamp(4rem, 10vw, 9rem)',
           fontWeight: 700,
-          color: FIELD.cream,
+          ...stageInk(),
           letterSpacing: '0',
           lineHeight: 0.98,
           animation: 'fadeSlide 0.55s ease 0.1s both'
@@ -2491,7 +2491,7 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
             fontFamily: F.stage,
             fontSize: 'clamp(5.5rem, 13vw, 13rem)',
             fontWeight: 700,
-            color: FIELD.cream,
+            ...stageInk(),
             letterSpacing: '0',
             lineHeight: 0.96,
             animation: 'revealEnter 0.8s cubic-bezier(0.19, 1, 0.22, 1) both'
@@ -3136,7 +3136,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
           <div style={{
           fontFamily: F.stage,
           fontSize: 'clamp(4rem, 9vw, 8.5rem)',
-          fontWeight: 700, color: FIELD.cream,
+          fontWeight: 700, ...stageInk(),
           letterSpacing: '0', lineHeight: 1.08,
           animation: 'pulseBig 0.9s ease-in-out infinite'
         }}>
@@ -3170,7 +3170,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
               textAlign: 'center'
             }}>
               <div style={{
-              color: hotField ? FIELD.cream : C.text,
+              ...stageInk(),
               fontFamily: F.stage,
               fontSize: 'clamp(3.2rem, 5.2vw + 1.2rem, 5rem)',
               lineHeight: 1.15,
@@ -3212,6 +3212,8 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
                 color: phase === 'feedback'
                   ? (feedLeft < 30 ? FIELD.vermilion : FIELD.blue)
                   : timerColor,
+                // while speaking the digits are ivory ink like the prompt; feedback keeps its colours
+                ...(phase === 'feedback' ? {} : stageInk()),
                 letterSpacing: '-0.025em',
                 lineHeight: 0.9,
                 fontVariantNumeric: 'tabular-nums',
