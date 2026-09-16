@@ -64,7 +64,7 @@ const FACE = {
   WebkitBackfaceVisibility: 'hidden'
 };
 
-function SheetWindow({ col, row, name, F }) {
+function SheetWindow({ col, row, name, F, present = false }) {
   return (
     <div style={{ ...FACE, overflow: 'hidden', background: PAPER_FRONT, boxShadow: 'inset 0 0 0 1px rgba(120,100,60,0.18)' }}>
       <div style={{
@@ -85,7 +85,12 @@ function SheetWindow({ col, row, name, F }) {
           style={{
             fontFamily: F.stage,
             fontWeight: 700,
-            fontSize: 'clamp(2.2rem, 5.4vw, 4rem)',
+            // presented: as large as the sheet allows — capped by name length so
+            // a long name still fits on one line (≈0.55em per character)
+            fontSize: present
+              ? `min(11rem, 9vw, ${(85 / Math.max(4, String(name || '').length)).toFixed(1)}vw)`
+              : 'clamp(2.2rem, 5.4vw, 4rem)',
+            transition: 'font-size 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
             letterSpacing: '0',
             lineHeight: 1.08,
             color: '#221A0E',
@@ -113,7 +118,7 @@ function PaperBack({ flip }) {
   );
 }
 
-function FoldedSheet({ name, topOpen, leftOpen, F }) {
+function FoldedSheet({ name, topOpen, leftOpen, present = false, F }) {
   const LIFTED = '0 18px 40px rgba(0,0,0,0.5)';
   const FLAT = '0 1px 2px rgba(0,0,0,0.12)';
   const leftFlap = {
@@ -130,8 +135,10 @@ function FoldedSheet({ name, topOpen, leftOpen, F }) {
     <div style={{ perspective: 1400, perspectiveOrigin: '50% 60%' }}>
       <div style={{
         position: 'relative',
-        width: 'min(60vw, 540px)',
-        height: 'clamp(170px, 27vh, 250px)',
+        // the open sheet grows to most of the stage width when presenting
+        width: present ? 'min(84vw, 1100px)' : 'min(60vw, 540px)',
+        height: present ? 'clamp(220px, 34vh, 360px)' : 'clamp(170px, 27vh, 250px)',
+        transition: 'width 0.8s cubic-bezier(0.22, 1, 0.36, 1), height 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
         transformStyle: 'preserve-3d'
       }}>
         {/* soft shadow under the whole sheet once it lies open */}
@@ -146,12 +153,12 @@ function FoldedSheet({ name, topOpen, leftOpen, F }) {
         }} />
         {/* bottom-right quadrant — the base everything folds onto */}
         <div style={{ position: 'absolute', left: '50%', top: '50%', width: '50%', height: '50%', transformStyle: 'preserve-3d', boxShadow: leftOpen ? FLAT : LIFTED, transition: 'box-shadow 1s ease' }}>
-          <SheetWindow col={1} row={1} name={name} F={F} />
+          <SheetWindow col={1} row={1} name={name} F={F} present={present} />
         </div>
 
         {/* bottom-left flap, hinged on the centre crease */}
         <div style={{ ...leftFlap, top: '50%', height: '50%' }}>
-          <SheetWindow col={0} row={1} name={name} F={F} />
+          <SheetWindow col={0} row={1} name={name} F={F} present={present} />
           <PaperBack flip="rotateY(180deg)" />
         </div>
 
@@ -168,7 +175,7 @@ function FoldedSheet({ name, topOpen, leftOpen, F }) {
           transition: 'transform 0.72s cubic-bezier(0.45, 0, 0.2, 1)'
         }}>
           <div style={{ position: 'absolute', left: '50%', top: 0, width: '50%', height: '100%', transformStyle: 'preserve-3d', boxShadow: topOpen ? FLAT : LIFTED, transition: 'box-shadow 0.72s ease' }}>
-            <SheetWindow col={1} row={0} name={name} F={F} />
+            <SheetWindow col={1} row={0} name={name} F={F} present={present} />
           </div>
           {/* the packet's outer face while the top half is still folded down */}
           <div style={{
@@ -180,7 +187,7 @@ function FoldedSheet({ name, topOpen, leftOpen, F }) {
             transform: 'rotateX(180deg) translateZ(0.5px)'
           }} />
           <div style={{ ...leftFlap, top: 0, height: '100%' }}>
-            <SheetWindow col={0} row={0} name={name} F={F} />
+            <SheetWindow col={0} row={0} name={name} F={F} present={present} />
             <PaperBack flip="rotateY(180deg)" />
           </div>
         </div>
@@ -583,7 +590,7 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
       <div style={{
         position: 'absolute',
         left: '50%',
-        top: '27%',
+        top: '34%',
         zIndex: 3,
         transform: 'translate(-50%, -50%)',
         pointerEvents: 'none'
@@ -592,10 +599,10 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
           <div style={{
             animation: cardStage === 'hold' ? 'hatPacketFidget 0.55s ease-in-out infinite' : 'none',
             // cancel the toss's resting tilt and grow, so the name sits square and large
-            transform: cardStage === 'present' ? 'rotate(2deg) scale(1.42)' : 'none',
+            transform: cardStage === 'present' ? 'rotate(2deg)' : 'none',
             transition: 'transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)'
           }}>
-            <FoldedSheet name={names[winnerIdx]} topOpen={topOpen} leftOpen={leftOpen} F={F} />
+            <FoldedSheet name={names[winnerIdx]} topOpen={topOpen} leftOpen={leftOpen} present={cardStage === 'present'} F={F} />
           </div>
         </div>
       </div>

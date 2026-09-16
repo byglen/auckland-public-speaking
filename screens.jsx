@@ -1888,29 +1888,47 @@ function WalkthroughRestartButton({ onRestart }) {
 }
 
 // ─── KEY HINTS (shared minimal keyboard UI) ──────────────────────────────────
+// The key hints are drawn as real keycaps: an ivory PBT-style top with a faint
+// grain, a lit upper edge, a slightly darker lower lip, a solid side wall
+// below and a soft shadow on the desk. Pressed = the cap sinks onto its wall.
+const KEY_GRAIN = "url(\"data:image/svg+xml;utf8," + encodeURIComponent(
+  "<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'>" +
+  "<filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/>" +
+  "<feColorMatrix values='0 0 0 0 0.2  0 0 0 0 0.18  0 0 0 0 0.14  0 0 0 0.09 0'/></filter>" +
+  "<rect width='140' height='140' filter='url(#g)'/></svg>"
+) + "\")";
+
 const KEY_FACE = {
-  background: 'rgba(205,228,254,0.05)',
-  border: '1.5px solid rgba(205,228,254,0.45)',
-  boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.25)',
-  color: 'rgba(205,228,254,0.85)',
-  fontFamily: F.ui
+  background: `${KEY_GRAIN}, linear-gradient(180deg, #FCFBF7 0%, #F1EFE8 58%, #E6E3DA 100%)`,
+  border: '1px solid #CFCBC0',
+  boxShadow: [
+    'inset 0 1px 0 rgba(255,255,255,0.95)',   // lit top edge
+    'inset 0 -2px 0 rgba(0,0,0,0.06)',        // lower lip
+    '0 4px 0 #B9B4A8',                        // side wall
+    '0 5px 0 #9E9A8F',                        // wall's own shadow line
+    '0 9px 18px rgba(0,0,0,0.5)'              // on the desk
+  ].join(', '),
+  color: '#2B2B30',
+  textShadow: '0 1px 0 rgba(255,255,255,0.6)',
+  fontFamily: F.ui,
+  transition: 'transform 0.08s ease, box-shadow 0.08s ease'
 };
 
-const KEY_FACE_DARK = {
-  background: 'rgba(205,228,254,0.07)',
-  border: '1.5px solid rgba(205,228,254,0.55)',
-  boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.3)',
-  color: 'rgba(205,228,254,0.92)',
-  fontFamily: F.ui
-};
+// Every field is dark now, so the "dark" variant is the same ivory cap.
+const KEY_FACE_DARK = KEY_FACE;
 
 function RetroSpaceKey({ active = false, dark = false, label = 'SPACE' }) {
   const activeStyle = active ? {
-    background: 'rgba(233,79,46,0.16)',
-    border: '1.5px solid rgba(233,79,46,0.9)',
-    boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.2)',
-    color: dark ? FIELD.vermilion : C.goldBright,
-    transform: 'translateY(2px)'
+    background: `${KEY_GRAIN}, linear-gradient(180deg, #F3F1EA 0%, #E9E6DD 100%)`,
+    boxShadow: [
+      'inset 0 1px 0 rgba(255,255,255,0.8)',
+      'inset 0 -1px 0 rgba(0,0,0,0.06)',
+      '0 1px 0 #B9B4A8',
+      '0 2px 0 #9E9A8F',
+      '0 4px 8px rgba(0,0,0,0.45)'
+    ].join(', '),
+    color: FIELD.vermilion,
+    transform: 'translateY(3px)'
   } : {};
   return (
     <div
