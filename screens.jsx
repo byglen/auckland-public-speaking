@@ -244,7 +244,9 @@ function Btn({ children, onClick, variant = 'primary', size = 'md', disabled }) 
 /** Pill badge — the label treatment for what a card *is*. `sky` (filled blue)
  *  for the prompt of the night and feedback, `heat` for Yolo, `quiet` (outlined)
  *  for the random prompts. Tracked caps in Theinhardt Bold, as in the style guide. */
-function Badge({ children, tone = 'sky', large = false, style = {} }) {
+/** `hero` is the Home-screen size: readable from a few metres, so it drops the
+ *  tracked caps for sentence case at a calmer weight — a title, not a label. */
+function Badge({ children, tone = 'sky', large = false, hero = false, style = {} }) {
   const tones = {
     sky: { background: FIELD.sky, color: '#FFFFFF', border: '1px solid transparent' },
     heat: { background: FIELD.vermilion, color: '#FFFFFF', border: '1px solid transparent' },
@@ -256,13 +258,13 @@ function Badge({ children, tone = 'sky', large = false, style = {} }) {
       alignItems: 'center',
       justifyContent: 'center',
       borderRadius: 999,
-      padding: large ? '0.68rem 1.28rem' : '0.6rem 1.06rem',
-      paddingRight: large ? 'calc(1.28rem - 0.1em)' : 'calc(1.06rem - 0.1em)', // trailing tracking
+      padding: hero ? '0.85rem 1.7rem' : large ? '0.68rem 1.28rem' : '0.6rem 1.06rem',
+      paddingRight: hero ? 'calc(1.7rem - 0.02em)' : large ? 'calc(1.28rem - 0.1em)' : 'calc(1.06rem - 0.1em)', // trailing tracking
       fontFamily: F.ui,
       fontWeight: 500,
-      fontSize: large ? 'clamp(0.85rem, 1.06vw, 1.06rem)' : 'clamp(0.77rem, 0.94vw, 0.94rem)',
-      letterSpacing: '0.1em',
-      textTransform: 'uppercase',
+      fontSize: hero ? 'clamp(1.15rem, 1.5vw, 1.6rem)' : large ? 'clamp(0.85rem, 1.06vw, 1.06rem)' : 'clamp(0.77rem, 0.94vw, 0.94rem)',
+      letterSpacing: hero ? '0.02em' : '0.1em',
+      textTransform: hero ? 'none' : 'uppercase',
       lineHeight: 1.25,
       whiteSpace: 'nowrap',
       ...tones[tone],
@@ -300,10 +302,10 @@ function YoloGlow({ still = false }) {
   );
 }
 
-function QuestionOfNightBadge({ large = false, text = '' }) {
+function QuestionOfNightBadge({ large = false, hero = false, text = '' }) {
   return (
-    <Badge tone="sky" large={large}>
-      {promptNoun(text, { cap: true })} of the Night
+    <Badge tone="sky" large={large} hero={hero}>
+      {promptNoun(text, { cap: true })} of the {hero ? 'night' : 'Night'}
     </Badge>
   );
 }
@@ -1263,7 +1265,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         minHeight: 0
       }}>
         <div style={{ marginBottom: '2.5rem' }}>
-          <QuestionOfNightBadge large text={questionOfNight} />
+          <QuestionOfNightBadge hero text={questionOfNight} />
         </div>
         <QuestionDisplayText style={{ margin: '0 auto 4rem', padding: '0 1rem' }}>
           {questionOfNight}
