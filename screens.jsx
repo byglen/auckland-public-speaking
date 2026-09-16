@@ -12,57 +12,64 @@ window.cmdPressed = cmdPressed;
 window.kbd = kbd;
 
 // ─── DESIGN TOKENS ────────────────────────────────────────────────────────────
-// Bright & lively, grown-up. Full-bleed colour fields per moment (Hodge House
-// energy): powder blue, vermilion, olive, caramel, cream, warm ink. One type
-// family — Theinhardt — carried by weight and tracking, not typeface contrast.
+// One dark room (cool ink #101114, from Glen's Paper "aps typography style
+// guide"), plain white stage type, chrome tinted with powder blue at low alpha.
+// Sky blue is the badge/accent for the prompt of the night; vermilion stays
+// reserved for heat (hat band, TIME'S UP, Yolo). Stage type is Canela Deck
+// Bold — open tracking (+0.015em), generous leading — chrome is Theinhardt.
 const FIELD = {
-  blue: '#CDE4FE',
+  blue: '#CDE4FE',       // powder blue — tints every hairline and muted label
+  sky: '#5696D2',        // filled badges (prompt of the night, feedback)
   cobalt: '#2F4FD6',
   vermilion: '#E94F2E',
-  olive: '#4A5524',
   caramel: '#C2874C',
-  cream: '#F6F1EA',
-  ink: '#231509'
+  cream: '#FFFFFF',      // stage text is plain white now (legacy key name kept)
+  chalk: '#E9F1FC',      // wordmark
+  ink: '#101114'
 };
 
 const C = {
-  bg: FIELD.cream,
-  surface: '#FDFAF4',
-  border: 'rgba(43,28,16,0.24)',       // hairline ink
-  borderSoft: 'rgba(43,28,16,0.12)',   // quieter hairline
-  gold: FIELD.vermilion,               // primary accent (legacy key name)
-  goldBright: '#C93A1B',               // pressed/emphasis vermilion
+  bg: FIELD.ink,
+  surface: '#171A20',
+  border: 'rgba(205,228,254,0.22)',    // hairline
+  borderSoft: 'rgba(205,228,254,0.12)', // quieter hairline
+  gold: FIELD.vermilion,               // heat accent (legacy key name)
+  goldBright: '#FF6A47',
   goldDim: 'rgba(233,79,46,0.5)',
-  dim: 'rgba(43,28,16,0.45)',
-  text: '#2B1C10',                     // warm ink
-  muted: 'rgba(43,28,16,0.68)',
-  cream: FIELD.cream,
+  dim: 'rgba(205,228,254,0.45)',
+  text: '#FFFFFF',
+  muted: 'rgba(205,228,254,0.70)',
+  cream: '#FFFFFF',
+  chalk: FIELD.chalk,
   blue: FIELD.blue,
-  blueDeep: FIELD.cobalt,
-  olive: FIELD.olive,
+  blueDeep: FIELD.blue,
+  sky: FIELD.sky,
+  olive: '#4A5524',
   caramel: FIELD.caramel,
-  amber: '#A96F1F',
-  orange: '#C25C1E',
+  amber: '#D9A24A',
+  orange: '#E07A3A',
   pulseRed: '#C93A1B',
   pulseRedSoft: '#E94F2E',
-  feedback: FIELD.cobalt,
+  feedback: FIELD.sky,
   yolo: FIELD.ink
 };
 
-// One voice, two registers: heavy display Theinhardt for stage moments,
-// regular/medium for chrome. (Legacy key names kept.)
+// Two voices: Canela Deck for the stage (prompts, names), Theinhardt for the
+// machine (labels, badges, timers, buttons, hints). Neue Montreal is the
+// wordmark only.
 const F = {
-  stage: "'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif",
-  ui: "'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif"
+  stage: "'Canela Deck', Georgia, 'Times New Roman', serif",
+  ui: "'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif",
+  brand: "'Neue Montreal', 'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif"
 };
 
 /** Small-caps label — the only treatment for eyebrows/labels. No pills, no borders. */
-function Eyebrow({ children, color = C.gold, large = false, tracking = '0.32em', style = {} }) {
+function Eyebrow({ children, color = C.muted, large = false, tracking = '0.22em', style = {} }) {
   return (
     <span style={{
       fontFamily: F.ui,
-      fontWeight: 500,
-      fontSize: large ? '1.02rem' : '0.82rem',
+      fontWeight: 700,
+      fontSize: large ? '1.22rem' : '0.88rem',
       letterSpacing: tracking,
       paddingLeft: tracking, // optically recentre tracked uppercase
       textTransform: 'uppercase',
@@ -76,6 +83,13 @@ function Eyebrow({ children, color = C.gold, large = false, tracking = '0.32em',
 
 /** Sentinel for the Yolo carousel slot (not a real question string). */
 const YOLO_SLOT = '__YOLO_SLOT__';
+
+/** WhatsApp group invite link. The QR on the end-of-night screen is generated
+ *  from this string in the browser (qrcode.js), so it can never expire on its
+ *  own. If an admin ever resets the group link in WhatsApp (Group info →
+ *  Invite via link → Reset link), paste the new one here. Keep it bare — no
+ *  ?s=sh&p=i… tracking suffix — so the code stays small and easy to scan. */
+const WHATSAPP_INVITE_URL = 'https://chat.whatsapp.com/Cuwr1jL6MczHeoRG1xG1hI';
 
 /** Bank transfer details shown at the end of the night — edit these to go live. */
 const BANK_DETAILS = {
@@ -195,11 +209,11 @@ function Btn({ children, onClick, variant = 'primary', size = 'md', disabled }) 
     xl: { padding: '1.7rem 4.5rem', fontSize: '1.7rem' }
   };
   const variants = {
-    primary: { background: C.text, color: C.cream },
-    gold: { background: FIELD.vermilion, color: C.cream },
-    outline: { background: 'transparent', color: C.gold, border: `1.5px solid ${C.goldDim}` },
+    primary: { background: C.surface, color: C.text, border: `1px solid ${C.border}` },
+    gold: { background: C.surface, color: C.text, border: `1px solid ${C.border}` },
+    outline: { background: 'transparent', color: C.muted, border: `1px solid ${C.border}` },
     ghost: { background: 'transparent', color: C.dim, border: '1px solid transparent' },
-    surface: { background: 'transparent', color: C.muted, border: `1.5px solid ${C.border}` }
+    surface: { background: 'transparent', color: C.muted, border: `1px solid ${C.border}` }
   };
   return (
     <button onClick={disabled ? undefined : onClick}
@@ -210,27 +224,86 @@ function Btn({ children, onClick, variant = 'primary', size = 'md', disabled }) 
 }
 
 // ─── SHARED BRAND ─────────────────────────────────────────────────────────────
-function QuestionOfNightBadge({ large = false, text = '', color = C.gold }) {
+/** Pill badge — the label treatment for what a card *is*. `sky` (filled blue)
+ *  for the prompt of the night and feedback, `heat` for Yolo, `quiet` (outlined)
+ *  for the random prompts. Tracked caps in Theinhardt Bold, as in the style guide. */
+function Badge({ children, tone = 'sky', large = false, style = {} }) {
+  const tones = {
+    sky: { background: FIELD.sky, color: '#FFFFFF', border: '1px solid transparent' },
+    heat: { background: FIELD.vermilion, color: '#FFFFFF', border: '1px solid transparent' },
+    quiet: { background: 'transparent', color: 'rgba(205,228,254,0.82)', border: '1px solid rgba(205,228,254,0.32)' }
+  };
   return (
-    <Eyebrow large={large} color={color}>
+    <span style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      borderRadius: 999,
+      padding: large ? '0.68rem 1.28rem' : '0.6rem 1.06rem',
+      paddingRight: large ? 'calc(1.28rem - 0.1em)' : 'calc(1.06rem - 0.1em)', // trailing tracking
+      fontFamily: F.ui,
+      fontWeight: 500,
+      fontSize: large ? 'clamp(0.85rem, 1.06vw, 1.06rem)' : 'clamp(0.77rem, 0.94vw, 0.94rem)',
+      letterSpacing: '0.1em',
+      textTransform: 'uppercase',
+      lineHeight: 1.25,
+      whiteSpace: 'nowrap',
+      ...tones[tone],
+      ...style
+    }}>
+      {children}
+    </span>
+  );
+}
+
+/** Yolo: the lights go red. A deep blood-red ground with an ember underneath
+ *  and a glow that breathes slowly. Shared by the Yolo slot in the prompt
+ *  picker and the Yolo prep / countdown screen — where it holds perfectly
+ *  still, so the speaker's five seconds of thinking have nothing moving. */
+const YOLO_BACKDROP = 'radial-gradient(ellipse 100% 62% at 50% 112%, rgba(233,79,46,0.34) 0%, rgba(180,30,30,0.12) 45%, transparent 72%), linear-gradient(180deg, #1F0507 0%, #150306 55%, #0B0203 100%)';
+
+function YoloGlow({ still = false }) {
+  return (
+    <>
+      <div aria-hidden style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 72% 58% at 50% 58%, rgba(233,79,46,0.22) 0%, rgba(160,20,24,0.10) 45%, transparent 76%)',
+        opacity: still ? 0.6 : undefined,
+        animation: still ? 'none' : 'yoloBreathe 3.2s ease-in-out infinite'
+      }} />
+      <div aria-hidden style={{
+        position: 'absolute',
+        inset: 0,
+        pointerEvents: 'none',
+        background: 'radial-gradient(ellipse 80% 70% at 50% 50%, transparent 40%, rgba(0,0,0,0.55) 100%)'
+      }} />
+    </>
+  );
+}
+
+function QuestionOfNightBadge({ large = false, text = '' }) {
+  return (
+    <Badge tone="sky" large={large}>
       {promptNoun(text, { cap: true })} of the Night
-    </Eyebrow>
+    </Badge>
   );
 }
 
 function YoloModeBadge({ large = false }) {
   return (
-    <Eyebrow large={large} color={FIELD.cream}>
+    <Badge tone="heat" large={large}>
       Yolo mode
-    </Eyebrow>
+    </Badge>
   );
 }
 
 function FeedbackBadge({ large = false }) {
   return (
-    <Eyebrow large={large} color={C.feedback}>
+    <Badge tone="sky" large={large}>
       Feedback
-    </Eyebrow>
+    </Badge>
   );
 }
 
@@ -246,12 +319,12 @@ function QuestionDisplayText({ children, style = {} }) {
       textWrap: 'balance',
       fontFamily: F.stage,
       fontWeight: 700,
-      letterSpacing: '-0.015em',
-      fontSize: 'clamp(3.4rem, 7vw, 8rem)',
-      lineHeight: 1.05,
+      letterSpacing: '0.015em',
+      fontSize: 'clamp(3rem, 6.1vw, 7rem)',
+      lineHeight: 1.22,
       ...style
     }}>
-      <span style={{ maxWidth: 1600 }}>{children}</span>
+      <span style={{ maxWidth: 'min(1280px, 100%)' }}>{children}</span>
     </div>
   );
 }
@@ -332,20 +405,24 @@ function HomeBrandMark() {
     <div
       aria-label="Auckland Public Speaking"
       style={{
-        fontFamily: F.ui,
-        fontWeight: 700,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 2,
+        fontFamily: F.brand,
         fontSize: '0.95rem',
+        lineHeight: 1.2,
         letterSpacing: '0.02em',
-        color: C.text,
+        color: C.chalk,
         whiteSpace: 'nowrap'
       }}>
-      Auckland Public Speaking<span style={{ fontSize: '0.65em', verticalAlign: 'super' }}>©</span>
+      <span style={{ fontWeight: 500 }}>Auckland</span>
+      <span style={{ fontWeight: 700 }}>Public Speaking</span>
     </div>
   );
 }
 
 // ─── SETUP SCREEN ─────────────────────────────────────────────────────────────
-function SetupScreen({ onComplete, hideBrand = false }) {
+function SetupScreen({ onComplete, hideBrand = false, donePrompts = new Set() }) {
   const [q, setQ] = useState('');
   const [usedRandom, setUsedRandom] = useState(false);
   const taRef = useRef(null);
@@ -364,15 +441,15 @@ function SetupScreen({ onComplete, hideBrand = false }) {
   }, [q, canSubmit, onComplete]);
 
   const pickRandom = () => {
-    const pool = QUESTIONS.filter((x) => x !== q);
-    setQ(pool[Math.floor(Math.random() * pool.length)]);
+    const pool = eligiblePrompts({ donePrompts, questionOfNight: q });
+    setQ(pickOne(pool).text);
     setUsedRandom(true);
     taRef.current?.focus();
   };
 
   return (
     <div style={{
-      background: FIELD.cream,
+      background: C.bg,
       minHeight: '100vh',
       display: 'flex',
       flexDirection: 'column'
@@ -408,8 +485,8 @@ function SetupScreen({ onComplete, hideBrand = false }) {
               fontFamily: F.stage,
               fontSize: 'clamp(2.4rem, 3.4vw + 0.9rem, 3.5rem)',
               fontWeight: 700,
-              letterSpacing: '-0.03em',
-              lineHeight: 1.02,
+              letterSpacing: '0.01em',
+              lineHeight: 1.1,
               margin: 0
             }}>
               Set tonight&apos;s {promptNoun(q)}
@@ -447,10 +524,9 @@ function SetupScreen({ onComplete, hideBrand = false }) {
                 fontSize: 'clamp(1.6rem, 1.8vw + 0.6rem, 2.1rem)',
                 fontFamily: F.stage,
                 fontWeight: 700,
-                letterSpacing: '-0.015em',
                 resize: 'none',
                 outline: 'none',
-                lineHeight: 1.25,
+                lineHeight: 1.4,
                 minHeight: '7rem',
                 textAlign: 'center'
               }}
@@ -509,7 +585,7 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
     <div
       style={{
         position: 'fixed', inset: 0, zIndex: 200,
-        background: 'rgba(35,21,9,0.5)',
+        background: 'rgba(0,0,0,0.55)',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         padding: '1.5rem'
       }}
@@ -524,7 +600,7 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
           background: C.surface,
           border: `1px solid ${C.border}`,
           borderRadius: 16,
-          boxShadow: '0 24px 60px rgba(43,28,16,0.3)',
+          boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
           display: 'flex',
           flexDirection: 'column',
           overflow: 'hidden'
@@ -560,7 +636,7 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
             onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); submitAdd(); } }}
             placeholder="Add a speaker…"
             style={{
-              flex: 1, background: 'rgba(43,28,16,0.04)', border: `1px solid ${C.border}`,
+              flex: 1, background: 'rgba(205,228,254,0.04)', border: `1px solid ${C.border}`,
               borderRadius: 10, padding: '0.65rem 1rem', caretColor: C.gold,
               color: C.text, fontSize: '1.02rem', fontFamily: F.ui, outline: 'none'
             }}
@@ -655,9 +731,275 @@ function ManageSpeakersModal({ participants, onClose, onAdd, onRemove, onSetDone
   );
 }
 
+// ─── PROMPT SELECTION ─────────────────────────────────────────────────────────
+function pickOne(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+/** Prompts still on the table: not permanently done, not used tonight, not the
+ *  prompt of the night, not already on screen. If a rule empties the pool the
+ *  constraints relax in order (done → used → on-screen) so a long-running
+ *  bank never leaves a speaker with nothing. */
+function eligiblePrompts({ donePrompts, usedQuestions, questionOfNight, excludeTexts = [] }) {
+  const done = donePrompts || new Set();
+  const used = usedQuestions || new Set();
+  const onScreen = new Set([questionOfNight, ...excludeTexts]);
+  const tiers = [
+    (p) => !done.has(p.id) && !used.has(p.text) && !onScreen.has(p.text),
+    (p) => !used.has(p.text) && !onScreen.has(p.text),
+    (p) => !onScreen.has(p.text),
+    () => true
+  ];
+  for (const keep of tiers) {
+    const pool = PROMPTS.filter(keep);
+    if (pool.length) return pool;
+  }
+  return PROMPTS;
+}
+
+/** The two random options offered to a speaker.
+ *  A: a random "about you" prompt.
+ *  B: scenario or big (coin flip), from a different theme than A; falls back to
+ *     the other style, then to any style, before giving up on the theme rule. */
+function pickSpeakerOptions({ donePrompts, usedQuestions, questionOfNight }) {
+  const pool = eligiblePrompts({ donePrompts, usedQuestions, questionOfNight });
+  const you = pool.filter((p) => p.type === 'you');
+  const a = pickOne(you.length ? you : pool);
+  const want = Math.random() < 0.5 ? 'scenario' : 'big';
+  const other = want === 'scenario' ? 'big' : 'scenario';
+  const rest = pool.filter((p) => p.id !== a.id);
+  const candidates = [
+    rest.filter((p) => p.type === want && p.theme !== a.theme),
+    rest.filter((p) => p.type === other && p.theme !== a.theme),
+    rest.filter((p) => p.theme !== a.theme),
+    rest
+  ].find((list) => list.length);
+  const b = candidates ? pickOne(candidates) : null;
+  return b ? [a.text, b.text] : [a.text];
+}
+
+/** Yolo: any style, but from a theme none of the on-screen randoms use. */
+function pickYoloPrompt({ donePrompts, usedQuestions, questionOfNight, carouselTexts }) {
+  const pool = eligiblePrompts({ donePrompts, usedQuestions, questionOfNight, excludeTexts: carouselTexts });
+  const takenThemes = new Set(carouselTexts.map((t) => PROMPT_BY_TEXT[t]?.theme).filter(Boolean));
+  const offTheme = pool.filter((p) => !takenThemes.has(p.theme));
+  return pickOne(offTheme.length ? offTheme : pool).text;
+}
+
+// ─── PROMPTS MODAL (done list — persistent, exportable) ───────────────────────
+function downloadJson(filename, obj) {
+  const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function PromptsModal({ donePrompts, onClose, onSetDone, onResetAll, onImport }) {
+  const [query, setQuery] = useState('');
+  const [view, setView] = useState(donePrompts.size ? 'done' : 'all');
+  const [notice, setNotice] = useState('');
+  const fileRef = useRef(null);
+  const searchRef = useRef(null);
+
+  useEffect(() => {
+    searchRef.current?.focus();
+    const h = (e) => { if (e.code === 'Escape') onClose(); };
+    window.addEventListener('keydown', h);
+    return () => window.removeEventListener('keydown', h);
+  }, [onClose]);
+
+  const q = query.trim().toLowerCase();
+  const rows = PROMPTS.filter((p) =>
+    (view === 'all' || donePrompts.has(p.id)) &&
+    (!q || p.text.toLowerCase().includes(q) || PROMPT_THEMES[p.theme].toLowerCase().includes(q))
+  );
+  const doneCount = donePrompts.size;
+  const left = PROMPTS.length - doneCount;
+
+  const exportDone = () => {
+    downloadJson(`aps-prompts-done-${new Date().toISOString().slice(0, 10)}.json`, {
+      app: 'auckland-public-speaking',
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      donePrompts: [...donePrompts]
+    });
+    setNotice(`Exported ${doneCount} done prompt${doneCount === 1 ? '' : 's'}.`);
+  };
+
+  const importFile = async (file) => {
+    if (!file) return;
+    try {
+      const data = JSON.parse(await file.text());
+      const ids = Array.isArray(data) ? data : data && data.donePrompts;
+      if (!Array.isArray(ids)) throw new Error('not a prompts export');
+      const valid = ids.filter((id) => typeof id === 'string' && PROMPT_BY_ID[id]);
+      const added = valid.filter((id) => !donePrompts.has(id)).length;
+      onImport(valid);
+      setNotice(`Imported ${valid.length} — ${added} new. Merged with what was already here.`);
+      setView('done');
+    } catch (e) {
+      setNotice("That file isn't a prompts export.");
+    }
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const tab = (key, label) => (
+    <button
+      type="button"
+      onClick={() => setView(key)}
+      style={{
+        background: 'none', border: 'none', cursor: 'pointer', padding: '0.35rem 0',
+        fontFamily: F.ui, fontSize: '0.92rem', fontWeight: 500, letterSpacing: '0.02em',
+        color: view === key ? C.text : C.dim,
+        borderBottom: `2px solid ${view === key ? C.gold : 'transparent'}`
+      }}>
+      {label}
+    </button>
+  );
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '1.5rem'
+      }}
+      onMouseDown={onClose}>
+      <div
+        role="dialog"
+        aria-label="Prompts"
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{
+          width: 'min(680px, 100%)',
+          maxHeight: 'min(85vh, 780px)',
+          background: C.surface,
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden'
+        }}>
+        <div style={{
+          padding: '1.35rem 1.5rem 1rem',
+          borderBottom: `1px solid ${C.borderSoft}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start'
+        }}>
+          <div>
+            <div style={{ color: C.text, fontSize: '1.3rem', fontWeight: 500, letterSpacing: '-0.01em' }}>Prompts</div>
+            <div style={{ color: C.dim, fontSize: '0.92rem', marginTop: '0.3rem' }}>
+              {doneCount} done · {left} left of {PROMPTS.length}. A prompt is marked done the moment a speech starts on it, and stays done across reloads.
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: 'none', border: 'none', color: C.dim,
+              fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1, padding: '0.25rem'
+            }}>
+            ×
+          </button>
+        </div>
+
+        <div style={{ padding: '0.75rem 1.5rem', borderBottom: `1px solid ${C.borderSoft}`, display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+          {tab('done', `Done (${doneCount})`)}
+          {tab('all', `All (${PROMPTS.length})`)}
+          <input
+            ref={searchRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search prompts or themes…"
+            style={{
+              flex: 1, marginLeft: 'auto', background: 'rgba(205,228,254,0.04)', border: `1px solid ${C.border}`,
+              borderRadius: 10, padding: '0.55rem 0.9rem', caretColor: C.gold,
+              color: C.text, fontSize: '0.98rem', fontFamily: F.ui, outline: 'none', minWidth: 0
+            }}
+          />
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
+          {rows.length === 0 &&
+          <div style={{ color: C.dim, textAlign: 'center', padding: '2.5rem 1.5rem', fontSize: '1.05rem' }}>
+            {view === 'done' && !q ? 'Nothing marked done yet.' : 'No prompts match.'}
+          </div>
+          }
+          {rows.map((p) => {
+            const isDone = donePrompts.has(p.id);
+            return (
+              <div
+                key={p.id}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '0.65rem',
+                  padding: '0.6rem 1.5rem',
+                  borderBottom: `1px solid ${C.borderSoft}`
+                }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    color: isDone ? C.dim : C.text,
+                    fontSize: '1.02rem',
+                    fontWeight: 400,
+                    textDecoration: isDone ? 'line-through' : 'none',
+                    lineHeight: 1.35
+                  }}>
+                    {p.text}
+                  </div>
+                </div>
+                <Btn variant="surface" size="sm" onClick={() => onSetDone(p.id, !isDone)}>
+                  {isDone ? 'Not done' : 'Mark done'}
+                </Btn>
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{
+          padding: '1rem 1.5rem',
+          borderTop: `1px solid ${C.borderSoft}`,
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '0.6rem'
+        }}>
+          <Btn variant="surface" size="sm" disabled={doneCount === 0} onClick={exportDone}>Export done list</Btn>
+          <Btn variant="surface" size="sm" onClick={() => fileRef.current?.click()}>Import…</Btn>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            onChange={(e) => importFile(e.target.files && e.target.files[0])}
+            style={{ display: 'none' }}
+          />
+          <Btn
+            variant="outline"
+            size="sm"
+            disabled={doneCount === 0}
+            onClick={() => {
+              if (doneCount === 0) return;
+              if (window.confirm(`Mark all ${doneCount} prompt${doneCount === 1 ? '' : 's'} as not done? Export first if you might want them back.`)) {
+                onResetAll();
+                setNotice('All prompts are back in the hat.');
+              }
+            }}>
+            Reset all
+          </Btn>
+          <span style={{ flex: 1, minWidth: 120, color: C.muted, fontSize: '0.9rem', textAlign: 'right' }}>{notice}</span>
+          <Btn variant="gold" size="sm" onClick={onClose}>Done</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── HOME SCREEN ──────────────────────────────────────────────────────────────
-function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, onWalkNudge, highlightSpeakers = false, hideBrand = false }) {
+function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegister, onDraw, onEditQuestion, onShowQR, onToggleDemo, demoMode, onAddParticipant, onRemoveParticipant, onSetParticipantDone, onSetParticipantFirstTimer, onResetSpeakers, reopenManage, onReopenManageConsumed, walkAllow = null, onWalkAdvance, onWalkNudge, highlightSpeakers = false, hideBrand = false, donePrompts = new Set(), onSetPromptDone, onResetDonePrompts, onImportDonePrompts }) {
   const [showManage, setShowManage] = useState(false);
+  const [showPrompts, setShowPrompts] = useState(false);
+  const modalOpen = showManage || showPrompts;
   const remaining = participants.filter((p) => !p.done);
   const total = participants.length;
   const done = participants.filter((p) => p.done).length;
@@ -695,7 +1037,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
 
   // ⌘D / Ctrl+D — toggle demo mode (sample speakers + accelerated speech timers)
   useEffect(() => {
-    if (!onToggleDemo || showManage) return;
+    if (!onToggleDemo || modalOpen) return;
     if (walkAllow && walkAllow !== 'demo' && walkAllow !== 'draw') return;
     const h = (e) => {
       if (!cmdPressed(e) || e.code !== 'KeyD') return;
@@ -706,11 +1048,11 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onToggleDemo, showManage, walkAllow]);
+  }, [onToggleDemo, modalOpen, walkAllow]);
 
   // Block Space → draw while manage modal is open
   useEffect(() => {
-    if (!showManage) return;
+    if (!modalOpen) return;
     const h = (e) => {
       if (e.code === 'Space') {
         e.preventDefault();
@@ -719,11 +1061,11 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h, true);
     return () => window.removeEventListener('keydown', h, true);
-  }, [showManage]);
+  }, [modalOpen]);
 
   // Listen for any letter key press → launch register screen with that char
   useEffect(() => {
-    if (showManage || !canAddSpeaker) return;
+    if (modalOpen || !canAddSpeaker) return;
     const h = (e) => {
       // Skip if modifier keys held, or if user is typing in an input already
       if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -738,12 +1080,12 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onRegister, showManage, canAddSpeaker]);
+  }, [onRegister, modalOpen, canAddSpeaker]);
 
   // Off-path nudge: if the host presses a meaningful key the active step doesn't ask for,
   // block it and shake the coach card to bring focus back to the current step.
   useEffect(() => {
-    if (!walkActive || showManage) return undefined;
+    if (!walkActive || modalOpen) return undefined;
     const h = (e) => {
       const tag = (e.target && e.target.tagName) || '';
       if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -766,10 +1108,10 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
     };
     window.addEventListener('keydown', h, true);
     return () => window.removeEventListener('keydown', h, true);
-  }, [walkActive, walkAllow, showManage, canAddSpeaker, nudge]);
+  }, [walkActive, walkAllow, modalOpen, canAddSpeaker, nudge]);
 
   return (
-    <div style={{ background: FIELD.blue, height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
+    <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden' }}>
 
       {showManage &&
       <ManageSpeakersModal
@@ -782,6 +1124,15 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         onResetAll={onResetSpeakers}
       />
       }
+      {showPrompts && onSetPromptDone &&
+      <PromptsModal
+        donePrompts={donePrompts}
+        onClose={() => setShowPrompts(false)}
+        onSetDone={onSetPromptDone}
+        onResetAll={onResetDonePrompts}
+        onImport={onImportDonePrompts}
+      />
+      }
 
       {/* Top bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.6rem 3rem', borderBottom: `1px solid ${C.borderSoft}` }}>
@@ -789,7 +1140,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           {demoMode &&
           <span style={{
-            color: FIELD.cobalt,
+            color: FIELD.blue,
             fontSize: '0.8rem',
             letterSpacing: '0.22em',
             textTransform: 'uppercase',
@@ -799,7 +1150,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
             Demo · {kbd('D')} to exit
           </span>
           }
-          <div style={{ position: 'relative', display: 'inline-flex' }}>
+          <div style={{ position: 'relative', display: 'inline-flex', gap: '0.65rem' }}>
             {highlightSpeakers &&
             <div
               aria-hidden
@@ -835,7 +1186,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
                 alignItems: 'center',
                 gap: '0.45rem',
                 color: C.gold,
-                fontWeight: 800,
+                fontWeight: 700,
                 fontSize: '1rem',
                 whiteSpace: 'nowrap',
                 pointerEvents: 'none',
@@ -861,6 +1212,14 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
               locked={!canManage}>
               Speakers
             </HomeSubduedButton>
+            {onSetPromptDone &&
+            <HomeSubduedButton
+              ariaLabel="Prompts — done list"
+              onClick={() => { if (canUseQR) setShowPrompts(true); else nudge(); }}
+              locked={!canUseQR}>
+              Prompts
+            </HomeSubduedButton>
+            }
           </div>
           <HomeIconButton
             ariaLabel="WhatsApp QR code"
@@ -883,10 +1242,10 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         textAlign: 'center',
         minHeight: 0
       }}>
-        <div style={{ marginBottom: '2.25rem' }}>
-          <QuestionOfNightBadge large text={questionOfNight} color={FIELD.cobalt} />
+        <div style={{ marginBottom: '2.5rem' }}>
+          <QuestionOfNightBadge large text={questionOfNight} />
         </div>
-        <QuestionDisplayText style={{ margin: '0 auto 4rem', padding: '0 3rem', color: FIELD.cobalt }}>
+        <QuestionDisplayText style={{ margin: '0 auto 4rem', padding: '0 3rem' }}>
           {questionOfNight}
         </QuestionDisplayText>
 
@@ -895,26 +1254,24 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         }
         {total > 0 && remaining.length === 0 &&
         <div style={{
-          color: FIELD.cobalt,
+          color: FIELD.blue,
           fontFamily: F.stage,
           fontWeight: 700,
-          letterSpacing: '-0.02em',
-          fontSize: 'clamp(2rem, 3vw, 2.8rem)'
+          fontSize: 'clamp(2.2rem, 3.2vw, 3rem)'
         }}>
           All speakers done — great night.
         </div>
         }
       </div>
 
-      {/* Speaker roll — a quiet typeset line, not chips */}
+      {/* Speaker roll — quiet outlined pills in the same voice as the top-right buttons */}
       {total > 0 &&
       <div style={{
-        padding: '1.4rem 3rem 1.6rem',
+        padding: '1.25rem 3rem 1.5rem',
         borderTop: `1px solid ${C.borderSoft}`,
         display: 'flex',
         flexWrap: 'wrap',
-        columnGap: '1.6rem',
-        rowGap: '0.55rem',
+        gap: '0.5rem',
         justifyContent: 'center'
       }}>
           {participants.map((p) => {
@@ -923,22 +1280,27 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
             return (
         <span key={p.name} style={{
           display: 'inline-flex',
-          alignItems: 'baseline',
-          gap: '0.35rem',
+          alignItems: 'center',
+          gap: '0.4rem',
+          padding: '0.42rem 0.85rem',
+          borderRadius: 10,
+          border: `1px solid ${p.done ? C.borderSoft : C.border}`,
           fontFamily: F.ui,
-          color: p.done ? C.dim : showFt ? FIELD.cobalt : C.text,
-          fontSize: '1.05rem',
+          color: p.done ? C.dim : C.muted,
+          fontSize: '0.92rem',
           fontWeight: 500,
-          opacity: p.done ? 0.55 : 1,
+          letterSpacing: '0.02em',
+          lineHeight: 1.2,
+          opacity: p.done ? 0.6 : 0.9,
           textDecoration: p.done ? 'line-through' : 'none',
-          textDecorationColor: 'rgba(43,28,16,0.4)',
+          textDecorationColor: 'rgba(205,228,254,0.4)',
           animation: pulsing ? 'ftNamePulse 1.2s ease-out' : undefined
         }}>
               {p.name}
               {showFt &&
               <span aria-label="first timer" style={{
                 fontSize: '0.72em',
-                color: FIELD.cobalt,
+                color: FIELD.blue,
                 lineHeight: 1
               }}>
                 ✦
@@ -978,13 +1340,13 @@ function RegistrationScreen({ initialChar = '', onAdd, onDone }) {
   };
 
   return (
-    <div style={{ background: FIELD.caramel, height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 6rem', gap: '3rem' }}>
+    <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '4rem 6rem', gap: '3rem' }}>
       <div style={{ textAlign: 'center' }}>
         <div style={{ marginBottom: '1.25rem' }}>
-          <Eyebrow color={FIELD.cream} tracking="0.38em">Add your name</Eyebrow>
+          <Badge tone="quiet" large>Add your name</Badge>
         </div>
-        <p style={{ color: 'rgba(43,28,16,0.75)', fontSize: '1.35rem', marginTop: '0.5rem', fontWeight: 500 }}>
-          Type your name, then press <span style={{ color: C.text, fontWeight: 700 }}>Enter</span>
+        <p style={{ color: 'rgba(205,228,254,0.88)', fontSize: '1.45rem', marginTop: '0.5rem', fontWeight: 500 }}>
+          Type your name, then press <span style={{ color: FIELD.cream, fontWeight: 700 }}>Enter</span>
         </p>
       </div>
 
@@ -1002,25 +1364,63 @@ function RegistrationScreen({ initialChar = '', onAdd, onDone }) {
           maxWidth: 1500,
           background: 'transparent',
           border: 'none',
-          borderBottom: '2px solid rgba(246,241,234,0.6)',
+          borderBottom: '2px solid rgba(205,228,254,0.6)',
           padding: '1.5rem 1rem',
           color: FIELD.cream,
           fontSize: 'clamp(4.5rem, 10vw, 10rem)',
           fontFamily: F.stage,
           fontWeight: 700,
           textAlign: 'center',
-          letterSpacing: '-0.03em',
+          letterSpacing: '0',
           outline: 'none',
           caretColor: FIELD.cream
         }} />
 
-      <div style={{ color: 'rgba(43,28,16,0.6)', fontSize: '0.95rem', letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 700 }}>
+      <div style={{ color: 'rgba(205,228,254,0.55)', fontSize: '1.05rem', letterSpacing: '0.22em', textTransform: 'uppercase', fontWeight: 700 }}>
         Press Esc to cancel
       </div>
     </div>);
 }
 
 // ─── QR CODE SCREEN ───────────────────────────────────────────────────────────
+/** Static QR rendered as crisp SVG from a string. Error level M (15% damage
+ *  tolerance) suits a projector; typeNumber 0 picks the smallest version that
+ *  fits. Falls back to the raw link as text if qrcode.js failed to load. */
+function QRCodeSvg({ value, label, style = {} }) {
+  const cells = React.useMemo(() => {
+    if (typeof qrcode !== 'function') return null;
+    const qr = qrcode(0, 'M');
+    qr.addData(value);
+    qr.make();
+    const n = qr.getModuleCount();
+    const rects = [];
+    for (let r = 0; r < n; r++) {
+      let run = 0;
+      for (let c = 0; c <= n; c++) {
+        const dark = c < n && qr.isDark(r, c);
+        if (dark) { run += 1; continue; }
+        if (run) { rects.push(`M${c - run} ${r}h${run}v1h-${run}z`); run = 0; }
+      }
+    }
+    return { n, d: rects.join('') };
+  }, [value]);
+
+  if (!cells) {
+    return <div style={{ ...style, color: '#111', fontFamily: F.ui, fontSize: '0.9rem', wordBreak: 'break-all' }}>{value}</div>;
+  }
+  return (
+    <svg
+      role="img"
+      aria-label={label}
+      viewBox={`0 0 ${cells.n} ${cells.n}`}
+      shapeRendering="crispEdges"
+      style={style}>
+      <rect width={cells.n} height={cells.n} fill="#fff" />
+      <path d={cells.d} fill="#111" />
+    </svg>
+  );
+}
+
 function QRScreen({ onBack }) {
   useEffect(() => {
     const h = (e) => {
@@ -1069,10 +1469,10 @@ function QRScreen({ onBack }) {
           <div style={QR_PANEL_STYLE}>
             <div style={QR_EYEBROW_STYLE}>Join our WhatsApp</div>
             <div style={{ background: '#fff', padding: 'clamp(1rem, 1.6vw, 1.5rem)', borderRadius: 12 }}>
-              <img
-                src="whatsapp-qr.png"
-                alt="WhatsApp group QR code"
-                style={{ display: 'block', width: 'min(34vh, 320px)', height: 'min(34vh, 320px)', imageRendering: 'pixelated' }}
+              <QRCodeSvg
+                value={WHATSAPP_INVITE_URL}
+                label="WhatsApp group QR code"
+                style={{ display: 'block', width: 'min(34vh, 320px)', height: 'min(34vh, 320px)' }}
               />
             </div>
             <p style={{ color: C.muted, fontSize: '1.02rem', fontWeight: 400, margin: '1.25rem 0 0', lineHeight: 1.5 }}>
@@ -1178,9 +1578,9 @@ function WalkKeyChip({ children }) {
       height: '1.7rem',
       padding: '0 0.55rem',
       borderRadius: 6,
-      background: 'rgba(43,28,16,0.05)',
-      border: '1px solid rgba(43,28,16,0.4)',
-      boxShadow: 'inset 0 -1.5px 0 rgba(43,28,16,0.2)',
+      background: 'rgba(205,228,254,0.05)',
+      border: '1px solid rgba(205,228,254,0.4)',
+      boxShadow: 'inset 0 -1.5px 0 rgba(0,0,0,0.2)',
       color: C.text,
       fontFamily: F.ui,
       fontSize: '0.88rem',
@@ -1235,7 +1635,7 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
         border: `1px solid ${C.goldDim}`,
         borderRadius: 14,
         padding: '1.2rem 1.35rem',
-        boxShadow: '0 18px 48px rgba(43,28,16,0.28)',
+        boxShadow: '0 18px 48px rgba(0,0,0,0.28)',
         pointerEvents: 'auto',
         display: 'flex',
         flexDirection: 'column',
@@ -1335,7 +1735,7 @@ function WalkthroughCoach({ title, body, cue = null, stepNumber, totalSteps, isL
             type="button"
             onClick={onExit}
             style={{
-              background: C.gold, color: C.bg, border: 'none', borderRadius: 10,
+              background: C.surface, color: C.text, border: `1px solid ${C.border}`, borderRadius: 10,
               padding: '0.55rem 1.2rem', fontFamily: F.ui, fontWeight: 500,
               fontSize: '0.95rem', cursor: 'pointer'
             }}>
@@ -1355,7 +1755,7 @@ function WalkthroughIntroModal({ onStart, programmeHref = 'programme.html' }) {
       position: 'fixed', inset: 0, zIndex: 600,
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: 'clamp(1rem, 4vw, 2.5rem)',
-      background: 'rgba(35,21,9,0.55)',
+      background: 'rgba(0,0,0,0.6)',
       backdropFilter: 'blur(4px)',
       WebkitBackdropFilter: 'blur(4px)'
     }} data-walkthrough-ui>
@@ -1370,7 +1770,7 @@ function WalkthroughIntroModal({ onStart, programmeHref = 'programme.html' }) {
         display: 'flex',
         flexDirection: 'column',
         gap: '1.1rem',
-        boxShadow: '0 24px 60px rgba(43,28,16,0.3)',
+        boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
         animation: 'walkthroughCoachPop 0.42s ease-out'
       }}>
         <span style={{
@@ -1436,9 +1836,9 @@ function WalkthroughIntroModal({ onStart, programmeHref = 'programme.html' }) {
           style={{
             marginTop: '0.5rem',
             alignSelf: 'stretch',
-            background: C.gold,
-            color: C.bg,
-            border: 'none',
+            background: C.surface,
+            color: C.text,
+            border: `1px solid ${C.border}`,
             borderRadius: 12,
             padding: '0.95rem 1.5rem',
             fontFamily: F.ui,
@@ -1475,7 +1875,7 @@ function WalkthroughRestartButton({ onRestart }) {
           fontWeight: 500,
           fontSize: '0.92rem',
           cursor: 'pointer',
-          boxShadow: '0 8px 28px rgba(43,28,16,0.25)',
+          boxShadow: '0 8px 28px rgba(0,0,0,0.25)',
           letterSpacing: '0.02em'
         }}>
         Restart walk-through
@@ -1486,26 +1886,26 @@ function WalkthroughRestartButton({ onRestart }) {
 
 // ─── KEY HINTS (shared minimal keyboard UI) ──────────────────────────────────
 const KEY_FACE = {
-  background: 'rgba(43,28,16,0.05)',
-  border: '1.5px solid rgba(43,28,16,0.45)',
-  boxShadow: 'inset 0 -2px 0 rgba(43,28,16,0.25)',
-  color: 'rgba(43,28,16,0.85)',
+  background: 'rgba(205,228,254,0.05)',
+  border: '1.5px solid rgba(205,228,254,0.45)',
+  boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.25)',
+  color: 'rgba(205,228,254,0.85)',
   fontFamily: F.ui
 };
 
 const KEY_FACE_DARK = {
-  background: 'rgba(246,241,234,0.07)',
-  border: '1.5px solid rgba(246,241,234,0.55)',
+  background: 'rgba(205,228,254,0.07)',
+  border: '1.5px solid rgba(205,228,254,0.55)',
   boxShadow: 'inset 0 -2px 0 rgba(0,0,0,0.3)',
-  color: 'rgba(246,241,234,0.92)',
+  color: 'rgba(205,228,254,0.92)',
   fontFamily: F.ui
 };
 
-function RetroSpaceKey({ active = false, dark = false }) {
+function RetroSpaceKey({ active = false, dark = false, label = 'SPACE' }) {
   const activeStyle = active ? {
     background: 'rgba(233,79,46,0.16)',
     border: '1.5px solid rgba(233,79,46,0.9)',
-    boxShadow: 'inset 0 -1px 0 rgba(43,28,16,0.2)',
+    boxShadow: 'inset 0 -1px 0 rgba(0,0,0,0.2)',
     color: dark ? FIELD.vermilion : C.goldBright,
     transform: 'translateY(2px)'
   } : {};
@@ -1516,37 +1916,37 @@ function RetroSpaceKey({ active = false, dark = false }) {
         display: 'inline-flex',
         alignItems: 'center',
         justifyContent: 'center',
-        minWidth: 'clamp(175px, 30vw, 260px)',
-        height: 'clamp(46px, 6vh, 58px)',
-        padding: '0 1.5rem',
-        borderRadius: 10,
-        fontSize: 'clamp(0.95rem, 1.8vw, 1.1rem)',
+        minWidth: 'clamp(210px, 36vw, 312px)',
+        height: 'clamp(55px, 7.2vh, 70px)',
+        padding: '0 1.8rem',
+        borderRadius: 12,
+        fontSize: 'clamp(1.14rem, 2.16vw, 1.32rem)',
         fontWeight: 700,
         letterSpacing: '0.32em',
-        paddingLeft: 'calc(1.5rem + 0.32em)',
+        paddingLeft: 'calc(1.8rem + 0.32em)',
         ...(dark ? KEY_FACE_DARK : KEY_FACE),
         ...activeStyle
       }}>
-      SPACE
+      {label}
     </div>
   );
 }
 
 function RetroArrowKeys({ dark = false }) {
   const square = {
-    width: 'clamp(44px, 7.5vw, 54px)',
-    height: 'clamp(44px, 7.5vw, 54px)',
+    width: 'clamp(53px, 9vw, 65px)',
+    height: 'clamp(53px, 9vw, 65px)',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    borderRadius: 10,
-    fontSize: 'clamp(1.05rem, 2vw, 1.3rem)',
+    borderRadius: 12,
+    fontSize: 'clamp(1.26rem, 2.4vw, 1.56rem)',
     fontWeight: 500,
     lineHeight: 1,
     ...(dark ? KEY_FACE_DARK : KEY_FACE)
   };
   return (
-    <div aria-hidden style={{ display: 'inline-flex', alignItems: 'center', gap: 'clamp(6px, 1vw, 9px)' }}>
+    <div aria-hidden style={{ display: 'inline-flex', alignItems: 'center', gap: 'clamp(7px, 1.2vw, 11px)' }}>
       <div style={square}>←</div>
       <div style={square}>→</div>
     </div>
@@ -1562,7 +1962,7 @@ function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, u
         display: 'flex',
         flexDirection: 'column',
         alignItems: align === 'right' ? 'flex-end' : align === 'left' ? 'flex-start' : 'center',
-        gap: '0.7rem',
+        gap: '0.85rem',
         animation: 'pulseBig 2.8s ease-in-out infinite',
         opacity: 0.94,
         ...style
@@ -1571,9 +1971,9 @@ function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, u
       {caption &&
       <span style={{
         fontFamily: F.ui,
-        fontSize: 'clamp(0.92rem, 1.5vw, 1.05rem)',
+        fontSize: 'clamp(1.1rem, 1.8vw, 1.26rem)',
         fontWeight: 500,
-        color: urgent ? C.pulseRedSoft : dark ? 'rgba(246,241,234,0.85)' : C.muted,
+        color: urgent ? C.pulseRedSoft : dark ? 'rgba(205,228,254,0.85)' : C.muted,
         letterSpacing: '0.03em',
         textAlign: align === 'right' ? 'right' : align === 'left' ? 'left' : 'center'
       }}>
@@ -1585,17 +1985,7 @@ function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, u
 }
 
 // ─── DRAW ADMIN MENU (top-left) ───────────────────────────────────────────────
-/** Selectable draw concepts — prototypes live side by side for comparison. */
-const DRAW_STYLES = [
-  { key: 'classic', label: 'Classic wheel' },
-  { key: 'lottery', label: 'Lottery machine' },
-  { key: 'plinko', label: 'Plinko drop' },
-  { key: 'hat', label: 'The hat' },
-  { key: 'candles', label: 'Candles' },
-  { key: 'wheel', label: 'Vinyl wheel' }
-];
-
-function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = false, disableMenu = false, drawStyle, onSetDrawStyle }) {
+function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = false, disableMenu = false }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -1617,7 +2007,7 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
         left: 'clamp(0.85rem, 2vw, 1.35rem)',
         zIndex: 60
       }}>
-      <div style={{ position: 'relative' }}>
+      <div style={{ position: 'relative' }} data-walkthrough-ui>
         <button
           type="button"
           aria-label="Menu"
@@ -1625,7 +2015,7 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
           disabled={disableMenu}
           onClick={() => { if (disableMenu) return; setOpen((o) => !o); }}
           style={{
-            background: 'rgba(246,241,234,0.92)',
+            background: C.surface,
             border: `1px solid ${C.border}`,
             color: C.text,
             padding: '0.38rem 0.7rem',
@@ -1636,7 +2026,7 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
             fontFamily: F.ui,
             letterSpacing: '0.04em',
             opacity: disableMenu ? 0.4 : 0.92,
-            boxShadow: '0 2px 10px rgba(43,28,16,0.15)'
+            boxShadow: '0 2px 10px rgba(0,0,0,0.15)'
           }}>
           ☰ Menu
         </button>
@@ -1652,7 +2042,7 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
           border: `1px solid ${C.border}`,
           borderRadius: 10,
           padding: '0.35rem 0',
-          boxShadow: '0 12px 36px rgba(43,28,16,0.25)'
+          boxShadow: '0 12px 36px rgba(0,0,0,0.25)'
         }}>
           {showRespin &&
           <button
@@ -1682,45 +2072,6 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
             ← Back to home
           </button>
 
-          {onSetDrawStyle &&
-          <>
-            <div style={{ height: 1, background: C.borderSoft, margin: '0.35rem 0' }} />
-            <div style={{
-              padding: '0.45rem 1rem 0.25rem',
-              fontFamily: F.ui,
-              fontSize: '0.68rem',
-              fontWeight: 500,
-              letterSpacing: '0.22em',
-              textTransform: 'uppercase',
-              color: C.dim
-            }}>
-              Draw style
-            </div>
-            {DRAW_STYLES.map(({ key, label }) => {
-              const active = drawStyle === key;
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => { setOpen(false); onSetDrawStyle(key); }}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '0.55rem',
-                    width: '100%', textAlign: 'left',
-                    background: 'none', border: 'none', cursor: 'pointer',
-                    color: active ? C.gold : C.muted, fontFamily: F.ui, fontSize: '0.95rem',
-                    fontWeight: active ? 500 : 400, padding: '0.55rem 1rem'
-                  }}>
-                  <span aria-hidden style={{
-                    width: 6, height: 6, borderRadius: '50%', flexShrink: 0,
-                    background: active ? C.gold : 'transparent',
-                    border: active ? 'none' : `1px solid ${C.dim}`
-                  }} />
-                  {label}
-                </button>
-              );
-            })}
-          </>
-          }
         </div>
         }
       </div>
@@ -1758,7 +2109,7 @@ function SpeakerRevealCelebration({ seed = 0 }) {
           width: p.size * 1.6,
           height: p.size * 1.6,
           borderRadius: p.id % 3 === 0 ? 1 : '50%',
-          background: p.id % 4 === 0 ? FIELD.blue : 'rgba(246,241,234,0.9)',
+          background: p.id % 4 === 0 ? FIELD.blue : 'rgba(205,228,254,0.9)',
           animation: `dustRise${p.variant} ${p.duration} ease-in-out ${p.delay} infinite`,
           willChange: 'transform, opacity'
         }} />
@@ -1797,7 +2148,7 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
 
   return (
     <div style={{
-      background: FIELD.olive,
+      background: C.bg,
       height: '100vh',
       width: '100vw',
       display: 'flex',
@@ -1812,9 +2163,9 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
         <div style={{
           color: FIELD.blue,
           fontFamily: F.ui,
-          fontSize: 'clamp(0.95rem, 1.3vw + 0.35rem, 1.2rem)',
-          letterSpacing: '0.42em',
-          paddingLeft: '0.42em',
+          fontSize: 'clamp(1.05rem, 1.4vw + 0.4rem, 1.3rem)',
+          letterSpacing: '0.24em',
+          paddingLeft: '0.24em',
           textTransform: 'uppercase',
           fontWeight: 700,
           marginBottom: 'clamp(1.5rem, 3.5vh, 2.25rem)',
@@ -1827,7 +2178,7 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
           fontSize: 'clamp(4rem, 10vw, 9rem)',
           fontWeight: 700,
           color: FIELD.cream,
-          letterSpacing: '-0.03em',
+          letterSpacing: '0',
           lineHeight: 0.98,
           animation: 'fadeSlide 0.55s ease 0.1s both'
         }}>
@@ -1855,10 +2206,10 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
         <div style={{
           marginTop: 'clamp(1.5rem, 3.5vh, 2.25rem)',
           fontFamily: F.stage,
-          fontSize: 'clamp(1.5rem, 2.4vw + 0.5rem, 2.1rem)',
-          fontWeight: 700,
-          letterSpacing: '-0.01em',
-          color: added ? FIELD.blue : 'rgba(246,241,234,0.7)',
+          fontSize: 'clamp(1.6rem, 2.5vw + 0.5rem, 2.2rem)',
+          fontWeight: 500,
+          letterSpacing: '0',
+          color: added ? FIELD.blue : 'rgba(205,228,254,0.7)',
           textTransform: 'lowercase',
           animation: 'revealQuoteIn 0.75s ease 0.55s both'
         }}>
@@ -1867,7 +2218,7 @@ function SpeakerAddedBeat({ name, added, continueAdding = false, isFirstTimer = 
         {continueAdding && !suppressAddHints &&
         <p style={{
           marginTop: 'clamp(2rem, 4vh, 2.75rem)',
-          color: 'rgba(246,241,234,0.55)',
+          color: 'rgba(205,228,254,0.55)',
           fontFamily: F.ui,
           fontSize: '0.9rem',
           letterSpacing: '0.18em',
@@ -1891,73 +2242,22 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
   const [nameKey, setNameKey] = useState(0);
   const [revealQuote, setRevealQuote] = useState(REVEAL_QUOTES[0]);
 
-  // Which draw concept performs the selection (persisted so it sticks between nights)
-  const [drawStyle, setDrawStyleState] = useState(() => {
-    try {
-      const saved = localStorage.getItem('apsDrawStyle');
-      return DRAW_STYLES.some((s) => s.key === saved) ? saved : 'hat';
-    } catch (e) { return 'hat'; }
-  });
-  const setDrawStyle = useCallback((s) => {
-    setDrawStyleState(s);
-    try { localStorage.setItem('apsDrawStyle', s); } catch (e) { /* private mode */ }
-  }, []);
-
   useEffect(() => {
     onPhaseChange && onPhaseChange(phase);
   }, [phase, onPhaseChange]);
 
   const remaining = participants.filter((p) => !p.done);
 
-  // Lock the participant pool for the spin so React state changes don't reshuffle the wheel mid-animation
+  // Lock the participant pool for the spin so React state changes don't reshuffle the hat mid-draw
   const [spinPool, setSpinPool] = useState([]);
   const [spinWinnerIdx, setSpinWinnerIdx] = useState(-1);
   const [spinKey, setSpinKey] = useState(0);
 
-  const [spinFocusName, setSpinFocusName] = useState('');
-  const [spinFocusKey, setSpinFocusKey] = useState(0);
-  const spinPointerLastRef = useRef(null);
-
-  /** True once user has released Space after a boost — gates name readout vs hold hint */
-  const [spinPastBoost, setSpinPastBoost] = useState(false);
-  const spinWasBoostingRef = useRef(false);
-
-  const [spinSpaceHeld, setSpinSpaceHeld] = useState(false);
-  const spinSpaceHeldRef = useRef(false);
   const lastRevealAdvanceRef = useRef(0);
 
   useEffect(() => {
     if (phase === 'reveal') lastRevealAdvanceRef.current = 0;
   }, [phase, winner?.name]);
-
-  useEffect(() => {
-    if (phase !== 'spinning') setSpinSpaceHeld(false);
-    if (phase !== 'spinning') {
-      setSpinPastBoost(false);
-      spinWasBoostingRef.current = false;
-    }
-  }, [phase]);
-
-  useEffect(() => {
-    spinSpaceHeldRef.current = spinSpaceHeld;
-  }, [spinSpaceHeld]);
-
-  const onSpinBoostChange = useCallback((held) => {
-    const h = !!held;
-    spinSpaceHeldRef.current = h;
-    if (spinWasBoostingRef.current && !h) setSpinPastBoost(true);
-    spinWasBoostingRef.current = h;
-    setSpinSpaceHeld(h);
-  }, []);
-
-  const onWheelPointerName = useCallback((name) => {
-    if (name == null || name === '') return;
-    if (spinSpaceHeldRef.current) return;
-    if (spinPointerLastRef.current === name) return;
-    spinPointerLastRef.current = name;
-    setSpinFocusName(name);
-    setSpinFocusKey((k) => k + 1);
-  }, []);
 
   const launchSpinFromPool = useCallback((pool, spokenCount) => {
     if (pool.length === 0) return;
@@ -1968,16 +2268,12 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     setSpinKey((k) => k + 1);
     setWinner(w);
     setPhase('spinning');
-    setSpinFocusName('');
-    setSpinPastBoost(false);
-    spinWasBoostingRef.current = false;
-    spinPointerLastRef.current = null;
   }, []);
 
   const startDraw = useCallback(() => {
     if (phase !== 'ready' || remaining.length === 0) return;
     const spokenCount = participants.filter((p) => p.done).length;
-    // One person left — skip wheel, go straight to Next Speaker reveal
+    // One person left — skip the hat, go straight to Next Speaker reveal
     if (remaining.length === 1) {
       const { winner: w } = pickDrawWinner(remaining, spokenCount);
       if (!w) return;
@@ -1999,7 +2295,7 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
 
   const prevDemoModeRef = useRef(demoMode);
 
-  // ⌘D swaps speaker roster — refresh locked spin pool + wheel slices to match
+  // ⌘D swaps speaker roster — refresh locked spin pool to match
   useEffect(() => {
     if (prevDemoModeRef.current === demoMode) return;
     prevDemoModeRef.current = demoMode;
@@ -2016,36 +2312,18 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       setRevealQuote(pickRevealQuoteForSession());
       setNameKey((k) => k + 1);
       setPhase('reveal');
-      setSpinFocusName('');
-      setSpinPastBoost(false);
-      spinWasBoostingRef.current = false;
-      spinPointerLastRef.current = null;
       return;
     }
 
     launchSpinFromPool([...remaining], spokenCount);
   }, [demoMode, remaining, participants, launchSpinFromPool, pickRevealQuoteForSession]);
 
+  // The hat has already presented the name — go straight to the question flow.
+  // (The one-speaker shortcut still uses the reveal screen, since there is no hat.)
   const onSpinComplete = useCallback(() => {
-    setRevealQuote(pickRevealQuoteForSession());
-    setNameKey((k) => k + 1);
-    setPhase('reveal');
-  }, [pickRevealQuoteForSession]);
+    if (winner) onComplete({ name: winner.name });
+  }, [winner, onComplete]);
 
-  /** Demo only — Return skips spin and jumps straight to a random reveal */
-  const skipSpinToReveal = useCallback(() => {
-    if (!demoMode || phase !== 'spinning' || spinPool.length === 0) return;
-    const spokenCount = participants.filter((p) => p.done).length;
-    const { winner: w } = pickDrawWinner(spinPool, spokenCount);
-    if (!w) return;
-    setWinner(w);
-    setRevealQuote(pickRevealQuoteForSession());
-    setNameKey((k) => k + 1);
-    setPhase('reveal');
-    setSpinSpaceHeld(false);
-    spinWasBoostingRef.current = false;
-    setSpinPastBoost(false);
-  }, [demoMode, phase, spinPool, participants, pickRevealQuoteForSession]);
 
   // Skip pre-draw screen — go straight to spin (or reveal if one left)
   useEffect(() => {
@@ -2069,18 +2347,6 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     return () => window.removeEventListener('keydown', h);
   }, [phase, winner, onComplete]);
 
-  // Demo mode — Return during spin skips to random reveal
-  useEffect(() => {
-    if (!demoMode || phase !== 'spinning') return;
-    const h = (e) => {
-      if (e.code !== 'Enter') return;
-      e.preventDefault();
-      skipSpinToReveal();
-    };
-    window.addEventListener('keydown', h);
-    return () => window.removeEventListener('keydown', h);
-  }, [demoMode, phase, skipSpinToReveal]);
-
   // ⌘D / Ctrl+D — toggle demo mode (same as home screen)
   useEffect(() => {
     if (!onToggleDemo) return;
@@ -2102,8 +2368,6 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       onRespin={respinFromReveal}
       disableBackHome={!!walkAllow}
       disableMenu={walkAllow === 'revealAdvance'}
-      drawStyle={drawStyle}
-      onSetDrawStyle={setDrawStyle}
     />
   );
 
@@ -2117,10 +2381,8 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       position: 'relative',
       overflow: 'hidden',
       background: phase === 'reveal'
-        ? FIELD.vermilion
-        : drawStyle === 'hat'
-        ? FIELD.blue
-        : FIELD.ink,
+        ? `radial-gradient(ellipse 120% 90% at 50% 18%, rgba(233,79,46,0.22) 0%, rgba(233,79,46,0.06) 45%, ${C.bg} 78%)`
+        : C.bg,
       transition: 'background 0.55s ease'
     }}>
 
@@ -2129,165 +2391,21 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       {/* Decorative rings (visible on Next Speaker) */}
       {phase === 'reveal' &&
       <>
-        <div style={{ position: 'absolute', width: 800, height: 800, borderRadius: '50%', border: '1.5px solid rgba(246,241,234,0.2)', pointerEvents: 'none', animation: 'revealRingPulse 3s ease-in-out infinite' }} />
-        <div style={{ position: 'absolute', width: 560, height: 560, borderRadius: '50%', border: '1.5px solid rgba(246,241,234,0.28)', pointerEvents: 'none', animation: 'revealRingPulse 3s ease-in-out 0.45s infinite' }} />
+        <div style={{ position: 'absolute', width: 800, height: 800, borderRadius: '50%', border: '1.5px solid rgba(205,228,254,0.2)', pointerEvents: 'none', animation: 'revealRingPulse 3s ease-in-out infinite' }} />
+        <div style={{ position: 'absolute', width: 560, height: 560, borderRadius: '50%', border: '1.5px solid rgba(205,228,254,0.28)', pointerEvents: 'none', animation: 'revealRingPulse 3s ease-in-out 0.45s infinite' }} />
       </>
       }
 
-      {/* ── SPINNING — classic wheel ── */}
-      {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 && drawStyle === 'classic' &&
-      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 0, alignSelf: 'stretch' }}>
-        {window.ClassicWheel && React.createElement(window.ClassicWheel, {
-          names: spinPool.map((p) => p.name),
-          winnerIdx: spinWinnerIdx,
-          spinKey: spinKey,
-          onComplete: onSpinComplete
-        })}
-      </div>
-      }
-
-      {/* ── SPINNING — lottery machine ── */}
-      {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 && drawStyle === 'lottery' &&
-      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 0, alignSelf: 'stretch' }}>
-        {window.LotteryDraw && React.createElement(window.LotteryDraw, {
-          names: spinPool.map((p) => p.name),
-          winnerIdx: spinWinnerIdx,
-          spinKey: spinKey,
-          onComplete: onSpinComplete
-        })}
-      </div>
-      }
-
-      {/* ── SPINNING — plinko drop ── */}
-      {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 && drawStyle === 'plinko' &&
-      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 0, alignSelf: 'stretch' }}>
-        {window.PlinkoDraw && React.createElement(window.PlinkoDraw, {
-          names: spinPool.map((p) => p.name),
-          winnerIdx: spinWinnerIdx,
-          spinKey: spinKey,
-          onComplete: onSpinComplete
-        })}
-      </div>
-      }
-
       {/* ── SPINNING — the hat ── */}
-      {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 && drawStyle === 'hat' &&
+      {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 &&
       <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 0, alignSelf: 'stretch' }}>
         {window.HatDraw && React.createElement(window.HatDraw, {
           names: spinPool.map((p) => p.name),
           winnerIdx: spinWinnerIdx,
           spinKey: spinKey,
+          doneCount: participants.filter((p) => p.done).length,
           onComplete: onSpinComplete
         })}
-      </div>
-      }
-
-      {/* ── SPINNING — candle draw ── */}
-      {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 && drawStyle === 'candles' &&
-      <div style={{ position: 'relative', width: '100%', flex: 1, minHeight: 0, alignSelf: 'stretch' }}>
-        {window.CandleDraw && React.createElement(window.CandleDraw, {
-          names: spinPool.map((p) => p.name),
-          winnerIdx: spinWinnerIdx,
-          spinKey: spinKey,
-          onComplete: onSpinComplete
-        })}
-      </div>
-      }
-
-      {/* ── SPINNING — vinyl wheel ── */}
-      {phase === 'spinning' && spinPool.length > 0 && spinWinnerIdx >= 0 && drawStyle === 'wheel' &&
-      <div style={{
-        position: 'relative',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        width: '100%',
-        flex: 1,
-        minHeight: 0,
-        padding: 'clamp(0.35rem, 1.5vh, 1rem)',
-        overflow: 'visible'
-      }}>
-        <div style={{
-          flexShrink: 0,
-          width: 'min(94vw, min(84vh, 1020px))',
-          position: 'relative',
-          zIndex: 1,
-          transition:
-            'transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), filter 0.38s cubic-bezier(0.25, 0.46, 0.45, 1)',
-          transform: spinSpaceHeld ? 'scale(1.035)' : 'scale(1)',
-          filter: spinSpaceHeld
-            ? 'saturate(1.06) brightness(1.04) drop-shadow(0 0 40px rgba(201,169,106,0.28))'
-            : 'none'
-        }}>
-          {window.SpinWheel && React.createElement(window.SpinWheel, {
-            names: spinPool.map((p) => p.name),
-            winnerIdx: spinWinnerIdx,
-            spinKey: spinKey,
-            remainingCount: remaining.length,
-            onComplete: onSpinComplete,
-            onPointerNameChange: onWheelPointerName,
-            onSpaceBoostChange: onSpinBoostChange
-          })}
-        </div>
-
-        <div style={{
-          position: 'absolute',
-          top: 'calc(50% - min(47vw, min(42vh, 510px)))',
-          left: 'calc(50% + min(47vw, min(42vh, 510px)) + clamp(1.25rem, 3vw, 3rem))',
-          right: 'clamp(1rem, 2vw, 2rem)',
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'flex-start',
-          minHeight: spinPastBoost ? 'clamp(3rem, 6.2vw, 7rem)' : undefined,
-          minWidth: 0,
-          pointerEvents: 'none',
-          zIndex: 50,
-          overflow: 'hidden'
-        }}>
-          {spinSpaceHeld ?
-          <KeyboardHint
-            ariaLabel="Release space to stop"
-            caption="release to stop"
-            align="center"
-            urgent
-          >
-            <RetroSpaceKey active />
-          </KeyboardHint>
-          : spinPastBoost && spinFocusName ?
-          <div
-            key={spinFocusKey}
-            title={spinFocusName}
-            style={{
-              width: '100%',
-              minWidth: 0,
-              fontFamily: F.stage,
-              fontSize: 'clamp(2.25rem, 4.5vw, 4.8rem)',
-              fontWeight: 400,
-              color: C.goldBright,
-              lineHeight: 1.1,
-              letterSpacing: '-0.005em',
-              textAlign: 'center',
-              whiteSpace: 'nowrap',
-              overflow: 'hidden',
-              textOverflow: 'ellipsis',
-              textShadow: '0 4px 28px rgba(0,0,0,0.6)',
-              animation: 'spinNameSwap 0.1s cubic-bezier(0.22, 1, 0.36, 1) both',
-              willChange: 'transform, opacity'
-            }}>
-            {spinFocusName}
-          </div>
-          : spinPastBoost ?
-          null
-          :
-          <KeyboardHint
-            ariaLabel="Press and hold space to spin"
-            caption="Press and hold"
-            align="center"
-          >
-            <RetroSpaceKey />
-          </KeyboardHint>
-          }
-        </div>
       </div>
       }
 
@@ -2299,9 +2417,9 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
           <div style={{
           color: FIELD.blue,
           fontFamily: F.ui,
-          fontSize: 'clamp(0.95rem, 1.4vw + 0.35rem, 1.25rem)',
-          letterSpacing: '0.42em',
-          paddingLeft: '0.42em',
+          fontSize: 'clamp(1.05rem, 1.5vw + 0.4rem, 1.35rem)',
+          letterSpacing: '0.24em',
+          paddingLeft: '0.24em',
           textTransform: 'uppercase',
           fontWeight: 700,
           marginBottom: 'clamp(1.5rem, 3.5vh, 2.25rem)',
@@ -2312,9 +2430,9 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
           <div key={nameKey} style={{
             fontFamily: F.stage,
             fontSize: 'clamp(5.5rem, 13vw, 13rem)',
-            fontWeight: 900,
+            fontWeight: 700,
             color: FIELD.cream,
-            letterSpacing: '-0.035em',
+            letterSpacing: '0',
             lineHeight: 0.96,
             animation: 'revealEnter 0.8s cubic-bezier(0.19, 1, 0.22, 1) both'
           }}>
@@ -2339,11 +2457,11 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
               margin: 'clamp(1.5rem, 3vh, 2.25rem) auto 0',
               padding: '0 1rem',
               fontFamily: F.stage,
-              fontSize: 'clamp(1.25rem, 2vw + 0.4rem, 1.7rem)',
+              fontSize: 'clamp(1.4rem, 2.1vw + 0.45rem, 1.9rem)',
               fontWeight: 500,
               lineHeight: 1.4,
-              letterSpacing: '-0.005em',
-              color: 'rgba(246,241,234,0.92)',
+              letterSpacing: '0',
+              color: 'rgba(205,228,254,0.92)',
               animation: 'revealQuoteIn 0.75s ease 0.55s both'
             }}
           >
@@ -2373,8 +2491,12 @@ function QuestionSelectScreen({
   speakerName,
   questionOfNight,
   usedQuestions,
+  donePrompts = new Set(),
   onStart,
   onStartYolo,
+  onBackHome,
+  onRedraw,
+  walkAllow = null,
   selectRestore = null,
   onSelectRestoreConsumed
 }) {
@@ -2405,12 +2527,11 @@ function QuestionSelectScreen({
       return;
     }
     if (didRestoreRef.current) return;
-    const available = QUESTIONS.filter((q) => !usedQuestions.has(q) && q !== questionOfNight);
-    const shuffled = [...available].sort(() => Math.random() - 0.5).slice(0, 3);
-    setOptions([YOLO_SLOT, questionOfNight, ...shuffled]);
+    const randoms = pickSpeakerOptions({ donePrompts, usedQuestions, questionOfNight });
+    setOptions([YOLO_SLOT, questionOfNight, ...randoms]);
     setIdx(1);
     setQKey((k) => k + 1);
-  }, [speakerName, questionOfNight, usedQuestions, selectRestore, onSelectRestoreConsumed]);
+  }, [speakerName, questionOfNight, usedQuestions, donePrompts, selectRestore, onSelectRestoreConsumed]);
 
   const isYolo = options[idx] === YOLO_SLOT;
   const isQotN = options[idx] === questionOfNight;
@@ -2446,17 +2567,19 @@ function QuestionSelectScreen({
 
   if (!options.length) return null;
 
+  // Prompt of the night sits on the same ground as Home. Moving to a random
+  // prompt shifts the room into deep navy with a low blue glow from the floor;
+  // Yolo turns the lights red. Nothing here should read as light coming in.
   const questionSelectBackdrop = isYolo
-    ? FIELD.ink
+    ? YOLO_BACKDROP
     : isQotN
-    ? FIELD.blue
-    : FIELD.cream;
+    ? C.bg
+    : 'radial-gradient(ellipse 100% 62% at 50% 112%, rgba(86,150,210,0.24) 0%, rgba(86,150,210,0.07) 45%, transparent 72%), linear-gradient(180deg, #0B1322 0%, #0A0F1B 55%, #080B12 100%)';
 
-  const onDark = isYolo;
   const dotColor = (i) => {
-    if (i !== idx) return onDark ? 'rgba(246,241,234,0.35)' : 'rgba(43,28,16,0.28)';
-    if (options[i] === YOLO_SLOT) return FIELD.cream;
-    if (options[i] === questionOfNight) return FIELD.cobalt;
+    if (i !== idx) return 'rgba(205,228,254,0.35)';
+    if (options[i] === YOLO_SLOT) return FIELD.vermilion;
+    if (options[i] === questionOfNight) return FIELD.sky;
     return C.text;
   };
 
@@ -2472,6 +2595,16 @@ function QuestionSelectScreen({
       padding: '2rem 6rem',
       position: 'relative'
     }}>
+      {isYolo && <YoloGlow />}
+      {onBackHome &&
+      <DrawingAdminMenu
+        onBackHome={onBackHome}
+        showRespin={!!onRedraw}
+        onRespin={onRedraw}
+        disableBackHome={!!walkAllow}
+        disableMenu={!!walkAllow}
+      />
+      }
 
       {/* Badge + pager — top centre */}
       <div style={{
@@ -2486,13 +2619,13 @@ function QuestionSelectScreen({
         zIndex: 2
       }}>
         {isQotN ?
-        <QuestionOfNightBadge text={questionOfNight} color={FIELD.cobalt} />
+        <QuestionOfNightBadge text={questionOfNight} />
         : isYolo ?
         <YoloModeBadge />
         : current ?
-        <Eyebrow color={C.muted}>
+        <Badge tone="quiet">
           Random {promptNoun(current)} {idx - 1}
-        </Eyebrow>
+        </Badge>
         : null
         }
 
@@ -2535,16 +2668,19 @@ function QuestionSelectScreen({
             position: 'absolute',
             inset: 0,
             borderRadius: '50%',
-            border: '2px solid rgba(246,241,234,0.45)',
-            animation: 'yoloPulse 2.4s ease-in-out infinite'
+            border: '2px solid rgba(233,79,46,0.85)',
+            boxShadow: '0 0 40px rgba(233,79,46,0.35), inset 0 0 40px rgba(233,79,46,0.18)',
+            background: 'rgba(233,79,46,0.06)',
+            animation: 'yoloPulse 2.8s ease-in-out infinite'
           }} />
           <div style={{
             fontFamily: F.stage,
             fontSize: 'clamp(6rem, 14vw, 10rem)',
-            fontWeight: 900,
+            fontWeight: 700,
             color: FIELD.cream,
             lineHeight: 1,
-            animation: 'yoloPulse 2.4s ease-in-out infinite',
+            textShadow: '0 0 36px rgba(233,79,46,0.7), 0 0 90px rgba(233,79,46,0.35)',
+            animation: 'yoloPulse 2.8s ease-in-out infinite',
             userSelect: 'none'
           }} aria-hidden>
             ?
@@ -2562,7 +2698,7 @@ function QuestionSelectScreen({
           bottom: 'clamp(12rem, 18vh, 15rem)',
           alignItems: 'center',
           padding: 'clamp(7.5rem, 12vh, 9.5rem) 3rem 0',
-          color: isQotN ? FIELD.cobalt : C.text,
+          color: C.text,
           animation: 'fadeSlide 0.22s ease-out'
         }}>
         {current}
@@ -2582,15 +2718,15 @@ function QuestionSelectScreen({
         gap: 'clamp(2rem, 5vw, 3.5rem)',
         zIndex: 3
       }}>
-        <KeyboardHint ariaLabel="Arrow keys to browse prompts" caption="to browse prompts" dark={onDark}>
-          <RetroArrowKeys dark={onDark} />
+        <KeyboardHint ariaLabel="Arrow keys to browse prompts" caption="to browse prompts" dark>
+          <RetroArrowKeys dark />
         </KeyboardHint>
         <KeyboardHint
           ariaLabel={isYolo ? 'Press space to accept the challenge' : 'Press space to start speech'}
           caption={isYolo ? 'to accept the challenge' : 'to start speech'}
-          dark={onDark}
+          dark
         >
-          <RetroSpaceKey dark={onDark} />
+          <RetroSpaceKey dark />
         </KeyboardHint>
       </div>
     </div>);
@@ -2652,7 +2788,7 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
 
   return (
     <div style={{
-      background: FIELD.ink,
+      background: YOLO_BACKDROP,
       height: '100vh',
       display: 'flex',
       flexDirection: 'column',
@@ -2660,22 +2796,22 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
       justifyContent: 'center',
       padding: '2rem 4rem',
       position: 'relative',
-      transition: 'background 0.6s ease'
+      overflow: 'hidden'
     }}>
+      <YoloGlow still />
       <div style={{ position: 'absolute', top: '2.5rem', left: 0, right: 0, display: 'flex', justifyContent: 'center', zIndex: 2 }}>
         <YoloModeBadge />
       </div>
 
       {showTease &&
       <div style={{
-        color: 'rgba(246,241,234,0.7)',
+        color: 'rgba(205,228,254,0.82)',
         fontFamily: F.ui,
-        fontSize: 'clamp(1.2rem, 2.4vw, 1.7rem)',
+        fontSize: 'clamp(1.5rem, 2.8vw, 2rem)',
         fontWeight: 700,
-        letterSpacing: '0.24em',
-        paddingLeft: '0.24em',
+        letterSpacing: '0.18em',
+        paddingLeft: '0.18em',
         textTransform: 'uppercase',
-        animation: 'yoloTeasePulse 1.8s ease-in-out infinite',
         userSelect: 'none'
       }}>
         Your {promptNoun(question)}…
@@ -2709,7 +2845,6 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
           letterSpacing: '-0.03em',
           lineHeight: 1,
           fontVariantNumeric: 'tabular-nums',
-          animation: 'yoloCountPop 0.35s cubic-bezier(0.22, 1, 0.36, 1) both',
           userSelect: 'none'
         }}>
         {countdown}
@@ -2901,15 +3036,15 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
   }, [onComplete, onBackToQuestions, requireFullSpeech]);
 
   // ── derive visuals — the whole field changes colour as time runs down ──
-  let bgColor = FIELD.cream;
+  let bgColor = C.bg;
   if (phase === 'speech') {
-    if (speechSecs >= 120) bgColor = flashOn ? FIELD.vermilion : '#C93A1B';else
-    if (speechSecs >= 90) bgColor = '#C86428';else
-    if (speechSecs >= 60) bgColor = FIELD.caramel;
+    if (speechSecs >= 120) bgColor = flashOn ? '#4A0E05' : '#2A0803';else
+    if (speechSecs >= 90) bgColor = '#2A0A03';else
+    if (speechSecs >= 60) bgColor = '#1F1206';
   } else if (phase === 'feedback') {
-    bgColor = FIELD.blue;
+    bgColor = '#0C1119';
   } else if (phase === 'alarm') {
-    bgColor = FIELD.vermilion;
+    bgColor = '#1E0602';
   }
 
   const hotField = phase === 'alarm' || (phase === 'speech' && speechSecs >= 90);
@@ -2941,8 +3076,8 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
           <div style={{
           fontFamily: F.stage,
           fontSize: 'clamp(4rem, 9vw, 8.5rem)',
-          fontWeight: 900, color: FIELD.cream,
-          letterSpacing: '-0.03em', lineHeight: 1.0,
+          fontWeight: 700, color: FIELD.cream,
+          letterSpacing: '0', lineHeight: 1.08,
           animation: 'pulseBig 0.9s ease-in-out infinite'
         }}>
             Next speaker, please
@@ -2966,7 +3101,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
           flexShrink: 0,
           padding: 'clamp(1.25rem, 2.5vh, 1.75rem) clamp(2rem, 4vw, 3rem) clamp(1.25rem, 2.5vh, 1.75rem)',
           display: 'flex', justifyContent: 'center',
-          borderBottom: `1px solid ${hotField ? 'rgba(246,241,234,0.3)' : C.borderSoft}`
+          borderBottom: `1px solid ${hotField ? 'rgba(205,228,254,0.3)' : C.borderSoft}`
         }}>
             <div style={{
               maxWidth: 'min(1280px, 94%)',
@@ -2977,10 +3112,10 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
               <div style={{
               color: hotField ? FIELD.cream : C.text,
               fontFamily: F.stage,
-              fontSize: 'clamp(2.6rem, 4.4vw + 1.1rem, 4.2rem)',
-              lineHeight: 1.02,
-              fontWeight: 900,
-              letterSpacing: '-0.025em',
+              fontSize: 'clamp(3.2rem, 5.2vw + 1.2rem, 5rem)',
+              lineHeight: 1.15,
+              fontWeight: 700,
+              letterSpacing: '0.015em',
               textWrap: 'balance',
               transition: 'color 0.8s ease',
               overflowWrap: 'break-word'
@@ -3013,11 +3148,11 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
               <div style={{
                 fontFamily: F.ui,
                 fontSize: 'clamp(8.5rem, 20vw, 21rem)',
-                fontWeight: 900,
+                fontWeight: 700,
                 color: phase === 'feedback'
-                  ? (feedLeft < 30 ? FIELD.vermilion : C.blueDeep)
+                  ? (feedLeft < 30 ? FIELD.vermilion : FIELD.blue)
                   : timerColor,
-                letterSpacing: '-0.04em',
+                letterSpacing: '-0.025em',
                 lineHeight: 0.9,
                 fontVariantNumeric: 'tabular-nums',
                 transition: timerFastForward ? 'color 0.35s ease' : 'color 0.8s ease',
@@ -3036,22 +3171,22 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
                 fontFamily: F.ui
               }}>
                 {phase === 'speech' && speechSecs >= 60 && speechSecs < 90 &&
-                <div style={{ color: C.text, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.32em', paddingLeft: '0.32em' }}>
+                <div style={{ color: C.text, fontSize: '1.85rem', fontWeight: 700, letterSpacing: '0.22em', paddingLeft: '0.22em' }}>
                   ONE MINUTE
                 </div>
                 }
                 {phase === 'speech' && speechSecs >= 90 && speechSecs < 120 &&
-                <div style={{ color: FIELD.cream, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.32em', paddingLeft: '0.32em' }}>
+                <div style={{ color: FIELD.cream, fontSize: '1.85rem', fontWeight: 700, letterSpacing: '0.22em', paddingLeft: '0.22em' }}>
                   WRAP IT UP SOON
                 </div>
                 }
                 {phase === 'speech' && speechSecs >= 120 &&
-                <div style={{ color: FIELD.cream, fontSize: '1.75rem', fontWeight: 900, letterSpacing: '0.32em', paddingLeft: '0.32em', animation: 'pulseBig 0.9s ease-in-out infinite' }}>
+                <div style={{ color: FIELD.cream, fontSize: '2rem', fontWeight: 900, letterSpacing: '0.22em', paddingLeft: '0.22em', animation: 'pulseBig 0.9s ease-in-out infinite' }}>
                   TIME'S UP
                 </div>
                 }
                 {phase === 'feedback' && feedLeft < 30 &&
-                <div style={{ color: FIELD.vermilion, fontSize: '1.6rem', fontWeight: 700, letterSpacing: '0.32em', paddingLeft: '0.32em' }}>
+                <div style={{ color: FIELD.vermilion, fontSize: '1.85rem', fontWeight: 700, letterSpacing: '0.22em', paddingLeft: '0.22em' }}>
                   ALMOST DONE
                 </div>
                 }
@@ -3096,7 +3231,11 @@ Object.assign(window, {
   WalkthroughRestartButton,
   SpeakerAddedBeat,
   YOLO_SLOT,
-  // Shared primitives for alternative draw concepts (candles.jsx etc.)
+  // Prompt selection (shared with app.jsx)
+  eligiblePrompts,
+  pickSpeakerOptions,
+  pickYoloPrompt,
+  // Shared primitives for the hat draw (tophat.jsx)
   KeyboardHint,
   RetroSpaceKey,
   APS_THEME: { C, F }
