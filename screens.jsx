@@ -1917,19 +1917,61 @@ const KEY_FACE = {
 // Every field is dark now, so the "dark" variant is the same ivory cap.
 const KEY_FACE_DARK = KEY_FACE;
 
+// The cap sunk onto its wall — used while the real key is down, and for the
+// hat's "release to draw" state.
+const KEY_PRESSED = {
+  background: `${KEY_GRAIN}, linear-gradient(180deg, #F3F1EA 0%, #E9E6DD 100%)`,
+  boxShadow: [
+    'inset 0 1px 0 rgba(255,255,255,0.8)',
+    'inset 0 -1px 0 rgba(0,0,0,0.06)',
+    '0 1px 0 #B9B4A8',
+    '0 2px 0 #9E9A8F',
+    '0 4px 8px rgba(0,0,0,0.45)'
+  ].join(', '),
+  transform: 'translateY(3px)'
+};
+
+/** Which of `codes` is physically held right now. Listens in the capture
+ *  phase so screens that swallow the key still light the cap, and keeps a
+ *  quick tap visibly down for a beat so the press reads as a real click. */
+function useKeyHeld(codes) {
+  const [held, setHeld] = useState(null);
+  const downAtRef = useRef(0);
+  const releaseRef = useRef(null);
+  const key = codes.join(',');
+  useEffect(() => {
+    const list = key.split(',');
+    const down = (e) => {
+      if (!list.includes(e.code) || e.repeat) return;
+      if (releaseRef.current) { clearTimeout(releaseRef.current); releaseRef.current = null; }
+      downAtRef.current = performance.now();
+      setHeld(e.code);
+    };
+    const up = (e) => {
+      if (!list.includes(e.code)) return;
+      const wait = Math.max(0, 140 - (performance.now() - downAtRef.current));
+      releaseRef.current = setTimeout(() => {
+        releaseRef.current = null;
+        setHeld((h) => (h === e.code ? null : h));
+      }, wait);
+    };
+    const clear = () => setHeld(null);
+    window.addEventListener('keydown', down, true);
+    window.addEventListener('keyup', up, true);
+    window.addEventListener('blur', clear);
+    return () => {
+      window.removeEventListener('keydown', down, true);
+      window.removeEventListener('keyup', up, true);
+      window.removeEventListener('blur', clear);
+      if (releaseRef.current) clearTimeout(releaseRef.current);
+    };
+  }, [key]);
+  return held;
+}
+
 function RetroSpaceKey({ active = false, dark = false, label = 'SPACE' }) {
-  const activeStyle = active ? {
-    background: `${KEY_GRAIN}, linear-gradient(180deg, #F3F1EA 0%, #E9E6DD 100%)`,
-    boxShadow: [
-      'inset 0 1px 0 rgba(255,255,255,0.8)',
-      'inset 0 -1px 0 rgba(0,0,0,0.06)',
-      '0 1px 0 #B9B4A8',
-      '0 2px 0 #9E9A8F',
-      '0 4px 8px rgba(0,0,0,0.45)'
-    ].join(', '),
-    color: FIELD.vermilion,
-    transform: 'translateY(3px)'
-  } : {};
+  const held = useKeyHeld(['Space']) === 'Space';
+  const pressed = held || active;
   return (
     <div
       aria-hidden
@@ -1946,7 +1988,8 @@ function RetroSpaceKey({ active = false, dark = false, label = 'SPACE' }) {
         letterSpacing: '0.32em',
         paddingLeft: 'calc(1.8rem + 0.32em)',
         ...(dark ? KEY_FACE_DARK : KEY_FACE),
-        ...activeStyle
+        ...(pressed ? KEY_PRESSED : {}),
+        ...(active ? { color: FIELD.vermilion } : {})
       }}>
       {label}
     </div>
@@ -1954,7 +1997,8 @@ function RetroSpaceKey({ active = false, dark = false, label = 'SPACE' }) {
 }
 
 function RetroArrowKeys({ dark = false }) {
-  const square = {
+  const held = useKeyHeld(['ArrowLeft', 'ArrowRight']);
+  const square = (code) => ({
     width: 'clamp(53px, 9vw, 65px)',
     height: 'clamp(53px, 9vw, 65px)',
     display: 'inline-flex',
@@ -1964,12 +2008,13 @@ function RetroArrowKeys({ dark = false }) {
     fontSize: 'clamp(1.26rem, 2.4vw, 1.56rem)',
     fontWeight: 500,
     lineHeight: 1,
-    ...(dark ? KEY_FACE_DARK : KEY_FACE)
-  };
+    ...(dark ? KEY_FACE_DARK : KEY_FACE),
+    ...(held === code ? KEY_PRESSED : {})
+  });
   return (
     <div aria-hidden style={{ display: 'inline-flex', alignItems: 'center', gap: 'clamp(7px, 1.2vw, 11px)' }}>
-      <div style={square}>←</div>
-      <div style={square}>→</div>
+      <div style={square('ArrowLeft')}>←</div>
+      <div style={square('ArrowRight')}>→</div>
     </div>
   );
 }
