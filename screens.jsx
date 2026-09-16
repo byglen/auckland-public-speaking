@@ -2758,7 +2758,6 @@ function QuestionSelectScreen({
           bottom: 'clamp(12rem, 18vh, 15rem)',
           alignItems: 'center',
           padding: 'clamp(7.5rem, 12vh, 9.5rem) 3rem 0',
-          color: C.text,
           animation: 'fadeSlide 0.22s ease-out'
         }}>
         {current}
@@ -2883,7 +2882,6 @@ function YoloPrepScreen({ question, demoMode = false, onComplete, onCancel }) {
         style={{
           maxWidth: 1500,
           padding: '0 2rem',
-          color: FIELD.cream,
           marginBottom: showCountdown ? 'clamp(2rem, 5vh, 3.5rem)' : 0,
           animation: phase === 'reveal'
             ? `yoloQuestionReveal ${revealAnimMs}ms cubic-bezier(0.22, 1, 0.36, 1) both`
