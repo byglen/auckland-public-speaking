@@ -2273,18 +2273,9 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
   const startDraw = useCallback(() => {
     if (phase !== 'ready' || remaining.length === 0) return;
     const spokenCount = participants.filter((p) => p.done).length;
-    // One person left — skip the hat, go straight to Next Speaker reveal
-    if (remaining.length === 1) {
-      const { winner: w } = pickDrawWinner(remaining, spokenCount);
-      if (!w) return;
-      setWinner(w);
-      setRevealQuote(pickRevealQuoteForSession());
-      setNameKey((k) => k + 1);
-      setPhase('reveal');
-      return;
-    }
+    // Even the last name gets the hat — the ritual is the same for everyone.
     launchSpinFromPool([...remaining], spokenCount);
-  }, [phase, remaining, participants, launchSpinFromPool, pickRevealQuoteForSession]);
+  }, [phase, remaining, participants, launchSpinFromPool]);
 
   /** Same pool as Draw — nobody is marked done until they browse questions */
   const respinFromReveal = useCallback(() => {
@@ -2302,24 +2293,10 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
 
     const spokenCount = participants.filter((p) => p.done).length;
     if (remaining.length === 0) return;
-
-    if (remaining.length === 1) {
-      const { winner: w } = pickDrawWinner(remaining, spokenCount);
-      if (!w) return;
-      setSpinPool([...remaining]);
-      setSpinWinnerIdx(0);
-      setWinner(w);
-      setRevealQuote(pickRevealQuoteForSession());
-      setNameKey((k) => k + 1);
-      setPhase('reveal');
-      return;
-    }
-
     launchSpinFromPool([...remaining], spokenCount);
-  }, [demoMode, remaining, participants, launchSpinFromPool, pickRevealQuoteForSession]);
+  }, [demoMode, remaining, participants, launchSpinFromPool]);
 
   // The hat has already presented the name — go straight to the question flow.
-  // (The one-speaker shortcut still uses the reveal screen, since there is no hat.)
   const onSpinComplete = useCallback(() => {
     if (winner) onComplete({ name: winner.name });
   }, [winner, onComplete]);
