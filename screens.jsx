@@ -316,15 +316,18 @@ function QuestionDisplayText({ children, style = {} }) {
       alignItems: 'center',
       textAlign: 'center',
       color: C.text,
-      textWrap: 'balance',
+      textWrap: 'pretty',
       fontFamily: F.stage,
       fontWeight: 700,
       letterSpacing: '0.015em',
-      fontSize: 'clamp(3rem, 6.1vw, 7rem)',
+      fontSize: 'clamp(3.3rem, 6.71vw, 7.7rem)',
       lineHeight: 1.22,
       ...style
     }}>
-      <span style={{ maxWidth: 'min(1280px, 100%)' }}>{children}</span>
+      {/* Full measure, and lines filled rather than balanced: 'balance' was
+          squeezing three-line prompts into a narrow column while two-liners
+          ran wide. 'pretty' only tidies the last line's orphan. */}
+      <span style={{ maxWidth: 'min(1408px, 100%)' }}>{children}</span>
     </div>
   );
 }
@@ -1245,7 +1248,7 @@ function HomeScreen({ questionOfNight, participants, firstTimerPulseName, onRegi
         <div style={{ marginBottom: '2.5rem' }}>
           <QuestionOfNightBadge large text={questionOfNight} />
         </div>
-        <QuestionDisplayText style={{ margin: '0 auto 4rem', padding: '0 3rem' }}>
+        <QuestionDisplayText style={{ margin: '0 auto 4rem', padding: '0 1rem' }}>
           {questionOfNight}
         </QuestionDisplayText>
 
@@ -2569,7 +2572,7 @@ function QuestionSelectScreen({
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '2rem 6rem',
+      padding: '2rem 2rem',
       position: 'relative'
     }}>
       {isYolo && <YoloGlow />}

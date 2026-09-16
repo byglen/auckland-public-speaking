@@ -266,11 +266,21 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
     let autoTimer = null;
     let downAt = 0;
     let popCount = 0;
+    let cursor = 0;
+    const inFlight = new Set(); // names currently in the air — one slip per name, never more
     const timers = [];
 
     function spawnPop() {
       if (cancelled || (mode !== 'boost' && mode !== 'hold')) return;
-      const name = shakeOrder[popCount % shakeOrder.length];
+      // next name in the shuffled order whose slip isn't already airborne;
+      // with every name in flight there is simply nothing more to throw
+      let name = null;
+      for (let i = 0; i < shakeOrder.length; i++) {
+        const candidate = shakeOrder[(cursor + i) % shakeOrder.length];
+        if (!inFlight.has(candidate)) { name = candidate; cursor = (cursor + i + 1) % shakeOrder.length; break; }
+      }
+      if (name == null) return;
+      inFlight.add(name);
       popCount += 1;
       const id = popCount;
       const pop = {
@@ -281,11 +291,11 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
         rot: (rng() - 0.5) * 110,
         dur: 0.85 + rng() * 0.3
       };
-      setPops((prev) => [...prev.slice(-16), pop]);
+      setPops((prev) => [...prev, pop]);
       timers.push(setTimeout(() => {
+        inFlight.delete(name);
         setPops((prev) => prev.filter((p) => p.id !== id));
       }, pop.dur * 1000 + 120));
-
     }
 
     function startShake() {
