@@ -63,6 +63,23 @@ const F = {
   brand: "'Neue Montreal', 'Theinhardt', 'Helvetica Neue', Helvetica, Arial, sans-serif"
 };
 
+/** Stage ink — the big prompt is set in the same ivory as the keycaps rather
+ *  than flat white: a faint paper grain over a soft top-lit gradient, clipped
+ *  to the letterforms. Reads as printed ink on the projector, not a light. */
+const STAGE_INK_GRADIENT = 'linear-gradient(180deg, #FCFBF7 0%, #F0EEE6 55%, #E1DED3 100%)';
+let STAGE_INK_CACHE = null;
+function stageInk() {
+  if (!STAGE_INK_CACHE) {
+    STAGE_INK_CACHE = {
+      color: 'transparent',
+      background: `${KEY_GRAIN}, ${STAGE_INK_GRADIENT}`,
+      WebkitBackgroundClip: 'text',
+      backgroundClip: 'text'
+    };
+  }
+  return STAGE_INK_CACHE;
+}
+
 /** Small-caps label — the only treatment for eyebrows/labels. No pills, no borders. */
 function Eyebrow({ children, color = C.muted, large = false, tracking = '0.22em', style = {} }) {
   return (
@@ -315,13 +332,13 @@ function QuestionDisplayText({ children, style = {} }) {
       justifyContent: 'center',
       alignItems: 'center',
       textAlign: 'center',
-      color: C.text,
       textWrap: 'pretty',
       fontFamily: F.stage,
       fontWeight: 700,
       letterSpacing: '0.015em',
       fontSize: 'clamp(3.3rem, 6.71vw, 7.7rem)',
       lineHeight: 1.22,
+      ...stageInk(),
       ...style
     }}>
       {/* Full measure, and lines filled rather than balanced: 'balance' was
