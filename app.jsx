@@ -95,7 +95,7 @@ const WALK_STEPS = [
   },
   {
     title: 'Mark them a first-timer',
-    body: ['Keeps them out of the first two draws and adds a gold FT badge.'],
+    body: ['Keeps them out of the first two draws and marks them with a star on the list.'],
     cue: { keys: [CMD, 'F'], text: 'flags the last speaker added' },
     allow: 'markFT',
     auto: (c) => c.hasFT,
@@ -136,15 +136,15 @@ const WALK_STEPS = [
   },
   {
     title: 'Run a draw',
-    body: ['Turn demo back on, then start the draw.'],
+    body: ['Turn demo back on, then put the names in the hat.'],
     cue: { keys: ['Space'], text: 'to start the draw' },
     cueWhen: (c) => c.demoMode,
     allow: 'draw',
     auto: (c) => c.screen === SCREEN.DRAWING,
   },
   {
-    title: 'Build it up',
-    body: ['Hold, then release — the draw decides who speaks.'],
+    title: 'Shake the hat',
+    body: ['Hold Space to shake, let go to draw. The name comes out on a slip, then the prompts appear on their own.'],
     cue: { keys: ['Space'], text: 'hold, then release' },
     // The hat shows the name, then moves to the prompt picker on its own.
     auto: (c) => c.screen === SCREEN.QSELECT,
