@@ -3,9 +3,9 @@
 //
 // Storage is an Upstash Redis database attached to the Vercel project
 // (Vercel → Storage → Create Database → Upstash Redis → Connect). Vercel then
-// injects KV_REST_API_URL / KV_REST_API_TOKEN (older name) or
-// UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN into the deployment; this
-// function accepts either pair. No npm dependencies — it talks to the Upstash
+// injects <PREFIX>_REST_API_URL / <PREFIX>_REST_API_TOKEN into the deployment
+// (prefix chosen when connecting; KV or STORAGE are the usual ones); this
+// function accepts any prefix. No npm dependencies — it talks to the Upstash
 // REST API with fetch.
 //
 //   GET  /api/done          → { donePrompts: ["q001", …], updatedAt }
@@ -16,8 +16,19 @@
 
 const KEY = 'aps:donePrompts:v1';
 
-const REST_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const REST_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+// The Vercel marketplace integration names the variables <PREFIX>_REST_API_URL
+// and <PREFIX>_REST_API_TOKEN, where the prefix is whatever was typed when
+// connecting the store (KV by default, STORAGE if left blank). Upstash's own
+// integration uses UPSTASH_REDIS_REST_URL / _TOKEN. Accept any of them.
+function findEnv(suffixes) {
+  for (const suffix of suffixes) {
+    const key = Object.keys(process.env).find((k) => k.endsWith(suffix) && process.env[k]);
+    if (key) return process.env[key];
+  }
+  return null;
+}
+const REST_URL = findEnv(['_REST_API_URL', '_REDIS_REST_URL']);
+const REST_TOKEN = findEnv(['_REST_API_TOKEN', '_REDIS_REST_TOKEN']);
 
 async function redis(command) {
   const r = await fetch(REST_URL, {
