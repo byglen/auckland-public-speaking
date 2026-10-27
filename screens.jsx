@@ -1501,18 +1501,21 @@ function QRScreen({ onBack }) {
       }}>
         <div style={{
           display: 'flex',
-          flexDirection: 'column',
+          flexWrap: 'wrap',
+          alignItems: 'stretch',
           gap: 'clamp(1.25rem, 2.4vw, 2.25rem)',
           width: '100%',
-          maxWidth: 1480
+          maxWidth: 1600
         }}>
 
-          <KohaCard />
-
-          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 'clamp(1.25rem, 2.4vw, 2.25rem)' }}>
-            <WhatsAppCard />
+          {/* Left column — koha progress above the bank details */}
+          <div style={{ flex: '1 1 620px', display: 'flex', flexDirection: 'column', gap: 'clamp(1.25rem, 2.4vw, 2.25rem)' }}>
+            <KohaCard />
             <BankDetailsCard />
           </div>
+
+          {/* Right column — WhatsApp QR, sized by the code */}
+          <WhatsAppCard />
 
         </div>
       </div>
@@ -1540,40 +1543,53 @@ const QR_EYEBROW_STYLE = {
   marginBottom: '1.4rem'
 };
 
+const CARD_LOGO_SIZE = 'clamp(52px, 4.4vw, 72px)';
+const CARD_TITLE_STYLE = {
+  color: C.text,
+  fontFamily: F.ui,
+  fontSize: 'clamp(1.35rem, 1.9vw, 2rem)',
+  fontWeight: 700,
+  letterSpacing: '0.005em',
+  lineHeight: 1.1
+};
+
 /** WhatsApp glyph (brand mark, drawn in the brand green so it reads at a glance). */
-function WhatsAppIcon({ size = 44 }) {
+function WhatsAppIcon({ size = CARD_LOGO_SIZE }) {
   return (
-    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+    <svg viewBox="0 0 24 24" aria-hidden style={{ display: 'block', width: size, height: size, flexShrink: 0 }}>
       <path fill="#25D366" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
     </svg>
   );
 }
 
 /** Meetup mark (brand logo, meetup-logo.png in the repo root). */
-function MeetupIcon({ size = 44 }) {
+function MeetupIcon({ size = CARD_LOGO_SIZE }) {
   return (
     <img
       src="meetup-logo.png"
       alt=""
       aria-hidden
-      width={size}
-      height={size}
       style={{ display: 'block', width: size, height: size, objectFit: 'contain', flexShrink: 0 }}
     />
   );
 }
 
-/** WhatsApp join: the logo and the code. No instructions needed. */
+/** WhatsApp join: logo, title and the code. The code's size sets the row height. */
 function WhatsAppCard() {
   return (
-    <div style={{ ...QR_PANEL_STYLE, flex: '0 1 420px', alignItems: 'center', justifyContent: 'center', gap: '1.25rem' }}>
-      <WhatsAppIcon />
-      <div style={{ background: '#fff', padding: 'clamp(0.75rem, 1.1vw, 1rem)', borderRadius: 12 }}>
-        <QRCodeSvg
-          value={WHATSAPP_INVITE_URL}
-          label="WhatsApp group QR code"
-          style={{ display: 'block', width: 'min(26vh, 260px)', height: 'min(26vh, 260px)' }}
-        />
+    <div style={{ ...QR_PANEL_STYLE, flex: '0 0 auto', gap: 'clamp(1.1rem, 1.8vw, 1.6rem)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+        <WhatsAppIcon />
+        <span style={CARD_TITLE_STYLE}>Join the WhatsApp</span>
+      </div>
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ background: '#fff', padding: 'clamp(0.85rem, 1.2vw, 1.1rem)', borderRadius: 14 }}>
+          <QRCodeSvg
+            value={WHATSAPP_INVITE_URL}
+            label="WhatsApp group QR code"
+            style={{ display: 'block', width: 'min(50vh, 26vw, 520px)', height: 'min(50vh, 26vw, 520px)' }}
+          />
+        </div>
       </div>
     </div>
   );
@@ -1590,11 +1606,9 @@ function KohaCard() {
 
       {/* Title row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <MeetupIcon />
-          <span style={{ color: C.text, fontFamily: F.ui, fontSize: 'clamp(1.35rem, 1.9vw, 2rem)', fontWeight: 700, letterSpacing: '0.005em', lineHeight: 1.1 }}>
-            Keep the group running
-          </span>
+          <span style={CARD_TITLE_STYLE}>Keep the group running</span>
         </div>
         <span style={sub}>Anything helps — $2–$5 is plenty</span>
       </div>
@@ -1682,7 +1696,7 @@ function BankDetailRow({ label, value, mono = false, last = false }) {
 
 function BankDetailsCard() {
   return (
-    <div style={{ ...QR_PANEL_STYLE, flex: '1 1 560px', justifyContent: 'center' }}>
+    <div style={{ ...QR_PANEL_STYLE, flex: '1 1 auto', justifyContent: 'center' }}>
       <div style={{ ...QR_EYEBROW_STYLE, marginBottom: '0.25rem' }}>Bank transfer</div>
       <BankDetailRow label="Account number" value={groupDigits(BANK_DETAILS.accountNumber)} mono />
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
