@@ -1490,7 +1490,7 @@ function QRScreen({ onBack }) {
         </div>
       </div>
 
-      {/* Centre — two panels: WhatsApp join (left) + bank details (right) */}
+      {/* Centre — koha progress on top, WhatsApp QR + bank details below */}
       <div style={{
         flex: 1,
         minHeight: 0,
@@ -1501,44 +1501,28 @@ function QRScreen({ onBack }) {
       }}>
         <div style={{
           display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'stretch',
-          justifyContent: 'center',
-          gap: 'clamp(1.5rem, 3vw, 2.75rem)',
+          flexDirection: 'column',
+          gap: 'clamp(1.25rem, 2.4vw, 2.25rem)',
           width: '100%',
-          maxWidth: 1720
+          maxWidth: 1480
         }}>
 
-          {/* ── WhatsApp join ── */}
-          <div style={{ ...QR_PANEL_STYLE, flex: '0 1 440px', maxWidth: 470, justifyContent: 'center' }}>
-            <div style={QR_EYEBROW_STYLE}>Join our WhatsApp</div>
-            <div style={{ background: '#fff', padding: 'clamp(0.85rem, 1.3vw, 1.25rem)', borderRadius: 12 }}>
-              <QRCodeSvg
-                value={WHATSAPP_INVITE_URL}
-                label="WhatsApp group QR code"
-                style={{ display: 'block', width: 'min(30vh, 300px)', height: 'min(30vh, 300px)' }}
-              />
-            </div>
-            <p style={{ color: C.muted, fontSize: 'clamp(1.05rem, 1.2vw, 1.3rem)', fontWeight: 400, margin: '1.25rem 0 0', lineHeight: 1.5 }}>
-              Point your camera at the code
-            </p>
-          </div>
+          <KohaCard />
 
-          {/* ── Bank details ── */}
-          <BankDetailsCard />
+          <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'stretch', gap: 'clamp(1.25rem, 2.4vw, 2.25rem)' }}>
+            <WhatsAppCard />
+            <BankDetailsCard />
+          </div>
 
         </div>
       </div>
     </div>);
 }
 
-// ─── BANK DETAILS CARD (shown on the QR / end-of-night screen) ─────────────────
+// ─── QR / END-OF-NIGHT CARDS ───────────────────────────────────────────────────
 const QR_PANEL_STYLE = {
-  flex: '1 1 340px',
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center',
-  textAlign: 'center',
   background: 'rgba(244,239,230,0.02)',
   border: `1px solid ${C.border}`,
   borderRadius: 16,
@@ -1555,6 +1539,123 @@ const QR_EYEBROW_STYLE = {
   fontWeight: 500,
   marginBottom: '1.4rem'
 };
+
+/** WhatsApp glyph (brand mark, drawn in the brand green so it reads at a glance). */
+function WhatsAppIcon({ size = 44 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" aria-hidden>
+      <path fill="#25D366" d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.885-9.885 9.885m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z" />
+    </svg>
+  );
+}
+
+/** Meetup mark — a monogram tile in Meetup red. Swap for the official SVG if wanted. */
+function MeetupIcon({ size = 40 }) {
+  return (
+    <span aria-hidden style={{
+      display: 'inline-flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      width: size,
+      height: size,
+      borderRadius: Math.round(size * 0.26),
+      background: '#F64060',
+      color: '#FFFFFF',
+      fontFamily: F.ui,
+      fontWeight: 700,
+      fontSize: size * 0.6,
+      lineHeight: 1,
+      flexShrink: 0
+    }}>
+      M
+    </span>
+  );
+}
+
+/** WhatsApp join: the logo and the code. No instructions needed. */
+function WhatsAppCard() {
+  return (
+    <div style={{ ...QR_PANEL_STYLE, flex: '0 1 420px', alignItems: 'center', justifyContent: 'center', gap: '1.25rem' }}>
+      <WhatsAppIcon />
+      <div style={{ background: '#fff', padding: 'clamp(0.75rem, 1.1vw, 1rem)', borderRadius: 12 }}>
+        <QRCodeSvg
+          value={WHATSAPP_INVITE_URL}
+          label="WhatsApp group QR code"
+          style={{ display: 'block', width: 'min(26vh, 260px)', height: 'min(26vh, 260px)' }}
+        />
+      </div>
+    </div>
+  );
+}
+
+/** Koha card: how far the Meetup fee fund has got. */
+function KohaCard() {
+  const { raised, target, dueBy } = KOHA;
+  const pct = target > 0 ? Math.max(0, Math.min(100, (raised / target) * 100)) : 0;
+  const money = (n) => `$${Math.round(n).toLocaleString('en-NZ')}`;
+  const sub = { color: C.muted, fontFamily: F.ui, fontSize: 'clamp(1.1rem, 1.5vw, 1.55rem)', fontWeight: 400 };
+  return (
+    <div style={{ ...QR_PANEL_STYLE, gap: 'clamp(1.1rem, 1.8vw, 1.6rem)' }}>
+
+      {/* Title row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+          <MeetupIcon />
+          <span style={{ color: C.text, fontFamily: F.ui, fontSize: 'clamp(1.35rem, 1.9vw, 2rem)', fontWeight: 700, letterSpacing: '0.005em', lineHeight: 1.1 }}>
+            Meetup fee koha
+          </span>
+        </div>
+        <span style={sub}>Anything helps — $2–$5 is plenty</span>
+      </div>
+
+      {/* Amount row */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.7rem' }}>
+          <span style={{
+            color: C.text,
+            fontFamily: F.ui,
+            fontSize: 'clamp(2.6rem, 4.2vw, 4.6rem)',
+            fontWeight: 700,
+            letterSpacing: '-0.01em',
+            fontVariantNumeric: 'tabular-nums',
+            lineHeight: 1
+          }}>
+            {money(raised)}
+          </span>
+          <span style={sub}>of {money(target)}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <Badge tone="sky" large>{Math.round(pct)}% there</Badge>
+          <Badge tone="quiet" large>Due {dueBy}</Badge>
+        </div>
+      </div>
+
+      {/* Bar */}
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={target}
+        aria-valuenow={raised}
+        aria-label={`Koha raised: ${money(raised)} of ${money(target)}`}
+        style={{
+          position: 'relative',
+          height: 18,
+          borderRadius: 999,
+          background: 'rgba(205,228,254,0.12)',
+          overflow: 'hidden'
+        }}>
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          width: `${pct}%`,
+          minWidth: pct > 0 ? 18 : 0,
+          borderRadius: 999,
+          background: C.sky
+        }} />
+      </div>
+    </div>
+  );
+}
 
 function BankDetailRow({ label, value, mono = false, last = false }) {
   return (
@@ -1588,90 +1689,14 @@ function BankDetailRow({ label, value, mono = false, last = false }) {
   );
 }
 
-/** Koha progress: raised vs target as a bar, with the fee due date. */
-function KohaProgress({ raised, target, dueBy }) {
-  const pct = target > 0 ? Math.max(0, Math.min(100, (raised / target) * 100)) : 0;
-  const money = (n) => `$${Math.round(n).toLocaleString('en-NZ')}`;
-  return (
-    <div style={{ margin: '0.25rem 0 0.5rem' }}>
-      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.6rem' }}>
-          <span style={{
-            color: C.text,
-            fontFamily: F.ui,
-            fontSize: 'clamp(2.6rem, 4.2vw, 4.6rem)',
-            fontWeight: 700,
-            letterSpacing: '-0.01em',
-            fontVariantNumeric: 'tabular-nums',
-            lineHeight: 1
-          }}>
-            {money(raised)}
-          </span>
-          <span style={{ color: C.muted, fontFamily: F.ui, fontSize: 'clamp(1.15rem, 1.6vw, 1.7rem)', fontWeight: 400 }}>
-            raised of {money(target)}
-          </span>
-        </div>
-        <span style={{ color: C.muted, fontFamily: F.ui, fontSize: 'clamp(1.15rem, 1.6vw, 1.7rem)', fontWeight: 500 }}>
-          {Math.round(pct)}% there
-        </span>
-      </div>
-
-      <div
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={target}
-        aria-valuenow={raised}
-        aria-label={`Koha raised: ${money(raised)} of ${money(target)}`}
-        style={{
-          position: 'relative',
-          height: 18,
-          marginTop: '1.2rem',
-          borderRadius: 999,
-          background: 'rgba(205,228,254,0.12)',
-          overflow: 'hidden'
-        }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          width: `${pct}%`,
-          minWidth: pct > 0 ? 14 : 0,
-          borderRadius: 999,
-          background: C.sky
-        }} />
-      </div>
-
-      <div style={{ marginTop: '0.95rem', fontFamily: F.ui, fontSize: 'clamp(1.1rem, 1.5vw, 1.6rem)' }}>
-        <span style={{ color: C.muted, fontWeight: 400 }}>Meetup fee due </span>
-        <span style={{ color: C.text, fontWeight: 500 }}>{dueBy}</span>
-      </div>
-    </div>
-  );
-}
-
 function BankDetailsCard() {
   return (
-    <div style={{
-      ...QR_PANEL_STYLE,
-      flex: '1 1 600px',
-      maxWidth: 1120,
-      alignItems: 'stretch',
-      textAlign: 'left',
-      gap: '1.5rem',
-      padding: 'clamp(1.75rem, 3vw, 2.75rem)'
-    }}>
-      <div style={{ ...QR_EYEBROW_STYLE, marginBottom: 0 }}>Support the night</div>
-      <p style={{ color: C.muted, fontSize: 'clamp(1.15rem, 1.6vw, 1.7rem)', fontWeight: 400, margin: 0, lineHeight: 1.5, maxWidth: '34em' }}>
-        We have a koha for meetup fees to keep the group running. Anything is appreciated — around $2–$5 is recommended.
-      </p>
-
-      <KohaProgress raised={KOHA.raised} target={KOHA.target} dueBy={KOHA.dueBy} />
-
-      <div style={{ display: 'flex', flexDirection: 'column', borderTop: `1px solid ${C.borderSoft}` }}>
-        <BankDetailRow label="Account number" value={groupDigits(BANK_DETAILS.accountNumber)} mono />
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-          <BankDetailRow label="Account name" value={BANK_DETAILS.accountName} last />
-          <BankDetailRow label="Reference" value={BANK_DETAILS.reference} mono last />
-        </div>
+    <div style={{ ...QR_PANEL_STYLE, flex: '1 1 560px', justifyContent: 'center' }}>
+      <div style={{ ...QR_EYEBROW_STYLE, marginBottom: '0.25rem' }}>Bank transfer</div>
+      <BankDetailRow label="Account number" value={groupDigits(BANK_DETAILS.accountNumber)} mono />
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+        <BankDetailRow label="Account name" value={BANK_DETAILS.accountName} last />
+        <BankDetailRow label="Reference" value={BANK_DETAILS.reference} mono last />
       </div>
     </div>
   );
