@@ -1549,26 +1549,17 @@ function WhatsAppIcon({ size = 44 }) {
   );
 }
 
-/** Meetup mark — a monogram tile in Meetup red. Swap for the official SVG if wanted. */
-function MeetupIcon({ size = 40 }) {
+/** Meetup mark (brand logo, meetup-logo.png in the repo root). */
+function MeetupIcon({ size = 44 }) {
   return (
-    <span aria-hidden style={{
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      width: size,
-      height: size,
-      borderRadius: Math.round(size * 0.26),
-      background: '#F64060',
-      color: '#FFFFFF',
-      fontFamily: F.ui,
-      fontWeight: 700,
-      fontSize: size * 0.6,
-      lineHeight: 1,
-      flexShrink: 0
-    }}>
-      M
-    </span>
+    <img
+      src="meetup-logo.png"
+      alt=""
+      aria-hidden
+      width={size}
+      height={size}
+      style={{ display: 'block', width: size, height: size, objectFit: 'contain', flexShrink: 0 }}
+    />
   );
 }
 
@@ -1602,7 +1593,7 @@ function KohaCard() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
           <MeetupIcon />
           <span style={{ color: C.text, fontFamily: F.ui, fontSize: 'clamp(1.35rem, 1.9vw, 2rem)', fontWeight: 700, letterSpacing: '0.005em', lineHeight: 1.1 }}>
-            Meetup fee koha
+            Keep the group running
           </span>
         </div>
         <span style={sub}>Anything helps — $2–$5 is plenty</span>
