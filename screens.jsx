@@ -118,7 +118,7 @@ const BANK_DETAILS = {
 /** Koha progress shown beside the bank details. Update `raised` as transfers
  *  come in; `dueBy` is display text, written the way it should read on screen. */
 const KOHA = {
-  raised: 33,
+  raised: 38,
   target: 200,
   dueBy: '31 January 2027'
 };
