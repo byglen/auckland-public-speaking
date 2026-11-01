@@ -120,7 +120,7 @@ const BANK_DETAILS = {
 const KOHA = {
   raised: 38,
   target: 200,
-  dueBy: '31 January 2027'
+  dueBy: '31 Jan 2027'
 };
 
 /** Format an account number for display. Pre-formatted numbers (with separators)
@@ -1622,7 +1622,7 @@ function Callout({ label, figure, note }) {
       borderRadius: 14,
       fontFamily: F.ui
     }}>
-      <span style={{ color: C.muted, fontSize: 'clamp(0.95rem, 1.2vw, 1.3rem)', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
+      <span style={{ color: C.muted, fontSize: 'clamp(1.05rem, 1.3vw, 1.4rem)', fontWeight: 400, letterSpacing: '0.01em' }}>
         {label}
       </span>
       <span style={{ color: C.text, fontSize: 'clamp(2.2rem, 3.4vw, 3.6rem)', fontWeight: 700, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.05 }}>
@@ -1667,10 +1667,7 @@ function KohaCard() {
             </span>
             <span style={sub}>of {money(target)}</span>
           </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-            <Badge tone="sky" large>{Math.round(pct)}% there</Badge>
-            <Badge tone="quiet" large>Due {dueBy}</Badge>
-          </div>
+          <Badge tone="quiet" large>Due {dueBy}</Badge>
         </div>
 
         {/* Bar */}
@@ -1699,7 +1696,7 @@ function KohaCard() {
         </div>
       </div>
 
-      <Callout label="Meetup charges us" figure={money(target)} note="every 6 months to keep the group listed" />
+      <Callout label="Meetup charges" figure={money(target)} note="every 6 months to keep the group listed" />
     </div>
   );
 }
@@ -1715,10 +1712,9 @@ function BankDetailRow({ label, value, mono = false, last = false }) {
     }}>
       <span style={{
         color: C.muted,
-        fontSize: 'clamp(0.95rem, 1.2vw, 1.3rem)',
-        fontWeight: 500,
-        letterSpacing: '0.14em',
-        textTransform: 'uppercase'
+        fontSize: 'clamp(1.05rem, 1.3vw, 1.4rem)',
+        fontWeight: 400,
+        letterSpacing: '0.01em'
       }}>
         {label}
       </span>
