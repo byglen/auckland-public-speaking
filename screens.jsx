@@ -1665,9 +1665,12 @@ function KohaCard() {
             }}>
               {money(raised)}
             </span>
-            <span style={sub}>of {money(target)}</span>
+            <span style={sub}>raised so far of {money(target)}</span>
           </div>
-          <Badge tone="sky" large style={{ textTransform: 'none', letterSpacing: '0.02em' }}>Next due {dueBy}</Badge>
+          <Badge tone="sky" large style={{ textTransform: 'none', letterSpacing: '0.02em', fontWeight: 400 }}>
+            <span style={{ opacity: 0.85 }}>Next due&nbsp;</span>
+            <span style={{ fontWeight: 700 }}>{dueBy}</span>
+          </Badge>
         </div>
 
         {/* Bar */}
@@ -1696,7 +1699,7 @@ function KohaCard() {
         </div>
       </div>
 
-      <Callout label="Meetup charges" figure={money(target)} note="every 6 months to keep the group listed" />
+      <Callout label="Meetup.com charges" figure={money(target)} note="every 6 months to keep the group listed" />
     </div>
   );
 }
