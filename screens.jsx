@@ -1606,73 +1606,100 @@ function WhatsAppCard() {
   );
 }
 
-/** Koha card: how far the Meetup fee fund has got. */
+/** Call-out tile: a small inset panel with a label, a big figure and a note. */
+function Callout({ label, figure, note }) {
+  return (
+    <div style={{
+      flex: '0 0 auto',
+      display: 'flex',
+      flexDirection: 'column',
+      justifyContent: 'center',
+      gap: '0.3rem',
+      width: 'clamp(190px, 17vw, 260px)',
+      padding: 'clamp(1rem, 1.6vw, 1.5rem) clamp(1.1rem, 1.8vw, 1.75rem)',
+      background: 'rgba(205,228,254,0.06)',
+      border: `1px solid ${C.borderSoft}`,
+      borderRadius: 14,
+      fontFamily: F.ui
+    }}>
+      <span style={{ color: C.dim, fontSize: 'clamp(0.78rem, 0.9vw, 0.95rem)', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+        {label}
+      </span>
+      <span style={{ color: C.text, fontSize: 'clamp(2rem, 3vw, 3.1rem)', fontWeight: 700, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.05 }}>
+        {figure}
+      </span>
+      <span style={{ color: C.muted, fontSize: 'clamp(1rem, 1.3vw, 1.3rem)', fontWeight: 400, lineHeight: 1.3 }}>
+        {note}
+      </span>
+    </div>
+  );
+}
+
+/** Koha card: how far the Meetup fee fund has got, with the charge called out. */
 function KohaCard() {
   const { raised, target, dueBy } = KOHA;
   const pct = target > 0 ? Math.max(0, Math.min(100, (raised / target) * 100)) : 0;
   const money = (n) => `$${Math.round(n).toLocaleString('en-NZ')}`;
   const sub = { color: C.muted, fontFamily: F.ui, fontSize: 'clamp(1.1rem, 1.5vw, 1.55rem)', fontWeight: 400 };
   return (
-    <div style={{ ...QR_PANEL_STYLE, gap: 'clamp(1.1rem, 1.8vw, 1.6rem)' }}>
+    <div style={{ ...QR_PANEL_STYLE, flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: 'clamp(1.25rem, 2vw, 2rem)' }}>
 
-      {/* Title row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+      <div style={{ flex: '1 1 380px', display: 'flex', flexDirection: 'column', gap: 'clamp(1.1rem, 1.8vw, 1.6rem)' }}>
+        {/* Title */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
           <MeetupIcon />
           <span style={CARD_TITLE_STYLE}>Keep the group running</span>
         </div>
-      </div>
 
-      {/* Amount row */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.7rem' }}>
-          <span style={{
-            color: C.text,
-            fontFamily: F.ui,
-            fontSize: 'clamp(2.6rem, 4.2vw, 4.6rem)',
-            fontWeight: 700,
-            letterSpacing: '-0.01em',
-            fontVariantNumeric: 'tabular-nums',
-            lineHeight: 1
+        {/* Amount row */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.7rem' }}>
+            <span style={{
+              color: C.text,
+              fontFamily: F.ui,
+              fontSize: 'clamp(2.6rem, 4.2vw, 4.6rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.01em',
+              fontVariantNumeric: 'tabular-nums',
+              lineHeight: 1
+            }}>
+              {money(raised)}
+            </span>
+            <span style={sub}>of {money(target)}</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
+            <Badge tone="sky" large>{Math.round(pct)}% there</Badge>
+            <Badge tone="quiet" large>Due {dueBy}</Badge>
+          </div>
+        </div>
+
+        {/* Bar */}
+        <div
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={target}
+          aria-valuenow={raised}
+          aria-label={`Koha raised: ${money(raised)} of ${money(target)}`}
+          style={{
+            position: 'relative',
+            height: 18,
+            borderRadius: 999,
+            background: 'rgba(205,228,254,0.12)',
+            overflow: 'hidden',
+            marginTop: 'auto'
           }}>
-            {money(raised)}
-          </span>
-          <span style={sub}>of {money(target)}</span>
-        </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-          <Badge tone="sky" large>{Math.round(pct)}% there</Badge>
-          <Badge tone="quiet" large>Due {dueBy}</Badge>
+          <div style={{
+            position: 'absolute',
+            inset: 0,
+            width: `${pct}%`,
+            minWidth: pct > 0 ? 18 : 0,
+            borderRadius: 999,
+            background: C.sky
+          }} />
         </div>
       </div>
 
-      {/* Bar */}
-      <div
-        role="progressbar"
-        aria-valuemin={0}
-        aria-valuemax={target}
-        aria-valuenow={raised}
-        aria-label={`Koha raised: ${money(raised)} of ${money(target)}`}
-        style={{
-          position: 'relative',
-          height: 18,
-          borderRadius: 999,
-          background: 'rgba(205,228,254,0.12)',
-          overflow: 'hidden'
-        }}>
-        <div style={{
-          position: 'absolute',
-          inset: 0,
-          width: `${pct}%`,
-          minWidth: pct > 0 ? 18 : 0,
-          borderRadius: 999,
-          background: C.sky
-        }} />
-      </div>
-
-      {/* What the target is for */}
-      <p style={{ ...sub, margin: 0, lineHeight: 1.4 }}>
-        Meetup charges us <span style={{ color: C.text, fontWeight: 500 }}>$200 every 6 months</span> to keep the group listed. Anything helps.
-      </p>
+      <Callout label="Meetup charges us" figure={money(target)} note="every 6 months to keep the group listed" />
     </div>
   );
 }
@@ -1697,11 +1724,12 @@ function BankDetailRow({ label, value, mono = false, last = false }) {
       </span>
       <span style={{
         color: C.text,
-        fontSize: mono ? 'clamp(1.9rem, 3.1vw, 3.4rem)' : 'clamp(1.6rem, 2.4vw, 2.6rem)',
+        fontSize: mono ? 'clamp(1.6rem, 2.3vw, 2.8rem)' : 'clamp(1.5rem, 2.1vw, 2.4rem)',
         fontWeight: 500,
         letterSpacing: mono ? '0.03em' : '0',
         fontVariantNumeric: mono ? 'tabular-nums' : 'normal',
-        lineHeight: 1.15
+        lineHeight: 1.15,
+        whiteSpace: 'nowrap'
       }}>
         {value}
       </span>
@@ -1711,12 +1739,15 @@ function BankDetailRow({ label, value, mono = false, last = false }) {
 
 function BankDetailsCard() {
   return (
-    <div style={{ ...QR_PANEL_STYLE, flex: '1 1 auto', justifyContent: 'center' }}>
-      <BankDetailRow label="Account number" value={groupDigits(BANK_DETAILS.accountNumber)} mono />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
-        <BankDetailRow label="Account name" value={BANK_DETAILS.accountName} last />
-        <BankDetailRow label="Reference" value={BANK_DETAILS.reference} mono last />
+    <div style={{ ...QR_PANEL_STYLE, flex: '1 1 auto', flexDirection: 'row', flexWrap: 'wrap', alignItems: 'stretch', gap: 'clamp(1.25rem, 2vw, 2rem)' }}>
+      <div style={{ flex: '1 1 380px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+        <BankDetailRow label="Account number" value={groupDigits(BANK_DETAILS.accountNumber)} mono />
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+          <BankDetailRow label="Account name" value={BANK_DETAILS.accountName} last />
+          <BankDetailRow label="Reference" value={BANK_DETAILS.reference} mono last />
+        </div>
       </div>
+      <Callout label="Suggested koha" figure="$2–$5" note="per person — anything helps" />
     </div>
   );
 }
