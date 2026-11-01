@@ -120,7 +120,7 @@ const BANK_DETAILS = {
 const KOHA = {
   raised: 38,
   target: 200,
-  dueBy: '31 Jan 2027'
+  dueBy: '31 Jan, 2027'
 };
 
 /** Format an account number for display. Pre-formatted numbers (with separators)
@@ -1667,7 +1667,7 @@ function KohaCard() {
             </span>
             <span style={sub}>of {money(target)}</span>
           </div>
-          <Badge tone="quiet" large>Due {dueBy}</Badge>
+          <Badge tone="sky" large style={{ textTransform: 'none', letterSpacing: '0.02em' }}>Next due {dueBy}</Badge>
         </div>
 
         {/* Bar */}
