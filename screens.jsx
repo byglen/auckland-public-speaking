@@ -1509,7 +1509,7 @@ function QRScreen({ onBack }) {
         }}>
 
           {/* Left column — koha progress above the bank details */}
-          <div style={{ flex: '1 1 620px', display: 'flex', flexDirection: 'column', gap: 'clamp(1.25rem, 2.4vw, 2.25rem)' }}>
+          <div style={{ flex: '1 1 720px', display: 'flex', flexDirection: 'column', gap: 'clamp(1.25rem, 2.4vw, 2.25rem)' }}>
             <KohaCard />
             <BankDetailsCard />
           </div>
@@ -1598,7 +1598,7 @@ function WhatsAppCard() {
           <QRCodeSvg
             value={WHATSAPP_INVITE_URL}
             label="WhatsApp group QR code"
-            style={{ display: 'block', width: 'min(50vh, 26vw, 520px)', height: 'min(50vh, 26vw, 520px)' }}
+            style={{ display: 'block', width: 'min(40vh, 19vw, 400px)', height: 'min(40vh, 19vw, 400px)' }}
           />
         </div>
       </div>
@@ -1615,20 +1615,20 @@ function Callout({ label, figure, note }) {
       flexDirection: 'column',
       justifyContent: 'center',
       gap: '0.3rem',
-      width: 'clamp(190px, 17vw, 260px)',
+      width: 'clamp(220px, 20vw, 320px)',
       padding: 'clamp(1rem, 1.6vw, 1.5rem) clamp(1.1rem, 1.8vw, 1.75rem)',
       background: 'rgba(205,228,254,0.06)',
       border: `1px solid ${C.borderSoft}`,
       borderRadius: 14,
       fontFamily: F.ui
     }}>
-      <span style={{ color: C.dim, fontSize: 'clamp(0.78rem, 0.9vw, 0.95rem)', fontWeight: 500, letterSpacing: '0.18em', textTransform: 'uppercase' }}>
+      <span style={{ color: C.muted, fontSize: 'clamp(0.95rem, 1.2vw, 1.3rem)', fontWeight: 500, letterSpacing: '0.14em', textTransform: 'uppercase' }}>
         {label}
       </span>
-      <span style={{ color: C.text, fontSize: 'clamp(2rem, 3vw, 3.1rem)', fontWeight: 700, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.05 }}>
+      <span style={{ color: C.text, fontSize: 'clamp(2.2rem, 3.4vw, 3.6rem)', fontWeight: 700, letterSpacing: '-0.01em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.05 }}>
         {figure}
       </span>
-      <span style={{ color: C.muted, fontSize: 'clamp(1rem, 1.3vw, 1.3rem)', fontWeight: 400, lineHeight: 1.3 }}>
+      <span style={{ color: C.muted, fontSize: 'clamp(1.05rem, 1.45vw, 1.5rem)', fontWeight: 400, lineHeight: 1.3 }}>
         {note}
       </span>
     </div>
@@ -1714,17 +1714,17 @@ function BankDetailRow({ label, value, mono = false, last = false }) {
       borderBottom: last ? 'none' : `1px solid ${C.borderSoft}`
     }}>
       <span style={{
-        color: C.dim,
-        fontSize: 'clamp(0.82rem, 0.95vw, 1rem)',
+        color: C.muted,
+        fontSize: 'clamp(0.95rem, 1.2vw, 1.3rem)',
         fontWeight: 500,
-        letterSpacing: '0.2em',
+        letterSpacing: '0.14em',
         textTransform: 'uppercase'
       }}>
         {label}
       </span>
       <span style={{
         color: C.text,
-        fontSize: mono ? 'clamp(1.6rem, 2.3vw, 2.8rem)' : 'clamp(1.5rem, 2.1vw, 2.4rem)',
+        fontSize: mono ? 'clamp(1.8rem, 2.8vw, 3.3rem)' : 'clamp(1.6rem, 2.3vw, 2.7rem)',
         fontWeight: 500,
         letterSpacing: mono ? '0.03em' : '0',
         fontVariantNumeric: mono ? 'tabular-nums' : 'normal',
