@@ -1621,7 +1621,6 @@ function KohaCard() {
           <MeetupIcon />
           <span style={CARD_TITLE_STYLE}>Keep the group running</span>
         </div>
-        <span style={sub}>Anything helps — $2–$5 is plenty</span>
       </div>
 
       {/* Amount row */}
@@ -1669,6 +1668,11 @@ function KohaCard() {
           background: C.sky
         }} />
       </div>
+
+      {/* What the target is for */}
+      <p style={{ ...sub, margin: 0, lineHeight: 1.4 }}>
+        Meetup charges us <span style={{ color: C.text, fontWeight: 500 }}>$200 every 6 months</span> to keep the group listed. Anything helps.
+      </p>
     </div>
   );
 }
