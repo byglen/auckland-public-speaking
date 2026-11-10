@@ -1434,7 +1434,7 @@ function RegistrationScreen({ initialChar = '', onAdd, onDone }) {
 /** Static QR rendered as crisp SVG from a string. Error level M (15% damage
  *  tolerance) suits a projector; typeNumber 0 picks the smallest version that
  *  fits. Falls back to the raw link as text if qrcode.js failed to load. */
-function QRCodeSvg({ value, label, style = {} }) {
+function QRCodeSvg({ value, label, style = {}, bg = '#fff', fg = '#111' }) {
   const cells = React.useMemo(() => {
     if (typeof qrcode !== 'function') return null;
     const qr = qrcode(0, 'M');
@@ -1463,23 +1463,48 @@ function QRCodeSvg({ value, label, style = {} }) {
       viewBox={`0 0 ${cells.n} ${cells.n}`}
       shapeRendering="crispEdges"
       style={style}>
-      <rect width={cells.n} height={cells.n} fill="#fff" />
-      <path d={cells.d} fill="#111" />
+      {bg !== 'none' && <rect width={cells.n} height={cells.n} fill={bg} />}
+      <path d={cells.d} fill={fg} />
     </svg>
   );
 }
 
+/** Layout explorations for the end-of-night screen. The host flips between
+ *  them with the switcher in the top bar (or keys 0–3); the choice is kept on
+ *  this device. 'current' is the layout that was live before the exploration. */
+const QR_VARIANTS = [
+  { id: 'current', label: 'Now', key: 'Digit0' },
+  { id: 'a', label: 'A', key: 'Digit1' },
+  { id: 'b', label: 'B', key: 'Digit2' },
+  { id: 'c', label: 'C', key: 'Digit3' }
+];
+const QR_VARIANT_STORE = 'aps.qrVariant.v1';
+
 function QRScreen({ onBack }) {
+  const [variant, setVariantState] = useState(() => {
+    try {
+      const v = localStorage.getItem(QR_VARIANT_STORE);
+      return QR_VARIANTS.some((x) => x.id === v) ? v : 'current';
+    } catch (_) { return 'current'; }
+  });
+  const setVariant = useCallback((v) => {
+    setVariantState(v);
+    try { localStorage.setItem(QR_VARIANT_STORE, v); } catch (_) {}
+  }, []);
+
   useEffect(() => {
     const h = (e) => {
       if (e.code === 'Escape' || e.code === 'Space' || e.code === 'Enter') {
         e.preventDefault();
         onBack();
+        return;
       }
+      const hit = QR_VARIANTS.find((x) => x.key === e.code);
+      if (hit && !e.metaKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); setVariant(hit.id); }
     };
     window.addEventListener('keydown', h);
     return () => window.removeEventListener('keydown', h);
-  }, [onBack]);
+  }, [onBack, setVariant]);
 
   return (
     <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -1488,13 +1513,37 @@ function QRScreen({ onBack }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.6rem 3rem', borderBottom: `1px solid ${C.borderSoft}` }}>
         <HomeBrandMark />
         <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center' }}>
+          {/* Layout switcher — exploration only */}
+          <div role="group" aria-label="Layout" style={{ display: 'flex', gap: 2, padding: 3, borderRadius: 10, border: `1px solid ${C.borderSoft}` }}>
+            {QR_VARIANTS.map((v) =>
+            <button
+              key={v.id}
+              type="button"
+              aria-pressed={variant === v.id}
+              onClick={(e) => { e.currentTarget.blur(); setVariant(v.id); }}
+              style={{
+                border: 'none', cursor: 'pointer', borderRadius: 7,
+                padding: '0.35rem 0.7rem', minWidth: '2.1rem',
+                fontFamily: F.ui, fontSize: '0.86rem', fontWeight: 500, letterSpacing: '0.02em',
+                background: variant === v.id ? 'rgba(205,228,254,0.16)' : 'transparent',
+                color: variant === v.id ? C.text : C.dim
+              }}>
+              {v.label}
+            </button>
+            )}
+          </div>
           <HomeIconButton ariaLabel="Close — back to home" onClick={onBack}>
             <BackIcon />
           </HomeIconButton>
         </div>
       </div>
 
+      {variant === 'a' && <QRLayoutPoster />}
+      {variant === 'b' && <QRLayoutSplit />}
+      {variant === 'c' && <QRLayoutPaper />}
+
       {/* Centre — koha progress on top, WhatsApp QR + bank details below */}
+      {variant === 'current' &&
       <div style={{
         flex: 1,
         minHeight: 0,
@@ -1523,6 +1572,7 @@ function QRScreen({ onBack }) {
 
         </div>
       </div>
+      }
     </div>);
 }
 
@@ -1751,6 +1801,173 @@ function BankDetailsCard() {
         </div>
       </div>
       <Callout label="Suggested koha" figure="$2–$5" note="per person — anything helps" />
+    </div>
+  );
+}
+
+// ─── END-OF-NIGHT LAYOUT EXPLORATIONS (A · B · C) ─────────────────────────────
+// One message each: help us pay the Meetup fees, here is the account, $2–$5 is
+// plenty — and the WhatsApp code. No nested cards, no tiles.
+const kohaMoney = (n) => `$${Math.round(n).toLocaleString('en-NZ')}`;
+const KOHA_HEADLINE = 'Help us pay the Meetup fees';
+const kohaFeeLine = () => `${kohaMoney(KOHA.target)} every 6 months`;
+const KOHA_NUDGE = '$2–$5 is plenty';
+
+function WhatsAppCaption({ color = C.muted, size = 'clamp(1.1rem, 1.5vw, 1.6rem)' }) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.7rem', fontFamily: F.ui, fontSize: size, fontWeight: 500, color }}>
+      <WhatsAppIcon size="1.7em" />
+      Join the WhatsApp
+    </div>
+  );
+}
+
+/** A — Poster. Type straight on the ground: one sentence in stage type, one
+ *  line of chrome under it, the account number, and the code to the side. */
+function QRLayoutPoster() {
+  const qr = 'min(40vh, 22vw, 420px)';
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(2rem, 5vh, 4rem) clamp(2rem, 6vw, 7rem)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(2.5rem, 6vw, 7rem)', width: '100%', maxWidth: 1680 }}>
+        <div style={{ flex: '1 1 0', minWidth: 0 }}>
+          <h1 style={{
+            margin: 0,
+            fontFamily: F.stage,
+            fontWeight: 700,
+            fontSize: 'clamp(3rem, 5.6vw, 6.6rem)',
+            lineHeight: 1.08,
+            letterSpacing: '0.005em',
+            ...stageInk()
+          }}>
+            {KOHA_HEADLINE}
+          </h1>
+          <p style={{ margin: 'clamp(1rem, 2.4vh, 1.75rem) 0 0', fontFamily: F.ui, fontSize: 'clamp(1.35rem, 2vw, 2.2rem)', fontWeight: 400, lineHeight: 1.35, color: C.muted }}>
+            <span style={{ color: C.text, fontWeight: 500 }}>{kohaFeeLine()}.</span> {KOHA_NUDGE}.
+          </p>
+
+          <div style={{ height: 1, background: C.border, margin: 'clamp(1.75rem, 4.5vh, 3rem) 0 clamp(1.5rem, 3.5vh, 2.5rem)' }} />
+
+          <div style={{ fontFamily: F.ui, color: C.text, fontSize: 'clamp(2.2rem, 3.9vw, 4.6rem)', fontWeight: 500, letterSpacing: '0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.05, whiteSpace: 'nowrap' }}>
+            {groupDigits(BANK_DETAILS.accountNumber)}
+          </div>
+          <div style={{ marginTop: '0.9rem', fontFamily: F.ui, fontSize: 'clamp(1.25rem, 1.8vw, 2rem)', fontWeight: 400, color: C.muted }}>
+            {BANK_DETAILS.accountName}
+            <span style={{ opacity: 0.5, margin: '0 0.7em' }}>·</span>
+            Reference <span style={{ color: C.text, fontWeight: 500 }}>{BANK_DETAILS.reference}</span>
+          </div>
+        </div>
+
+        <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 'clamp(1rem, 2.2vh, 1.5rem)' }}>
+          <div style={{ background: '#fff', padding: 'clamp(0.85rem, 1.2vw, 1.1rem)', borderRadius: 14 }}>
+            <QRCodeSvg value={WHATSAPP_INVITE_URL} label="WhatsApp group QR code" style={{ display: 'block', width: qr, height: qr }} />
+          </div>
+          <WhatsAppCaption />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/** B — Two halves. The ask on the left with the suggested amount as the hero
+ *  figure and a hair-thin progress line; the code on the right. One hairline
+ *  between them, nothing else boxed. */
+function QRLayoutSplit() {
+  const qr = 'min(44vh, 24vw, 460px)';
+  const pct = KOHA.target > 0 ? Math.max(0, Math.min(100, (KOHA.raised / KOHA.target) * 100)) : 0;
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'stretch' }}>
+      <div style={{ flex: '1.45 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', justifyContent: 'center', padding: 'clamp(2rem, 5vh, 4rem) clamp(2rem, 6vw, 7rem)' }}>
+        <div style={{ fontFamily: F.ui, fontSize: 'clamp(1.35rem, 2vw, 2.2rem)', fontWeight: 500, color: C.text }}>
+          {KOHA_HEADLINE}
+          <span style={{ color: C.muted, fontWeight: 400 }}><span style={{ opacity: 0.5, margin: '0 0.6em' }}>·</span>{kohaFeeLine()}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '0.35em', marginTop: 'clamp(0.4rem, 1vh, 0.8rem)', fontFamily: F.ui }}>
+          <span style={{ color: C.text, fontSize: 'clamp(5.5rem, 11vw, 12.5rem)', fontWeight: 700, letterSpacing: '-0.03em', lineHeight: 0.95, fontVariantNumeric: 'tabular-nums' }}>$2–$5</span>
+          <span style={{ color: C.muted, fontSize: 'clamp(1.35rem, 2vw, 2.2rem)', fontWeight: 400 }}>is plenty</span>
+        </div>
+
+        {/* progress — a line, not a feature */}
+        <div style={{ marginTop: 'clamp(1.5rem, 3.5vh, 2.5rem)', maxWidth: '34rem' }}>
+          <div role="progressbar" aria-valuemin={0} aria-valuemax={KOHA.target} aria-valuenow={KOHA.raised} aria-label="Raised so far"
+            style={{ position: 'relative', height: 6, borderRadius: 999, background: 'rgba(205,228,254,0.14)', overflow: 'hidden' }}>
+            <div style={{ position: 'absolute', inset: 0, width: `${pct}%`, minWidth: pct > 0 ? 6 : 0, borderRadius: 999, background: C.sky }} />
+          </div>
+          <div style={{ marginTop: '0.7rem', fontFamily: F.ui, fontSize: 'clamp(1.05rem, 1.4vw, 1.5rem)', color: C.muted }}>
+            <span style={{ color: C.text, fontWeight: 500 }}>{kohaMoney(KOHA.raised)}</span> raised so far
+          </div>
+        </div>
+
+        <div style={{ marginTop: 'clamp(1.75rem, 4.5vh, 3rem)', fontFamily: F.ui, color: C.text, fontSize: 'clamp(2rem, 3.4vw, 4rem)', fontWeight: 500, letterSpacing: '0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.05, whiteSpace: 'nowrap' }}>
+          {groupDigits(BANK_DETAILS.accountNumber)}
+        </div>
+        <div style={{ marginTop: '0.8rem', fontFamily: F.ui, fontSize: 'clamp(1.2rem, 1.7vw, 1.9rem)', fontWeight: 400, color: C.muted }}>
+          {BANK_DETAILS.accountName}
+          <span style={{ opacity: 0.5, margin: '0 0.7em' }}>·</span>
+          Reference <span style={{ color: C.text, fontWeight: 500 }}>{BANK_DETAILS.reference}</span>
+        </div>
+      </div>
+
+      <div aria-hidden style={{ width: 1, background: C.borderSoft, margin: 'clamp(2rem, 6vh, 4rem) 0' }} />
+
+      <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'clamp(1.1rem, 2.6vh, 1.75rem)', padding: 'clamp(2rem, 5vh, 4rem) clamp(1.5rem, 4vw, 4rem)' }}>
+        <div style={{ background: '#fff', padding: 'clamp(0.85rem, 1.2vw, 1.1rem)', borderRadius: 14 }}>
+          <QRCodeSvg value={WHATSAPP_INVITE_URL} label="WhatsApp group QR code" style={{ display: 'block', width: qr, height: qr }} />
+        </div>
+        <WhatsAppCaption />
+      </div>
+    </div>
+  );
+}
+
+/** C — The sheet. One piece of paper, the same paper the hat hands out:
+ *  everything printed on it in ink, the code on the far side of the crease. */
+function QRLayoutPaper() {
+  const INK = '#221A0E';
+  const INK_SOFT = 'rgba(34,26,14,0.66)';
+  const CREASE = 'rgba(120,100,60,0.28)';
+  const qr = 'min(36vh, 19vw, 380px)';
+  return (
+    <div style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 'clamp(1.5rem, 4vh, 3rem) clamp(1.5rem, 5vw, 5rem)' }}>
+      <div style={{
+        position: 'relative',
+        display: 'flex',
+        alignItems: 'stretch',
+        width: '100%',
+        maxWidth: 1500,
+        background: 'linear-gradient(160deg, #F6EFE0 0%, #EDE2CB 55%, #E3D6B9 100%)',
+        borderRadius: 4,
+        boxShadow: '0 34px 80px rgba(0,0,0,0.6), inset 0 0 0 1px rgba(120,100,60,0.18)',
+        transform: 'rotate(-0.6deg)',
+        color: INK
+      }}>
+        <div style={{ flex: '1.7 1 0', minWidth: 0, padding: 'clamp(2rem, 5.5vh, 4rem) clamp(2rem, 4.5vw, 4.5rem)' }}>
+          <h1 style={{ margin: 0, fontFamily: F.stage, fontWeight: 700, fontSize: 'clamp(2.6rem, 4.6vw, 5.4rem)', lineHeight: 1.08, letterSpacing: '0.005em', color: INK }}>
+            {KOHA_HEADLINE}
+          </h1>
+          <p style={{ margin: 'clamp(0.9rem, 2vh, 1.5rem) 0 0', fontFamily: F.ui, fontSize: 'clamp(1.3rem, 1.85vw, 2.1rem)', fontWeight: 400, lineHeight: 1.35, color: INK_SOFT }}>
+            <span style={{ color: INK, fontWeight: 500 }}>{kohaFeeLine()}.</span> {KOHA_NUDGE}.
+          </p>
+
+          <div aria-hidden style={{ borderTop: `2px dashed ${CREASE}`, margin: 'clamp(1.5rem, 4vh, 2.75rem) 0 clamp(1.25rem, 3.2vh, 2.25rem)' }} />
+
+          <div style={{ fontFamily: F.ui, fontSize: 'clamp(2rem, 3.4vw, 4rem)', fontWeight: 700, letterSpacing: '0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.05, whiteSpace: 'nowrap', color: INK }}>
+            {groupDigits(BANK_DETAILS.accountNumber)}
+          </div>
+          <div style={{ marginTop: '0.8rem', fontFamily: F.ui, fontSize: 'clamp(1.2rem, 1.7vw, 1.9rem)', fontWeight: 400, color: INK_SOFT }}>
+            {BANK_DETAILS.accountName}
+            <span style={{ opacity: 0.5, margin: '0 0.7em' }}>·</span>
+            Reference <span style={{ color: INK, fontWeight: 700 }}>{BANK_DETAILS.reference}</span>
+          </div>
+        </div>
+
+        {/* the crease */}
+        <div aria-hidden style={{ width: 1, background: CREASE }} />
+
+        <div style={{ flex: '1 1 0', minWidth: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 'clamp(0.9rem, 2.2vh, 1.4rem)', padding: 'clamp(1.75rem, 4.5vh, 3.25rem) clamp(1.5rem, 3vw, 3rem)' }}>
+          <QRCodeSvg value={WHATSAPP_INVITE_URL} label="WhatsApp group QR code" bg="none" fg={INK} style={{ display: 'block', width: qr, height: qr }} />
+          <WhatsAppCaption color={INK} />
+        </div>
+      </div>
     </div>
   );
 }
