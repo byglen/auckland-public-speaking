@@ -154,6 +154,10 @@ function promptNoun(text, { cap = false } = {}) {
 window.isQuestionPrompt = isQuestionPrompt;
 window.promptNoun = promptNoun;
 
+/** Feedback round after each speech: how long it runs, and when the timer turns red. */
+const FEEDBACK_SECS = 60;
+const FEEDBACK_WARN_SECS = 15;
+
 /** Pick a draw winner; first-timers excluded from draws 1–2 unless no one else is eligible. */
 function pickDrawWinner(pool, spokenCount) {
   if (!pool.length) return { winner: null, winnerIdx: -1 };
@@ -2233,7 +2237,7 @@ function KeyboardHint({ ariaLabel, caption, children, align = 'center', style, u
 }
 
 // ─── DRAW ADMIN MENU (top-left) ───────────────────────────────────────────────
-function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = false, disableMenu = false }) {
+function DrawingAdminMenu({ onBackHome, showRespin, onRespin, onChooseSpeaker = null, disableBackHome = false, disableMenu = false }) {
   const [open, setOpen] = useState(false);
   const wrapRef = useRef(null);
 
@@ -2305,6 +2309,19 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
             Respin
           </button>
           }
+          {onChooseSpeaker &&
+          <button
+            type="button"
+            onClick={() => { setOpen(false); onChooseSpeaker(); }}
+            style={{
+              display: 'block', width: '100%', textAlign: 'left',
+              background: 'none', border: 'none', cursor: 'pointer',
+              color: C.text, fontFamily: F.ui, fontSize: '0.95rem',
+              fontWeight: 400, padding: '0.6rem 1rem'
+            }}>
+            Choose speaker
+          </button>
+          }
           <button
             type="button"
             disabled={disableBackHome}
@@ -2322,6 +2339,128 @@ function DrawingAdminMenu({ onBackHome, showRespin, onRespin, disableBackHome = 
 
         </div>
         }
+      </div>
+    </div>
+  );
+}
+
+// ─── CHOOSE SPEAKER (draw screen menu) ───────────────────────────────────────
+/** Host override for the draw: every speaker, spoken or not, each with a Pick
+ *  button. Picking one skips the hat ritual and presents their name. */
+function ChooseSpeakerModal({ participants, onPick, onClose }) {
+  const dialogRef = useRef(null);
+  const pending = participants.filter((p) => !p.done);
+  const done = participants.filter((p) => p.done);
+  const ordered = [...pending, ...done];
+
+  // While the modal is up the hat must not hear Space, and Escape closes it.
+  // Capture phase on window runs before the hat's own key listeners.
+  useEffect(() => {
+    dialogRef.current?.focus();
+    const swallow = (e) => {
+      if (e.code === 'Escape') {
+        e.stopImmediatePropagation();
+        if (e.type === 'keydown') onClose();
+        return;
+      }
+      if (e.code === 'Space') e.stopImmediatePropagation();
+    };
+    window.addEventListener('keydown', swallow, true);
+    window.addEventListener('keyup', swallow, true);
+    return () => {
+      window.removeEventListener('keydown', swallow, true);
+      window.removeEventListener('keyup', swallow, true);
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      data-walkthrough-ui
+      style={{
+        position: 'fixed', inset: 0, zIndex: 200,
+        background: 'rgba(0,0,0,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '1.5rem'
+      }}
+      onMouseDown={onClose}>
+      <div
+        ref={dialogRef}
+        tabIndex={-1}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Choose speaker"
+        onMouseDown={(e) => e.stopPropagation()}
+        style={{
+          width: 'min(560px, 100%)',
+          maxHeight: 'min(85vh, 720px)',
+          background: C.surface,
+          border: `1px solid ${C.border}`,
+          borderRadius: 16,
+          boxShadow: '0 24px 60px rgba(0,0,0,0.3)',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          outline: 'none',
+          fontFamily: F.ui
+        }}>
+        <div style={{
+          padding: '1.35rem 1.5rem',
+          borderBottom: `1px solid ${C.borderSoft}`,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+        }}>
+          <div>
+            <div style={{ color: C.text, fontSize: '1.3rem', fontWeight: 500, letterSpacing: '-0.01em' }}>Choose speaker</div>
+            <div style={{ color: C.dim, fontSize: '0.92rem', marginTop: '0.3rem' }}>
+              {pending.length} in the hat · {done.length} spoken
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            style={{
+              background: 'none', border: 'none', color: C.dim,
+              fontSize: '1.5rem', cursor: 'pointer', lineHeight: 1, padding: '0.25rem'
+            }}>
+            ×
+          </button>
+        </div>
+
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0.5rem 0' }}>
+          {ordered.map((p, i) =>
+          <div
+            key={p.name}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '0.65rem',
+              padding: '0.65rem 1.5rem',
+              borderBottom: i === ordered.length - 1 ? 'none' : `1px solid ${C.borderSoft}`
+            }}>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{
+                color: p.done ? C.dim : C.text,
+                fontSize: '1.08rem',
+                fontWeight: 400,
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap'
+              }}>
+                {p.name}
+              </div>
+              <div style={{
+                fontSize: '0.7rem',
+                fontWeight: 500,
+                letterSpacing: '0.16em',
+                textTransform: 'uppercase',
+                marginTop: '0.2rem',
+                color: p.done ? C.dim : p.firstTimer ? C.gold : C.muted
+              }}>
+                {p.done ? 'Spoken' : p.firstTimer ? 'First timer · In the hat' : 'In the hat'}
+              </div>
+            </div>
+            <Btn variant={p.done ? 'surface' : 'primary'} size="sm" onClick={() => onPick(p)}>
+              {p.done ? 'Pick again' : 'Pick'}
+            </Btn>
+          </div>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -2500,6 +2639,9 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
   const [spinPool, setSpinPool] = useState([]);
   const [spinWinnerIdx, setSpinWinnerIdx] = useState(-1);
   const [spinKey, setSpinKey] = useState(0);
+  // Host override: a speaker picked by hand from the menu skips the hat ritual.
+  const [directPick, setDirectPick] = useState(false);
+  const [chooserOpen, setChooserOpen] = useState(false);
 
   const lastRevealAdvanceRef = useRef(0);
 
@@ -2511,12 +2653,36 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
     if (pool.length === 0) return;
     const { winner: w, winnerIdx } = pickDrawWinner(pool, spokenCount);
     if (winnerIdx < 0 || !w) return;
+    setDirectPick(false);
     setSpinPool(pool);
     setSpinWinnerIdx(winnerIdx);
     setSpinKey((k) => k + 1);
     setWinner(w);
     setPhase('spinning');
   }, []);
+
+  /** Menu → Choose speaker. The hat goes back to waiting behind the list, so a
+   *  shake or reveal already under way can't finish while the host is choosing. */
+  const openChooser = useCallback(() => {
+    if (remaining.length > 0) {
+      launchSpinFromPool([...remaining], participants.filter((p) => p.done).length);
+    }
+    setChooserOpen(true);
+  }, [remaining, participants, launchSpinFromPool]);
+
+  /** The host picked someone (spoken or not): straight to the sheet with their name. */
+  const pickSpeaker = useCallback((p) => {
+    const pool = remaining.some((r) => r.name === p.name) ? [...remaining] : [...remaining, p];
+    setSpinPool(pool);
+    setSpinWinnerIdx(pool.findIndex((r) => r.name === p.name));
+    setSpinKey((k) => k + 1);
+    setWinner(p);
+    setDirectPick(true);
+    setPhase('spinning');
+    setChooserOpen(false);
+  }, [remaining]);
+
+  const closeChooser = useCallback(() => setChooserOpen(false), []);
 
   const startDraw = useCallback(() => {
     if (phase !== 'ready' || remaining.length === 0) return;
@@ -2591,6 +2757,7 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
       onBackHome={onBackHome}
       showRespin={phase === 'reveal' && remaining.length > 1}
       onRespin={respinFromReveal}
+      onChooseSpeaker={!walkAllow && phase === 'spinning' ? openChooser : null}
       disableBackHome={!!walkAllow}
       disableMenu={walkAllow === 'revealAdvance'}
     />
@@ -2629,9 +2796,15 @@ function DrawingScreen({ participants, onComplete, onBackHome, pickRevealQuoteFo
           winnerIdx: spinWinnerIdx,
           spinKey: spinKey,
           doneCount: participants.filter((p) => p.done).length,
+          direct: directPick,
+          paused: chooserOpen,
           onComplete: onSpinComplete
         })}
       </div>
+      }
+
+      {chooserOpen &&
+      <ChooseSpeakerModal participants={participants} onPick={pickSpeaker} onClose={closeChooser} />
       }
 
       {/* ── REVEAL (Next Speaker) — Space / Enter or button → question picker */}
@@ -3190,7 +3363,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
     };
   }, [phase, demoMode]);
 
-  // Feedback timer — counts up to 2:00 then alarm (demo + real)
+  // Feedback timer — counts up to FEEDBACK_SECS then alarm (demo + real)
   useEffect(() => {
     if (phase !== 'feedback') return;
     const start = Date.now();
@@ -3199,7 +3372,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
     const tick = () => {
       const e = (Date.now() - start) / 1000;
       setFeedSecs(e);
-      if (e >= 120 && !alarmFired) {
+      if (e >= FEEDBACK_SECS && !alarmFired) {
         alarmFired = true;
         setPhase('alarm');
       }
@@ -3277,7 +3450,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
     if (speechSecs >= 60) timerColor = C.text;
   }
 
-  const feedLeft = Math.max(0, 120 - feedSecs);
+  const feedLeft = Math.max(0, FEEDBACK_SECS - feedSecs);
 
   return (
     <div style={{
@@ -3373,7 +3546,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
                 fontSize: 'clamp(8.5rem, 20vw, 21rem)',
                 fontWeight: 700,
                 color: phase === 'feedback'
-                  ? (feedLeft < 30 ? FIELD.vermilion : FIELD.blue)
+                  ? (feedLeft < FEEDBACK_WARN_SECS ? FIELD.vermilion : FIELD.blue)
                   : timerColor,
                 // while speaking the digits are ivory ink like the prompt; feedback keeps its colours
                 ...(phase === 'feedback' ? {} : stageInk()),
@@ -3410,7 +3583,7 @@ function SpeechScreen({ speakerName, question, onComplete, onBackToQuestions, de
                   TIME'S UP
                 </div>
                 }
-                {phase === 'feedback' && feedLeft < 30 &&
+                {phase === 'feedback' && feedLeft < FEEDBACK_WARN_SECS &&
                 <div style={{ color: FIELD.vermilion, fontSize: '1.85rem', fontWeight: 700, letterSpacing: '0.22em', paddingLeft: '0.22em' }}>
                   ALMOST DONE
                 </div>

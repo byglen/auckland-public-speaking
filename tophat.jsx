@@ -4,7 +4,9 @@
 // and flash names — release, and one folded slip is tossed out, sits for a
 // beat, then unfolds in two real folds to show the winner's name in ink.
 //
-// Contract: { names, winnerIdx, spinKey, onComplete }.
+// Contract: { names, winnerIdx, spinKey, onComplete, doneCount, direct, paused }.
+// `direct` skips the ritual: the host chose this speaker by hand, so the open
+// sheet comes straight out with their name on it.
 const { useState, useEffect, useRef, useMemo } = React;
 
 function hatRng(seed) {
@@ -220,7 +222,7 @@ function TallyPill({ value, label }) {
   );
 }
 
-const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
+const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0, direct = false, paused = false }) => {
   const theme = window.APS_THEME;
   const C = theme.C;
   const F = theme.F;
@@ -237,6 +239,9 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
   hudRef.current = hudPhase;
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
+  // paused: a host dialog is open over the hat — it must not hear Space
+  const pausedRef = useRef(paused);
+  pausedRef.current = paused;
 
   // Deterministic roll-call + shake randomness per draw
   const rng = useMemo(() => hatRng((spinKey + 1) * 15485863 + N * 31 + winnerIdx * 11), [spinKey, N, winnerIdx]);
@@ -344,8 +349,17 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
       onCompleteRef.current && onCompleteRef.current();
     }
 
+    // Host picked the speaker by hand: no shake, no unfolding — the open sheet
+    // is presented at once, holds for the room, then moves on (Space skips).
+    if (direct) {
+      mode = 'present';
+      setCardStage('present');
+      setHudPhase('landed');
+      timers.push(setTimeout(finish, 5800));
+    }
+
     function onKd(e) {
-      if (e.code !== 'Space') return;
+      if (e.code !== 'Space' || pausedRef.current) return;
       const tag = (e.target && e.target.tagName) || '';
       if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (e.repeat) { e.preventDefault(); return; }
@@ -363,7 +377,7 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
       }, 500);
     }
     function onKu(e) {
-      if (e.code !== 'Space') return;
+      if (e.code !== 'Space' || pausedRef.current) return;
       if (mode === 'hold') {
         e.preventDefault();
         beginResolve();
@@ -396,7 +410,7 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
       timers.forEach((t) => clearTimeout(t));
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [spinKey, names.join('|')]);
+  }, [spinKey, names.join('|'), direct]);
 
   const shaking = hudPhase === 'boost' || hudPhase === 'hold';
   const resolveOrLater = hudPhase === 'resolve' || hudPhase === 'landed';
@@ -507,7 +521,7 @@ const HatDraw = ({ names, winnerIdx, spinKey, onComplete, doneCount = 0 }) => {
           {/* slips layer — anchored inside the crown, so drop-ins are swallowed
               by the near wall and shaken slips leap up through the opening */}
           <div style={{ position: 'absolute', left: '50%', top: '58%', zIndex: 1 }}>
-            {rollcall.map((s, i) =>
+            {!direct && rollcall.map((s, i) =>
             <div
               key={`${spinKey}-rc-${i}`}
               style={{
