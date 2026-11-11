@@ -1547,36 +1547,56 @@ function QRScreen({ onBack }) {
             <p style={{ ...body, margin: 'clamp(1rem, 2.4vh, 1.75rem) 0 0', maxWidth: '26em' }}>
               Meetup.com takes <strong style={strong}>{kohaMoney(KOHA.target)} every 6 months</strong>. We appreciate any donations to help out 🙂
             </p>
-            <p style={{ ...body, margin: 'clamp(0.6rem, 1.4vh, 1rem) 0 0' }}>
-              <strong style={strong}>{kohaMoney(KOHA.raised)}/{kohaMoney(KOHA.target)}</strong> raised so far. Next due <strong style={strong}>{KOHA.dueBy}</strong>
-            </p>
 
-            {/* Bank details — three labelled lines in a quiet panel, lifted just off the ground */}
-            <div style={{
-              display: 'inline-grid',
-              gridTemplateColumns: 'max-content max-content',
-              columnGap: 'clamp(1.25rem, 2.4vw, 2.5rem)',
-              rowGap: 'clamp(0.45rem, 1.2vh, 0.8rem)',
-              alignItems: 'baseline',
-              marginTop: 'clamp(1.75rem, 4.5vh, 3rem)',
-              padding: 'clamp(1.25rem, 3vh, 2.1rem) clamp(1.5rem, 2.6vw, 2.75rem)',
-              background: QR_IVORY_PANEL,
-              borderRadius: 18,
-              fontFamily: F.ui,
-              fontSize: 'clamp(1.7rem, 2.7vw, 3.1rem)',
-              lineHeight: 1.15,
-              color: QR_IVORY
-            }}>
-              {[
-                ['Account', groupDigits(BANK_DETAILS.accountNumber)],
-                ['Name', BANK_DETAILS.accountName],
-                ['Ref', BANK_DETAILS.reference]
-              ].map(([label, value]) =>
-              <React.Fragment key={label}>
-                <span style={{ fontWeight: 400 }}>{label}</span>
-                <span style={{ fontWeight: 700, letterSpacing: '0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</span>
-              </React.Fragment>
-              )}
+            {/* Two quiet panels, same width: how far we've got, then where to send it */}
+            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'stretch', gap: 'clamp(0.75rem, 1.8vh, 1.15rem)', marginTop: 'clamp(1.5rem, 4vh, 2.75rem)', maxWidth: '100%' }}>
+
+              {/* Raised so far — the figure is the big thing */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 'clamp(1rem, 1.8vw, 2rem)',
+                padding: 'clamp(1.1rem, 2.6vh, 1.8rem) clamp(1.5rem, 2.6vw, 2.75rem)',
+                background: QR_IVORY_PANEL,
+                borderRadius: 18,
+                fontFamily: F.ui,
+                color: QR_IVORY
+              }}>
+                <span style={{ fontSize: 'clamp(2.6rem, 4.4vw, 5rem)', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                  {kohaMoney(KOHA.raised)}/{kohaMoney(KOHA.target)}
+                </span>
+                <span style={{ fontSize: 'clamp(1.2rem, 1.7vw, 1.9rem)', fontWeight: 400, lineHeight: 1.3, whiteSpace: 'nowrap' }}>
+                  raised so far<br />
+                  Next due <strong style={strong}>{KOHA.dueBy}</strong>
+                </span>
+              </div>
+
+              {/* Bank details — three labelled lines */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'max-content max-content',
+                columnGap: 'clamp(1.1rem, 2vw, 2.1rem)',
+                rowGap: 'clamp(0.35rem, 0.9vh, 0.6rem)',
+                alignItems: 'baseline',
+                padding: 'clamp(1.1rem, 2.6vh, 1.8rem) clamp(1.5rem, 2.6vw, 2.75rem)',
+                background: QR_IVORY_PANEL,
+                borderRadius: 18,
+                fontFamily: F.ui,
+                fontSize: 'clamp(1.3rem, 2vw, 2.3rem)',
+                lineHeight: 1.2,
+                color: QR_IVORY
+              }}>
+                {[
+                  ['Account', groupDigits(BANK_DETAILS.accountNumber)],
+                  ['Name', BANK_DETAILS.accountName],
+                  ['Ref', BANK_DETAILS.reference]
+                ].map(([label, value]) =>
+                <React.Fragment key={label}>
+                  <span style={{ fontWeight: 400 }}>{label}</span>
+                  <span style={{ fontWeight: 700, letterSpacing: '0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</span>
+                </React.Fragment>
+                )}
+              </div>
             </div>
           </div>
 
