@@ -115,8 +115,9 @@ const BANK_DETAILS = {
   reference: 'APS'
 };
 
-/** Koha progress on the end-of-night screen. Update `raised` as transfers come
- *  in; `target` is what Meetup charges the group every six months. */
+/** Koha numbers for the end-of-night screen. `target` is what Meetup charges
+ *  the group every six months. `raised` is kept up to date as transfers come
+ *  in but is not shown on screen at the moment (Glen removed it "for now"). */
 const KOHA = {
   raised: 38,
   target: 200
@@ -1475,6 +1476,7 @@ function QRCodeSvg({ value, label, style = {}, bg = '#fff', fg = '#111' }) {
 // or a second colour.
 const QR_IVORY = '#F0EEE6';
 const QR_IVORY_PANEL = 'rgba(240,238,230,0.11)';
+const QR_IVORY_RULE = 'rgba(240,238,230,0.2)';
 const kohaMoney = (n) => `$${Math.round(n).toLocaleString('en-NZ')}`;
 
 /** WhatsApp glyph (brand mark, drawn in the brand green so it reads at a glance). */
@@ -1512,6 +1514,8 @@ function QRScreen({ onBack }) {
   const qr = 'min(40vh, 22vw, 420px)';
   const body = { fontFamily: F.ui, fontSize: 'clamp(1.35rem, 2vw, 2.2rem)', fontWeight: 400, lineHeight: 1.4, color: QR_IVORY };
   const strong = { fontWeight: 700 };
+  const fieldHeading = { fontFamily: F.stage, fontWeight: 500, fontSize: 'clamp(1.2rem, 1.7vw, 1.95rem)', letterSpacing: '0.01em', lineHeight: 1.1, marginBottom: '0.4em' };
+  const fieldValue = { fontFamily: F.ui, fontWeight: 700, fontSize: 'clamp(1.6rem, 2.5vw, 2.9rem)', letterSpacing: '0.01em', lineHeight: 1.1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' };
 
   return (
     <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -1546,53 +1550,34 @@ function QRScreen({ onBack }) {
               Meetup.com takes <strong style={strong}>{kohaMoney(KOHA.target)} every 6 months</strong>. We appreciate any small donations to help out 🙂
             </p>
 
-            {/* Two panels, same width: how far we've got (the app's sky blue), then where to send it */}
-            <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'stretch', gap: 'clamp(0.75rem, 1.8vh, 1.15rem)', marginTop: 'clamp(1.5rem, 4vh, 2.75rem)', maxWidth: '100%' }}>
-
-              {/* Raised so far — the figure is the big thing */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'baseline',
-                gap: 'clamp(0.7rem, 1.2vw, 1.3rem)',
-                padding: 'clamp(1rem, 2.3vh, 1.6rem) clamp(1.5rem, 2.6vw, 2.75rem)',
-                background: C.sky,
-                borderRadius: 18,
-                fontFamily: F.ui,
-                color: QR_IVORY
-              }}>
-                <span style={{ fontSize: 'clamp(2.1rem, 3.5vw, 4rem)', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
-                  {kohaMoney(KOHA.raised)}/{kohaMoney(KOHA.target)}
-                </span>
-                <span style={{ fontSize: 'clamp(1.15rem, 1.7vw, 1.95rem)', fontWeight: 400, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
-                  raised so far
-                </span>
+            {/* Bank details — one roomy panel. Field headings in the stage serif,
+                values in bold sans: the account number leads, name and reference
+                share the row under a hairline. */}
+            <div style={{
+              display: 'inline-grid',
+              gridTemplateColumns: 'auto auto',
+              columnGap: 'clamp(2.5rem, 5vw, 5.5rem)',
+              marginTop: 'clamp(1.75rem, 4.5vh, 3rem)',
+              padding: 'clamp(1.6rem, 4vh, 2.75rem) clamp(1.9rem, 3.2vw, 3.5rem)',
+              background: QR_IVORY_PANEL,
+              borderRadius: 22,
+              color: QR_IVORY,
+              maxWidth: '100%'
+            }}>
+              <div style={{ gridColumn: '1 / -1' }}>
+                <div style={fieldHeading}>Account</div>
+                <div style={{ ...fieldValue, fontSize: 'clamp(1.9rem, 3.1vw, 3.6rem)' }}>{groupDigits(BANK_DETAILS.accountNumber)}</div>
               </div>
 
-              {/* Bank details — three labelled lines */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'max-content max-content',
-                columnGap: 'clamp(1.1rem, 2vw, 2.1rem)',
-                rowGap: 'clamp(0.35rem, 0.9vh, 0.6rem)',
-                alignItems: 'baseline',
-                padding: 'clamp(1.1rem, 2.6vh, 1.8rem) clamp(1.5rem, 2.6vw, 2.75rem)',
-                background: QR_IVORY_PANEL,
-                borderRadius: 18,
-                fontFamily: F.ui,
-                fontSize: 'clamp(1.3rem, 2vw, 2.3rem)',
-                lineHeight: 1.2,
-                color: QR_IVORY
-              }}>
-                {[
-                  ['Account', groupDigits(BANK_DETAILS.accountNumber)],
-                  ['Name', BANK_DETAILS.accountName],
-                  ['Ref', BANK_DETAILS.reference]
-                ].map(([label, value]) =>
-                <React.Fragment key={label}>
-                  <span style={{ fontWeight: 400 }}>{label}</span>
-                  <span style={{ fontWeight: 700, letterSpacing: '0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</span>
-                </React.Fragment>
-                )}
+              <div aria-hidden style={{ gridColumn: '1 / -1', height: 1, background: QR_IVORY_RULE, margin: 'clamp(1.1rem, 2.8vh, 1.9rem) 0' }} />
+
+              <div>
+                <div style={fieldHeading}>Name</div>
+                <div style={fieldValue}>{BANK_DETAILS.accountName}</div>
+              </div>
+              <div>
+                <div style={fieldHeading}>Reference</div>
+                <div style={fieldValue}>{BANK_DETAILS.reference}</div>
               </div>
             </div>
           </div>
