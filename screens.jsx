@@ -1474,7 +1474,7 @@ function QRCodeSvg({ value, label, style = {}, bg = '#fff', fg = '#111' }) {
 // one solid ivory (the stage ink) — emphasis is regular vs bold, never opacity
 // or a second colour.
 const QR_IVORY = '#F0EEE6';
-const QR_IVORY_PANEL = 'rgba(240,238,230,0.07)';
+const QR_IVORY_PANEL = 'rgba(240,238,230,0.11)';
 const kohaMoney = (n) => `$${Math.round(n).toLocaleString('en-NZ')}`;
 
 /** WhatsApp glyph (brand mark, drawn in the brand green so it reads at a glance). */
@@ -1540,10 +1540,10 @@ function QRScreen({ onBack }) {
               letterSpacing: '0.005em',
               ...stageInk()
             }}>
-              Meetup fee donations
+              Meetup fee donations.
             </h1>
             <p style={{ ...body, margin: 'clamp(1rem, 2.4vh, 1.75rem) 0 0', maxWidth: '26em' }}>
-              Meetup.com takes <strong style={strong}>{kohaMoney(KOHA.target)} every 6 months</strong>. We appreciate any donations to help out 🙂
+              Meetup.com takes <strong style={strong}>{kohaMoney(KOHA.target)} every 6 months</strong>. We appreciate any small donations to help out 🙂
             </p>
 
             {/* Two quiet panels, same width: how far we've got, then where to send it */}
