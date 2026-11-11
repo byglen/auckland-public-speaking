@@ -121,7 +121,7 @@ const BANK_DETAILS = {
 const KOHA = {
   raised: 38,
   target: 200,
-  dueBy: '31 Jan 2027'
+  dueBy: 'Jan 31, 2027'
 };
 
 /** Format an account number for display. Pre-formatted numbers (with separators)
@@ -1471,13 +1471,12 @@ function QRCodeSvg({ value, label, style = {}, bg = '#fff', fg = '#111' }) {
 }
 
 // ─── END-OF-NIGHT SCREEN — koha + WhatsApp ────────────────────────────────────
-// A poster, not a dashboard: one sentence in stage type, one line under it, a
-// progress bar, the account number, and the WhatsApp code to the side. Every
-// piece of text is the same ivory as the stage ink (solid or softened) — no
-// blue-grey chrome on this screen.
+// A poster, not a dashboard: a heading in stage type, two plain sentences, the
+// bank details in a quiet panel, and the WhatsApp code to the side. All text is
+// one solid ivory (the stage ink) — emphasis is regular vs bold, never opacity
+// or a second colour.
 const QR_IVORY = '#F0EEE6';
-const QR_IVORY_SOFT = 'rgba(240,238,230,0.62)';
-const QR_IVORY_TRACK = 'rgba(240,238,230,0.14)';
+const QR_IVORY_PANEL = 'rgba(240,238,230,0.07)';
 const kohaMoney = (n) => `$${Math.round(n).toLocaleString('en-NZ')}`;
 
 /** WhatsApp glyph (brand mark, drawn in the brand green so it reads at a glance). */
@@ -1513,8 +1512,8 @@ function QRScreen({ onBack }) {
   }, [onBack]);
 
   const qr = 'min(40vh, 22vw, 420px)';
-  const pct = KOHA.target > 0 ? Math.max(0, Math.min(100, (KOHA.raised / KOHA.target) * 100)) : 0;
-  const small = { fontFamily: F.ui, fontSize: 'clamp(1.25rem, 1.8vw, 2rem)', fontWeight: 400, color: QR_IVORY_SOFT };
+  const body = { fontFamily: F.ui, fontSize: 'clamp(1.35rem, 2vw, 2.2rem)', fontWeight: 400, lineHeight: 1.4, color: QR_IVORY };
+  const strong = { fontWeight: 700 };
 
   return (
     <div style={{ background: C.bg, height: '100vh', display: 'flex', flexDirection: 'column' }}>
@@ -1545,37 +1544,28 @@ function QRScreen({ onBack }) {
             }}>
               Meetup fee donations
             </h1>
-            <p style={{ ...small, margin: 'clamp(1rem, 2.4vh, 1.75rem) 0 0', fontSize: 'clamp(1.35rem, 2vw, 2.2rem)', lineHeight: 1.4, maxWidth: '26em' }}>
-              Meetup.com takes <span style={{ color: QR_IVORY, fontWeight: 500 }}>{kohaMoney(KOHA.target)} every 6 months</span>. We appreciate any donations to help out 🙂
+            <p style={{ ...body, margin: 'clamp(1rem, 2.4vh, 1.75rem) 0 0', maxWidth: '26em' }}>
+              Meetup.com takes <strong style={strong}>{kohaMoney(KOHA.target)} every 6 months</strong>. We appreciate any donations to help out 🙂
+            </p>
+            <p style={{ ...body, margin: 'clamp(0.6rem, 1.4vh, 1rem) 0 0' }}>
+              <strong style={strong}>{kohaMoney(KOHA.raised)}/{kohaMoney(KOHA.target)}</strong> raised so far. Next due <strong style={strong}>{KOHA.dueBy}</strong>
             </p>
 
-            {/* Progress — raised so far on the left, next due date on the right */}
-            <div style={{ margin: 'clamp(1.75rem, 4.5vh, 3rem) 0' }}>
-              <div
-                role="progressbar"
-                aria-valuemin={0}
-                aria-valuemax={KOHA.target}
-                aria-valuenow={KOHA.raised}
-                aria-label={`Raised so far: ${kohaMoney(KOHA.raised)} of ${kohaMoney(KOHA.target)}`}
-                style={{ position: 'relative', height: 10, borderRadius: 999, background: QR_IVORY_TRACK, overflow: 'hidden' }}>
-                <div style={{ position: 'absolute', inset: 0, width: `${pct}%`, minWidth: pct > 0 ? 10 : 0, borderRadius: 999, background: QR_IVORY }} />
-              </div>
-              <div style={{ ...small, display: 'flex', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap', marginTop: '0.85rem', fontSize: 'clamp(1.15rem, 1.6vw, 1.75rem)' }}>
-                <span><span style={{ color: QR_IVORY, fontWeight: 500 }}>{kohaMoney(KOHA.raised)}</span> raised so far</span>
-                <span>Next due <span style={{ color: QR_IVORY, fontWeight: 500 }}>{KOHA.dueBy}</span></span>
-              </div>
-            </div>
-
-            {/* Bank details — three labelled lines, as you'd type them into a banking app */}
+            {/* Bank details — three labelled lines in a quiet panel, lifted just off the ground */}
             <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'max-content 1fr',
+              display: 'inline-grid',
+              gridTemplateColumns: 'max-content max-content',
               columnGap: 'clamp(1.25rem, 2.4vw, 2.5rem)',
               rowGap: 'clamp(0.45rem, 1.2vh, 0.8rem)',
               alignItems: 'baseline',
+              marginTop: 'clamp(1.75rem, 4.5vh, 3rem)',
+              padding: 'clamp(1.25rem, 3vh, 2.1rem) clamp(1.5rem, 2.6vw, 2.75rem)',
+              background: QR_IVORY_PANEL,
+              borderRadius: 18,
               fontFamily: F.ui,
               fontSize: 'clamp(1.7rem, 2.7vw, 3.1rem)',
-              lineHeight: 1.15
+              lineHeight: 1.15,
+              color: QR_IVORY
             }}>
               {[
                 ['Account', groupDigits(BANK_DETAILS.accountNumber)],
@@ -1583,8 +1573,8 @@ function QRScreen({ onBack }) {
                 ['Ref', BANK_DETAILS.reference]
               ].map(([label, value]) =>
               <React.Fragment key={label}>
-                <span style={{ color: QR_IVORY_SOFT, fontWeight: 400 }}>{label}</span>
-                <span style={{ color: QR_IVORY, fontWeight: 500, letterSpacing: '0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</span>
+                <span style={{ fontWeight: 400 }}>{label}</span>
+                <span style={{ fontWeight: 700, letterSpacing: '0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</span>
               </React.Fragment>
               )}
             </div>
@@ -1595,7 +1585,7 @@ function QRScreen({ onBack }) {
             <div style={{ background: QR_IVORY, padding: 'clamp(0.85rem, 1.2vw, 1.1rem)', borderRadius: 14 }}>
               <QRCodeSvg value={WHATSAPP_INVITE_URL} label="WhatsApp group QR code" bg="none" style={{ display: 'block', width: qr, height: qr }} />
             </div>
-            <div style={{ ...small, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.7rem', fontSize: 'clamp(1.1rem, 1.5vw, 1.6rem)', fontWeight: 500 }}>
+            <div style={{ ...body, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.7rem', fontSize: 'clamp(1.1rem, 1.5vw, 1.6rem)' }}>
               <WhatsAppIcon />
               Join the WhatsApp
             </div>
