@@ -116,12 +116,10 @@ const BANK_DETAILS = {
 };
 
 /** Koha progress on the end-of-night screen. Update `raised` as transfers come
- *  in; `target` is what Meetup charges the group every six months; `dueBy` is
- *  display text for when the next charge lands. */
+ *  in; `target` is what Meetup charges the group every six months. */
 const KOHA = {
   raised: 38,
-  target: 200,
-  dueBy: 'Jan 31, 2027'
+  target: 200
 };
 
 /** Format an account number for display. Pre-formatted numbers (with separators)
@@ -1554,8 +1552,8 @@ function QRScreen({ onBack }) {
               {/* Raised so far — the figure is the big thing */}
               <div style={{
                 display: 'flex',
-                alignItems: 'center',
-                gap: 'clamp(1rem, 1.8vw, 2rem)',
+                alignItems: 'baseline',
+                gap: 'clamp(0.8rem, 1.4vw, 1.5rem)',
                 padding: 'clamp(1.1rem, 2.6vh, 1.8rem) clamp(1.5rem, 2.6vw, 2.75rem)',
                 background: QR_IVORY_PANEL,
                 borderRadius: 18,
@@ -1565,9 +1563,8 @@ function QRScreen({ onBack }) {
                 <span style={{ fontSize: 'clamp(2.6rem, 4.4vw, 5rem)', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                   {kohaMoney(KOHA.raised)}/{kohaMoney(KOHA.target)}
                 </span>
-                <span style={{ fontSize: 'clamp(1.2rem, 1.7vw, 1.9rem)', fontWeight: 400, lineHeight: 1.3, whiteSpace: 'nowrap' }}>
-                  raised so far<br />
-                  Next due <strong style={strong}>{KOHA.dueBy}</strong>
+                <span style={{ fontSize: 'clamp(1.3rem, 2vw, 2.3rem)', fontWeight: 400, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                  raised so far
                 </span>
               </div>
 
