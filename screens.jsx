@@ -1546,24 +1546,24 @@ function QRScreen({ onBack }) {
               Meetup.com takes <strong style={strong}>{kohaMoney(KOHA.target)} every 6 months</strong>. We appreciate any small donations to help out 🙂
             </p>
 
-            {/* Two quiet panels, same width: how far we've got, then where to send it */}
+            {/* Two panels, same width: how far we've got (the app's sky blue), then where to send it */}
             <div style={{ display: 'inline-flex', flexDirection: 'column', alignItems: 'stretch', gap: 'clamp(0.75rem, 1.8vh, 1.15rem)', marginTop: 'clamp(1.5rem, 4vh, 2.75rem)', maxWidth: '100%' }}>
 
               {/* Raised so far — the figure is the big thing */}
               <div style={{
                 display: 'flex',
                 alignItems: 'baseline',
-                gap: 'clamp(0.8rem, 1.4vw, 1.5rem)',
-                padding: 'clamp(1.1rem, 2.6vh, 1.8rem) clamp(1.5rem, 2.6vw, 2.75rem)',
-                background: QR_IVORY_PANEL,
+                gap: 'clamp(0.7rem, 1.2vw, 1.3rem)',
+                padding: 'clamp(1rem, 2.3vh, 1.6rem) clamp(1.5rem, 2.6vw, 2.75rem)',
+                background: C.sky,
                 borderRadius: 18,
                 fontFamily: F.ui,
                 color: QR_IVORY
               }}>
-                <span style={{ fontSize: 'clamp(2.6rem, 4.4vw, 5rem)', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 'clamp(2.1rem, 3.5vw, 4rem)', fontWeight: 700, letterSpacing: '-0.01em', lineHeight: 1, fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>
                   {kohaMoney(KOHA.raised)}/{kohaMoney(KOHA.target)}
                 </span>
-                <span style={{ fontSize: 'clamp(1.3rem, 2vw, 2.3rem)', fontWeight: 400, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 'clamp(1.15rem, 1.7vw, 1.95rem)', fontWeight: 400, lineHeight: 1.2, whiteSpace: 'nowrap' }}>
                   raised so far
                 </span>
               </div>
