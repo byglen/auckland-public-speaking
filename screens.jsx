@@ -116,10 +116,12 @@ const BANK_DETAILS = {
 };
 
 /** Koha progress on the end-of-night screen. Update `raised` as transfers come
- *  in; `target` is what Meetup charges the group every six months. */
+ *  in; `target` is what Meetup charges the group every six months; `dueBy` is
+ *  display text for when the next charge lands. */
 const KOHA = {
   raised: 38,
-  target: 200
+  target: 200,
+  dueBy: '31 Jan 2027'
 };
 
 /** Format an account number for display. Pre-formatted numbers (with separators)
@@ -1536,18 +1538,18 @@ function QRScreen({ onBack }) {
               margin: 0,
               fontFamily: F.stage,
               fontWeight: 700,
-              fontSize: 'clamp(3rem, 5.6vw, 6.6rem)',
+              fontSize: 'clamp(2.8rem, 5vw, 6rem)',
               lineHeight: 1.08,
               letterSpacing: '0.005em',
               ...stageInk()
             }}>
-              Help us pay the Meetup fees
+              Meetup fee donations
             </h1>
-            <p style={{ ...small, margin: 'clamp(1rem, 2.4vh, 1.75rem) 0 0', fontSize: 'clamp(1.35rem, 2vw, 2.2rem)', lineHeight: 1.35 }}>
-              <span style={{ color: QR_IVORY, fontWeight: 500 }}>{kohaMoney(KOHA.target)} every 6 months.</span> $2–$5 is plenty.
+            <p style={{ ...small, margin: 'clamp(1rem, 2.4vh, 1.75rem) 0 0', fontSize: 'clamp(1.35rem, 2vw, 2.2rem)', lineHeight: 1.4, maxWidth: '26em' }}>
+              Meetup.com takes <span style={{ color: QR_IVORY, fontWeight: 500 }}>{kohaMoney(KOHA.target)} every 6 months</span>. We appreciate any donations to help out 🙂
             </p>
 
-            {/* Progress — the bar doubles as the divider between the ask and the account */}
+            {/* Progress — raised so far on the left, next due date on the right */}
             <div style={{ margin: 'clamp(1.75rem, 4.5vh, 3rem) 0' }}>
               <div
                 role="progressbar"
@@ -1558,18 +1560,33 @@ function QRScreen({ onBack }) {
                 style={{ position: 'relative', height: 10, borderRadius: 999, background: QR_IVORY_TRACK, overflow: 'hidden' }}>
                 <div style={{ position: 'absolute', inset: 0, width: `${pct}%`, minWidth: pct > 0 ? 10 : 0, borderRadius: 999, background: QR_IVORY }} />
               </div>
-              <div style={{ ...small, marginTop: '0.85rem', fontSize: 'clamp(1.15rem, 1.6vw, 1.75rem)' }}>
-                <span style={{ color: QR_IVORY, fontWeight: 500 }}>{kohaMoney(KOHA.raised)}</span> raised so far
+              <div style={{ ...small, display: 'flex', justifyContent: 'space-between', gap: '1.5rem', flexWrap: 'wrap', marginTop: '0.85rem', fontSize: 'clamp(1.15rem, 1.6vw, 1.75rem)' }}>
+                <span><span style={{ color: QR_IVORY, fontWeight: 500 }}>{kohaMoney(KOHA.raised)}</span> raised so far</span>
+                <span>Next due <span style={{ color: QR_IVORY, fontWeight: 500 }}>{KOHA.dueBy}</span></span>
               </div>
             </div>
 
-            <div style={{ fontFamily: F.ui, color: QR_IVORY, fontSize: 'clamp(2.2rem, 3.9vw, 4.6rem)', fontWeight: 500, letterSpacing: '0.02em', fontVariantNumeric: 'tabular-nums', lineHeight: 1.05, whiteSpace: 'nowrap' }}>
-              {groupDigits(BANK_DETAILS.accountNumber)}
-            </div>
-            <div style={{ ...small, marginTop: '0.9rem' }}>
-              {BANK_DETAILS.accountName}
-              <span style={{ opacity: 0.5, margin: '0 0.7em' }}>·</span>
-              Reference <span style={{ color: QR_IVORY, fontWeight: 500 }}>{BANK_DETAILS.reference}</span>
+            {/* Bank details — three labelled lines, as you'd type them into a banking app */}
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'max-content 1fr',
+              columnGap: 'clamp(1.25rem, 2.4vw, 2.5rem)',
+              rowGap: 'clamp(0.45rem, 1.2vh, 0.8rem)',
+              alignItems: 'baseline',
+              fontFamily: F.ui,
+              fontSize: 'clamp(1.7rem, 2.7vw, 3.1rem)',
+              lineHeight: 1.15
+            }}>
+              {[
+                ['Account', groupDigits(BANK_DETAILS.accountNumber)],
+                ['Name', BANK_DETAILS.accountName],
+                ['Ref', BANK_DETAILS.reference]
+              ].map(([label, value]) =>
+              <React.Fragment key={label}>
+                <span style={{ color: QR_IVORY_SOFT, fontWeight: 400 }}>{label}</span>
+                <span style={{ color: QR_IVORY, fontWeight: 500, letterSpacing: '0.01em', fontVariantNumeric: 'tabular-nums', whiteSpace: 'nowrap' }}>{value}</span>
+              </React.Fragment>
+              )}
             </div>
           </div>
 
